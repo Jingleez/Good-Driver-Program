@@ -9,5 +9,7 @@ class Config:
     DB_USER = os.getenv('DB_USER', 'admin')
     DB_PASSWORD = os.getenv('DB_PASSWORD', 'Cpsc4910_Team13!Rds')
     DB_NAME = os.getenv('DB_NAME', 'Team13_database')
-    SQLALCHEMY_DATABASE_URI = f"mysql+mysqlconnector://{DB_USER}:{DB_PASSWORD}@{DB_HOST}/{DB_NAME}"
+    SQLALCHEMY_DATABASE_URI = (
+        'mysql+pymysql://admin:Cpsc4910_Team13!Rds@team13-rds.cobd8enwsupz.us-east-1.rds.amazonaws.com:3306/Team13_database'
+    )
     SQLALCHEMY_TRACK_MODIFICATIONS = False

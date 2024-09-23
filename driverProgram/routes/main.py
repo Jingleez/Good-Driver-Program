@@ -1,6 +1,7 @@
 # driverProgram/routes/main.py
-from flask import Blueprint, render_template, current_app
-from flask_login import login_required, current_user  
+from flask import Blueprint, render_template
+from driverProgram import db
+from sqlalchemy import text 
 
 main_bp = Blueprint('main', __name__)
 
@@ -12,7 +13,7 @@ def destination():
 def about():
     db_status = "Unknown"
     try:
-        db.session.execute('SELECT 1')
+        db.session.execute(text('SELECT 1'))
         db_status = "Database connection successful!"
     except Exception as e:
         db_status = f"Database connection failed: {str(e)}"

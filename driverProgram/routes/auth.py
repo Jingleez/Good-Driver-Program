@@ -1,9 +1,8 @@
-# app/routes/auth.py
-from flask import Blueprint, render_template, redirect, url_for, flash, request
-from flask_login import login_user, logout_user, login_required  # type: ignore
+from flask import Blueprint, render_template, redirect, url_for, flash
+from flask_login import login_user, logout_user, login_required
 from ..forms import LoginForm, SignupForm
-from ..models import ifUsernameExist, User
-from ..models import db  # Import db for database operations
+from ..models import User
+from .. import db  # Import db from the current package
 from werkzeug.security import generate_password_hash, check_password_hash
 
 auth_bp = Blueprint('auth', __name__, url_prefix='/auth')
