@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ title if title else "My Flask App" }}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f8f9fa; /* Light background color */
+            margin: 0;
+            padding: 0;
+        }
+        nav {
+            background-color: #007bff; /* Primary color for the navbar */
+            color: white;
+            padding: 10px;
+        }
+        nav ul {
+            list-style-type: none;
+            padding: 0;
+        }
+        nav ul li {
+            display: inline;
+            margin-right: 15px;
+        }
+        nav a {
+            color: white;
+            text-decoration: none;
+        }
+        nav a:hover {
+            text-decoration: underline; /* Add underline on hover */
+        }
+        .container {
+            max-width: 800px;
+            margin: 20px auto;
+            padding: 20px;
+            background-color: white; /* White background for content */
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1); /* Subtle shadow effect */
+        }
+        .flash {
+            padding: 10px;
+            margin-bottom: 20px;
+            border-radius: 5px;
+        }
+        .flash.success {
+            background-color: #d4edda; /* Success message background */
+            color: #155724; /* Success message text color */
+        }
+        .flash.error {
+            background-color: #f8d7da; /* Error message background */
+            color: #721c24; /* Error message text color */
+        }
+    </style>
+</head>
+<body>
+    <nav>
+        <ul>
+            <li><a href="{{ url_for('main.destination') }}">Home</a></li>
+            {% if current_user.is_authenticated %}
+                <li><a href="{{ url_for('main.dashboard') }}">Dashboard</a></li>
+                <li><a href="{{ url_for('auth.logout') }}">Logout</a></li>
+            {% else %}
+                <li><a href="{{ url_for('auth.login') }}">Login</a></li>
+                <li><a href="{{ url_for('auth.signup') }}">Signup</a></li>
+            {% endif %}
+            <li><a href="{{ url_for('main.about') }}">About</a></li>
+        </ul>
+    </nav>
+    
+    <div class="container">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+          {% if messages %}
+            {% for category, message in messages %}
+              <div class="flash {{ category }}">
+                  {{ message }}
+              </div>
+            {% endfor %}
+          {% endif %}
+        {% endwith %}
+        
+        {% block content %}{% endblock %}
+    </div>
+    
+    <script src="{{ url_for('static', filename='js/scripts.js') }}"></script>
+</body>
+</html>

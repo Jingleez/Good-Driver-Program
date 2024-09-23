@@ -1,3 +1,12 @@
+flask
+flask-login
+flask-mail
+flask-restx
+flask-sqlalchemy
+flask-wtf
+mysql-connector-python
+wtforms
+werkzeug
 aniso8601==8.0.0
 attrs==20.2.0
 certifi==2020.6.20
