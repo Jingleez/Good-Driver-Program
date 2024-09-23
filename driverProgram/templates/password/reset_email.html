@@ -1,0 +1,12 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Password Reset</title>
+</head>
+<body>
+    <h1>Password Reset Request</h1>
+    <p>To reset your password, visit the following link:</p>
+    <a href="{{ url_for('reset_password', token=token, _external=True) }}">Reset Password</a>
+</body>
+</html>

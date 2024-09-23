@@ -1,5 +1,9 @@
-from flask_sqlalchemy import SQLAlchemy
+# driverProgram/models.py
+import jwt
+import os
+import time
 from flask_login import UserMixin
+from flask import current_app
 from werkzeug.security import generate_password_hash, check_password_hash
 from . import db
 
@@ -22,6 +26,25 @@ class User(UserMixin, db.Model):
 
     def check_password(self, password):
         return check_password_hash(self.password_hash, password)
+
+    def get_reset_token(self, expires=600):
+        return jwt.encode(
+            {'reset_password': self.username, 'exp': time.time() + expires},
+            key=os.getenv('SECRET_KEY_FLASK'),
+            algorithm='HS256'
+        )
+
+    @staticmethod
+    def verify_reset_token(token):
+        try:
+            payload = jwt.decode(token, key=os.getenv('SECRET_KEY_FLASK'), algorithms=['HS256'])
+            username = payload.get('reset_password')
+            if username is None:
+                return None
+        except Exception as e:
+            print(f"Token verification error: {e}")
+            return None
+        return User.query.filter_by(username=username).first()
 
 def ifUsernameExist(username):
     return User.query.filter_by(username=username).first() is not None

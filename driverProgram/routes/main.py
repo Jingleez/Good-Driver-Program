@@ -1,5 +1,5 @@
 # driverProgram/routes/main.py
-from flask import Blueprint, render_template
+from flask import Blueprint, render_template, redirect, url_for, session, flash
 from driverProgram import db
 from sqlalchemy import text 
 
@@ -19,3 +19,14 @@ def about():
         db_status = f"Database connection failed: {str(e)}"
 
     return render_template('Destination/about.html', db_status=db_status)
+
+@main_bp.route('/dashboard')
+def dashboard():
+    user_role = session.get('user_role')  
+    if user_role == 'driver':
+        return render_template('dashboard/driver_dash.html')  
+    elif user_role == 'sponsor':
+        return render_template('dashboard/sponsor_dash.html')  
+    else:
+        flash('Unauthorized access.', 'danger')
+        return redirect(url_for('main.destination'))

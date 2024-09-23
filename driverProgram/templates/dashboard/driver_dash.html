@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Driver Dashboard</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='CSS/style.css') }}">
+</head>
+<body>
+    <header>
+        <h1>Welcome to the Driver Dashboard</h1>
+        <nav>
+            <ul>
+                <li><a href="{{ url_for('main.destination') }}">Home</a></li>
+                <li><a href="{{ url_for('auth.logout') }}">Logout</a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        <h2>Your Trips</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>Trip ID</th>
+                    <th>Destination</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+        </table>
+    </main>
+</body>
+</html>
