@@ -1,5 +1,6 @@
 import os
 from dotenv import load_dotenv
+from datetime import timedelta
 
 load_dotenv()
 
@@ -13,5 +14,3 @@ class Config:
         'mysql+pymysql://admin:Cpsc4910_Team13!Rds@team13-rds.cobd8enwsupz.us-east-1.rds.amazonaws.com:3306/Team13_database'
     )
     SQLALCHEMY_TRACK_MODIFICATIONS = False
-
-    

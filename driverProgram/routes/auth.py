@@ -16,7 +16,6 @@ def login():
         user = User.query.filter_by(username=form.username.data).first()
         if user and user.check_password(form.password.data):
             login_user(user)
-            session['user_role'] = user.role  
             flash('Logged in successfully!', 'success')
             return redirect(url_for('main.dashboard'))  
         else:
