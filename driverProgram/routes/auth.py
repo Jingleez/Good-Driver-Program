@@ -13,7 +13,7 @@ def login():
     if form.validate_on_submit():
         user = User.query.filter_by(username=form.username.data).first()
         if user and user.check_password(form.password.data):
-            login_user(user)
+            login_user(user, remember=form.remember_me.data)
             flash('Logged in successfully!', 'success')
             return redirect(url_for('main.destination'))
         else:
