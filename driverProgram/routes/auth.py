@@ -2,7 +2,7 @@ from flask import Blueprint, render_template, redirect, url_for, flash
 from flask_login import login_user, logout_user, login_required
 from ..forms import LoginForm, SignupForm
 from ..models import User
-from .. import db  # Import db from the current package
+from .. import db 
 from werkzeug.security import generate_password_hash, check_password_hash
 
 auth_bp = Blueprint('auth', __name__, url_prefix='/auth')
@@ -24,14 +24,12 @@ def login():
 def signup():
     form = SignupForm()
     if form.validate_on_submit():
-        # Check sponsor code if role is sponsor
         if form.role.data == 'sponsor':
             sponsor_code = form.sponsor_code.data
             if not sponsor_code or len(sponsor_code) != 6 or not sponsor_code.isdigit():
                 flash('Invalid sponsor code.', 'danger')
                 return render_template('Destination/signup.html', form=form)
 
-        # Create new user
         new_user = User(
             first_name=form.first_name.data,
             last_name=form.last_name.data,
@@ -44,10 +42,8 @@ def signup():
         )
         new_user.set_password(form.password.data)
         
-        # Add to database
         db.session.add(new_user)
         db.session.commit()
-        
         flash('Account created successfully! Please log in.', 'success')
         return redirect(url_for('auth.login'))
     return render_template('Destination/signup.html', form=form)
