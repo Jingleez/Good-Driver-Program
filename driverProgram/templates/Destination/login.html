@@ -6,7 +6,7 @@
         {{ form.hidden_tag() }}
         <p>
             {{ form.username.label }}<br>
-            {{ form.username(size=32) }}<br>
+            {{ form.username(size=32, value=form.username.data or '') }}<br>
             {% for error in form.username.errors %}
                 <span class="error">{{ error }}</span>
             {% endfor %}
@@ -20,6 +20,7 @@
         </p>
         <p>
             {{form.remember_me() }} {{form.remember_me.label }}
+
         <p>{{ form.submit() }}</p>
     </form>
 {% endblock %}

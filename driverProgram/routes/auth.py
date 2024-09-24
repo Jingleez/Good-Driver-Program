@@ -15,11 +15,16 @@ def login():
     if form.validate_on_submit():
         user = User.query.filter_by(username=form.username.data).first()
         if user and user.check_password(form.password.data):
-            login_user(user)
+            login_user(user, remember=form.remember_me.data)
+            session['user_role'] = user.role
+            session['username'] = form.username.data
             flash('Logged in successfully!', 'success')
             return redirect(url_for('main.dashboard'))  
         else:
             flash('Invalid username or password.', 'danger')
+    else:
+        if 'username' in session:
+            form.username.data = session['username']
     return render_template('Destination/login.html', form=form)
 
 @auth_bp.route('/signup', methods=['GET', 'POST'])

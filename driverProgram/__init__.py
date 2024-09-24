@@ -5,6 +5,8 @@ from config import Config
 import os
 from dotenv import load_dotenv
 from flask_mail import Mail
+from datetime import timedelta
+
 
 app = Flask(__name__)
 app.config.from_object(Config)
@@ -38,6 +40,9 @@ def create_app():
     app.config['MAIL_PASSWORD'] = "your_email_password"
     mail = Mail(app)
 
+    app.config['REMEMBER_COOKIE_DURATION'] = timedelta(days=7)
+
+    
     with app.app_context():
         db.create_all()  
 

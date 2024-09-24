@@ -8,7 +8,7 @@
 </head>
 <body>
     <header>
-        <h1>Welcome to the Driver Dashboard</h1>
+        <h1>Welcome to the Driver Dashboard, {{ current_user.first_name }}!</h1>
         <nav>
             <ul>
                 <li><a href="{{ url_for('main.destination') }}">Home</a></li>
