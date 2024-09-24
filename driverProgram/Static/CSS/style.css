@@ -3,6 +3,8 @@ body {
     font-family: Arial, sans-serif;
     margin: 0;
     padding: 0;
+    line-height: 1.6;
+    background-color: white;
 }
 
 /* Header Styles */
@@ -22,7 +24,7 @@ body {
 
 /* Hero Section */
 #hero {
-    background: url('../img/hero-bg.jpg') no-repeat center center/cover;
+    background-color: #3498db;
     color: white;
     text-align: center;
     padding: 100px 0;
@@ -38,6 +40,11 @@ body {
     color: white;
     padding: 10px 20px;
     border-radius: 5px;
+    text-decoration: none;
+}
+
+.btn:hover {
+    background-color: #218838;
 }
 
 /* Features Section */
@@ -71,4 +78,118 @@ footer {
 .footer-links li {
     display: inline;
     margin: 0 10px;
+}
+
+/* Destination Page Styles */
+.destination-page {
+    max-width: 1200px;
+    margin: 40px auto;
+    padding: 20px;
+    background-color: white;
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.welcome-section {
+    text-align: center;
+    margin-bottom: 50px;
+    background: url('../img/background.jpg') no-repeat center center/cover;
+    padding: 100px 20px;
+    color: white;
+    border-radius: 10px;
+}
+
+.page-title {
+    font-size: 2.5rem;
+    color: white;
+    margin-bottom: 20px;
+}
+
+.intro-text {
+    font-size: 1.2rem;
+    color: white;
+    margin-bottom: 30px;
+}
+
+.cta-button {
+    display: inline-block;
+    padding: 10px 20px;
+    background-color: #e67e22;
+    color: white;
+    text-decoration: none;
+    border-radius: 5px;
+    transition: background-color 0.3s ease;
+}
+
+.cta-button:hover {
+    background-color: #d35400;
+}
+
+/* Features Section for Destination Page */
+.features-section {
+    display: flex;
+    justify-content: space-around;
+    flex-wrap: wrap;
+    gap: 20px;
+}
+
+.feature-card {
+    flex: 1 1 calc(33% - 20px);
+    padding: 20px;
+    background-color: #ecf0f1;
+    border-radius: 10px;
+    text-align: center;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    transition: transform 0.3s ease;
+}
+
+.feature-card h2 {
+    color: #2980b9;
+    margin-bottom: 15px;
+}
+
+.feature-card p {
+    color: #7f8c8d;
+}
+
+.feature-card:hover {
+    transform: translateY(-5px);
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .features-section {
+        flex-direction: column;
+    }
+
+    .feature-card {
+        flex: 1 1 100%;
+    }
+}
+
+/* Founders Section Styles */
+#founders {
+    margin: 40px 0;
+    padding: 20px;
+    background-color: #ecf0f1; /* Light gray background */
+    border-radius: 10px;
+    text-align: center;
+}
+
+#founders h2 {
+    color: #2980b9; /* Blue color for the title */
+}
+
+#founders p {
+    color: #34495e; /* Dark gray for the paragraph */
+}
+
+#founders ul {
+    list-style-type: none; /* Remove default list styling */
+    padding: 0;
+}
+
+#founders li {
+    margin: 10px 0; /* Space between names */
+    font-size: 1.2rem; /* Font size for names */
 }
