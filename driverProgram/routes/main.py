@@ -2,6 +2,8 @@
 from flask import Blueprint, render_template, redirect, url_for, session, flash
 from driverProgram import db
 from sqlalchemy import text 
+import jwt
+
 
 main_bp = Blueprint('main', __name__)
 
@@ -20,16 +22,22 @@ def about():
 
     return render_template('Destination/about.html', db_status=db_status)
 
+
+def is_token_valid(token):
+    try:
+        decoded = jwt.decode(token, options={"verify_signature": False})
+        return True
+    except jwt.ExpiredSignatureError:
+        return False
+    except jwt.InvalidTokenError:
+        return False
+
 @main_bp.route('/dashboard')
 def dashboard():
-    user_role = session.get('user_role')  
-    if user_role == 'driver':
-        return render_template('dashboard/driver_dash.html')  
-    elif user_role == 'sponsor':
-        return render_template('dashboard/sponsor_dash.html')  
-    else:
+    if 'id_token' not in session or not is_token_valid(session['id_token']):
         flash('Unauthorized access.', 'danger')
-        return redirect(url_for('main.destination'))
+        return redirect(url_for('auth_bp.login'))
+    return render_template('dashboard/driver_dash.html')
     
 @main_bp.route('/messages')
 def messages():

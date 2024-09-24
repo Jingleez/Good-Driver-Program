@@ -14,3 +14,8 @@ class Config:
         'mysql+pymysql://admin:Cpsc4910_Team13!Rds@team13-rds.cobd8enwsupz.us-east-1.rds.amazonaws.com:3306/Team13_database'
     )
     SQLALCHEMY_TRACK_MODIFICATIONS = False
+
+    #AWS Cognito
+    COGNITO_USER_POOL_ID = os.environ.get('COGNITO_USER_POOL_ID')
+    COGNITO_CLIENT_ID = os.environ.get('COGNITO_CLIENT_ID')
+    COGNITO_REGION = os.environ.get('COGNITO_REGION')

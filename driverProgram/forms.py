@@ -1,7 +1,7 @@
 # driverProgram/forms.py
 from flask_wtf import FlaskForm
-from wtforms import StringField, PasswordField, SubmitField, SelectField, BooleanField
-from wtforms.validators import DataRequired, Email, EqualTo, Length, ValidationError
+from wtforms import StringField, PasswordField, SubmitField, SelectField, BooleanField, DateField
+from wtforms.validators import DataRequired, Email, EqualTo, Length, ValidationError, Optional
 from .models import User
 
 class LoginForm(FlaskForm):
@@ -11,16 +11,18 @@ class LoginForm(FlaskForm):
     submit = SubmitField('Login')
 
 class SignupForm(FlaskForm):
-    first_name = StringField('First Name', validators=[DataRequired(), Length(min=2, max=150)])
-    last_name = StringField('Last Name', validators=[DataRequired(), Length(min=2, max=150)])
-    address = StringField('Address', validators=[DataRequired(), Length(max=250)])
-    phone = StringField('Phone', validators=[DataRequired(), Length(max=20)])
-    email = StringField('Email', validators=[DataRequired(), Email(), Length(max=150)])
-    username = StringField('Username', validators=[DataRequired(), Length(min=2, max=150)])
-    password = PasswordField('Password', validators=[DataRequired(), Length(min=6)])
-    confirm_password = PasswordField('Confirm Password', validators=[DataRequired(), EqualTo('password')])
-    role = SelectField('Role', choices=[('driver', 'Driver'), ('sponsor', 'Sponsor')], validators=[DataRequired()])
-    sponsor_code = StringField('Sponsor Code', validators=[])  # Optional, required if role is sponsor
+    first_name = StringField('First Name', validators=[DataRequired()])
+    last_name = StringField('Last Name', validators=[DataRequired()])
+    address = StringField('Address', validators=[DataRequired()])
+    phone = StringField('Phone', validators=[DataRequired()])
+    email = StringField('Email', validators=[DataRequired(), Email()])
+    username = StringField('Username', validators=[DataRequired()])
+    password = PasswordField('Password', validators=[DataRequired()])
+    confirm_password = PasswordField('Confirm Password', validators=[DataRequired()])
+    role = SelectField('Role', choices=[('user', 'User'), ('admin', 'Admin'), ('sponsor', 'Sponsor')], validators=[DataRequired()])
+    sponsor_code = StringField('Sponsor Code', validators=[Optional()])
+    birthdate = DateField('Birthdate', format='%Y-%m-%d', validators=[Optional()])
+    gender = SelectField('Gender', choices=[('male', 'Male'), ('female', 'Female'), ('other', 'Other')], validators=[Optional()])
     submit = SubmitField('Sign Up')
 
     def validate_username(self, username):
@@ -33,11 +35,6 @@ class SignupForm(FlaskForm):
         if user:
             raise ValidationError('Email is already registered.')
 
-class ResetRequestForm(FlaskForm):
+class ResetPasswordRequestForm(FlaskForm):
     email = StringField('Email', validators=[DataRequired(), Email()])
     submit = SubmitField('Request Password Reset')
-
-class ResetPasswordForm(FlaskForm):
-    password = PasswordField('New Password', validators=[DataRequired(), Length(min=6)])
-    confirm_password = PasswordField('Confirm New Password', validators=[DataRequired(), EqualTo('password')])
-    submit = SubmitField('Reset Password')

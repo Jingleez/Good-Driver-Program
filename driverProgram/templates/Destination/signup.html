@@ -4,6 +4,7 @@
     <h2>Signup</h2>
     <form method="POST" action="{{ url_for('auth.signup') }}">
         {{ form.hidden_tag() }}
+        
         <p>
             {{ form.first_name.label }}<br>
             {{ form.first_name(size=32) }}<br>
@@ -11,6 +12,7 @@
                 <span class="error">{{ error }}</span>
             {% endfor %}
         </p>
+
         <p>
             {{ form.last_name.label }}<br>
             {{ form.last_name(size=32) }}<br>
@@ -18,6 +20,7 @@
                 <span class="error">{{ error }}</span>
             {% endfor %}
         </p>
+
         <p>
             {{ form.address.label }}<br>
             {{ form.address(size=64) }}<br>
@@ -25,6 +28,7 @@
                 <span class="error">{{ error }}</span>
             {% endfor %}
         </p>
+
         <p>
             {{ form.phone.label }}<br>
             {{ form.phone(size=20) }}<br>
@@ -32,6 +36,7 @@
                 <span class="error">{{ error }}</span>
             {% endfor %}
         </p>
+
         <p>
             {{ form.email.label }}<br>
             {{ form.email(size=64) }}<br>
@@ -39,6 +44,7 @@
                 <span class="error">{{ error }}</span>
             {% endfor %}
         </p>
+
         <p>
             {{ form.username.label }}<br>
             {{ form.username(size=32) }}<br>
@@ -46,6 +52,7 @@
                 <span class="error">{{ error }}</span>
             {% endfor %}
         </p>
+
         <p>
             {{ form.password.label }}<br>
             {{ form.password(size=32) }}<br>
@@ -53,6 +60,7 @@
                 <span class="error">{{ error }}</span>
             {% endfor %}
         </p>
+
         <p>
             {{ form.confirm_password.label }}<br>
             {{ form.confirm_password(size=32) }}<br>
@@ -60,6 +68,7 @@
                 <span class="error">{{ error }}</span>
             {% endfor %}
         </p>
+
         <p>
             {{ form.role.label }}<br>
             {{ form.role() }}<br>
@@ -67,6 +76,7 @@
                 <span class="error">{{ error }}</span>
             {% endfor %}
         </p>
+
         <p id="sponsor-code-field" style="display: none;">
             {{ form.sponsor_code.label }}<br>
             {{ form.sponsor_code(size=6) }}<br>
@@ -74,7 +84,26 @@
                 <span class="error">{{ error }}</span>
             {% endfor %}
         </p>
-        <p>{{ form.submit() }}</p>
+
+        <p>
+            {{ form.birthdate.label }}<br>
+            {{ form.birthdate(size=32) }}<br>
+            {% for error in form.birthdate.errors %}
+                <span class="error">{{ error }}</span>
+            {% endfor %}
+        </p>
+
+        <p>
+            {{ form.gender.label }}<br>
+            {{ form.gender() }}<br>
+            {% for error in form.gender.errors %}
+                <span class="error">{{ error }}</span>
+            {% endfor %}
+        </p>
+
+        <p>
+            {{ form.submit() }}
+        </p>
     </form>
 
     <script>
@@ -83,11 +112,7 @@
         const sponsorCodeField = document.getElementById('sponsor-code-field');
 
         roleSelect.addEventListener('change', function() {
-            if (this.value === 'sponsor') {
-                sponsorCodeField.style.display = 'block';
-            } else {
-                sponsorCodeField.style.display = 'none';
-            }
+            sponsorCodeField.style.display = this.value === 'sponsor' ? 'block' : 'none';
         });
 
         // Initialize on page load
