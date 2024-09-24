@@ -30,3 +30,15 @@ def dashboard():
     else:
         flash('Unauthorized access.', 'danger')
         return redirect(url_for('main.destination'))
+    
+@main_bp.route('/messages')
+def messages():
+    return render_template('Destination/messages.html') 
+
+@main_bp.route('/browse-organizations')
+def browse_organizations():
+    return render_template('Destination/browse_organizations.html')  
+
+@main_bp.route('/current-organization')
+def current_organization():
+    return render_template('Destination/current_organization.html')  
