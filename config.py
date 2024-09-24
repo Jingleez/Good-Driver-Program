@@ -15,7 +15,7 @@ class Config:
     )
     SQLALCHEMY_TRACK_MODIFICATIONS = False
 
-    #AWS Cognito
+    #AWS Cognito connection details 
     COGNITO_USER_POOL_ID = os.environ.get('COGNITO_USER_POOL_ID')
     COGNITO_CLIENT_ID = os.environ.get('COGNITO_CLIENT_ID')
     COGNITO_REGION = os.environ.get('COGNITO_REGION')

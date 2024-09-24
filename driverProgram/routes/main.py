@@ -19,7 +19,6 @@ def about():
         db_status = "Database connection successful!"
     except Exception as e:
         db_status = f"Database connection failed: {str(e)}"
-
     return render_template('Destination/about.html', db_status=db_status)
 
 
