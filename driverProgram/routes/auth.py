@@ -9,6 +9,7 @@ import boto3, os, re
 from botocore.exceptions import ClientError
 from dotenv import load_dotenv
 from datetime import datetime
+from ..forms import ConfirmResetForm
 
 load_dotenv()
 
@@ -98,7 +99,9 @@ def reset_request():
         client = boto3.client('cognito-idp', region_name=cognito_region)
         try:
             response = client.forgot_password( ClientId=cognito_client_id, Username=email, )
+            print(f"AWS Cognito response: {response}") #debug statement to see AWS response
             flash('Password reset email sent.', 'success')
+            return redirect(url_for('auth.confirm_reset'))
         except client.exceptions.UserNotFoundException:
             flash('No user found with that email address.', 'error')
         except Exception as e:
@@ -106,17 +109,27 @@ def reset_request():
         return redirect(url_for('auth.login')) 
     return render_template('password/reset_request.html', form=form)
 
-@auth_bp.route('/confirm_reset', methods=['POST'])
+@auth_bp.route('/confirm_reset', methods=['GET', 'POST'])
 def confirm_reset():
-    email = request.json.get('email')
-    verification_code = request.json.get('code')
-    new_password = request.json.get('new_password')
-    try:
-        cognito_client.confirm_forgot_password( ClientId=CognitoClientId, Username=email, ConfirmationCode=verification_code, Password=new_password
-        )
-        return jsonify({"message": "Password has been reset."}), 200
-    except ClientError as e:
-        return jsonify({"message": f"Error resetting password: {e.response['Error']['Message']}"}), 400
+    form = ConfirmResetForm()  # Assuming you have a form for verification code and new password
+    if request.method == 'POST' and form.validate_on_submit():
+        email = form.email.data
+        verification_code = form.verification_code.data
+        new_password = form.new_password.data
+        cognito_client = boto3.client('cognito-idp', region_name=os.getenv('COGNITO_REGION'))
+        try:
+            cognito_client.confirm_forgot_password(
+                ClientId=os.getenv('COGNITO_CLIENT_ID'),
+                Username=email,
+                ConfirmationCode=verification_code,
+                Password=new_password
+            )
+            flash('Your password has been reset successfully!', 'success')
+            return redirect(url_for('auth.login'))
+        except ClientError as e:
+            flash(f"Error resetting password: {e.response['Error']['Message']}", 'danger')
+    return render_template('password/reset_password.html', form=form)  # Renders the form for GET requests
+
 
 @auth_bp.route('/verify', methods=['GET', 'POST'])
 def verify():
@@ -131,3 +144,24 @@ def verify():
         except ClientError as e:
             flash(f'An error occurred: {e.response["Error"]["Message"]}', 'danger')
     return render_template('password/verify.html')
+
+
+
+# To allow admin users to disable or delete users.
+@auth_bp.route('/delete_user', methods=['POST'])
+def delete_user():
+    email = request.form['email']
+    cognito_client = boto3.client('cognito-idp', region_name=os.getenv('COGNITO_REGION'))
+    try:
+        # AdminDeleteUser requires the User Pool ID and Username (usually the email).
+        response = cognito_client.admin_delete_user(
+            UserPoolId=os.getenv('COGNITO_USER_POOL_ID'),  # Make sure the User Pool ID is in your environment variables
+            Username=email
+        )
+        flash(f'User with email {email} has been deleted successfully.', 'success')
+    except cognito_client.exceptions.UserNotFoundException:
+        flash('No user found with that email address.', 'error')
+    except Exception as e:
+        flash(f'An error occurred: {str(e)}', 'error')
+    return redirect(url_for('auth.login'))
+

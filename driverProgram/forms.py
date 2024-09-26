@@ -19,7 +19,7 @@ class SignupForm(FlaskForm):
     username = StringField('Username', validators=[DataRequired()])
     password = PasswordField('Password', validators=[DataRequired()])
     confirm_password = PasswordField('Confirm Password', validators=[DataRequired()])
-    role = SelectField('Role', choices=[('user', 'User'), ('admin', 'Admin'), ('sponsor', 'Sponsor')], validators=[DataRequired()])
+    role = SelectField('Role', choices=[('Driver', 'Driver'), ('admin', 'Admin'), ('sponsor', 'Sponsor')], validators=[DataRequired()])
     sponsor_code = StringField('Sponsor Code', validators=[Optional()])
     birthdate = DateField('Birthdate', format='%Y-%m-%d', validators=[Optional()])
     gender = SelectField('Gender', choices=[('male', 'Male'), ('female', 'Female'), ('other', 'Other')], validators=[Optional()])
@@ -38,3 +38,13 @@ class SignupForm(FlaskForm):
 class ResetPasswordRequestForm(FlaskForm):
     email = StringField('Email', validators=[DataRequired(), Email()])
     submit = SubmitField('Request Password Reset')
+
+class ConfirmResetForm(FlaskForm):
+    email = StringField('Email', validators=[DataRequired(), Email()])
+    verification_code = StringField('Verification Code', validators=[DataRequired()])
+    new_password = PasswordField('New Password', validators=[
+        DataRequired(),
+        EqualTo('confirm_password', message='Passwords must match')
+    ])
+    confirm_password = PasswordField('Confirm Password', validators=[DataRequired()])
+    submit = SubmitField('Reset Password')
