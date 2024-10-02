@@ -28,18 +28,44 @@ def login():
     form = LoginForm()
     if form.validate_on_submit():
         try:
-            response = cognito_client.admin_initiate_auth( UserPoolId=CognitoUserPoolId, ClientId=CognitoClientId, AuthFlow='ADMIN_USER_PASSWORD_AUTH',
-                        AuthParameters={ 'USERNAME': form.username.data, 'PASSWORD': form.password.data, }
+            response = cognito_client.admin_initiate_auth(
+                UserPoolId=CognitoUserPoolId,
+                ClientId=CognitoClientId,
+                AuthFlow='ADMIN_USER_PASSWORD_AUTH',
+                AuthParameters={
+                    'USERNAME': form.username.data,
+                    'PASSWORD': form.password.data,
+                }
             )
             id_token = response['AuthenticationResult']['IdToken']
             session['id_token'] = id_token
-            flash('Logged in successfully!', 'success')
-            return redirect(url_for('main.dashboard'))
+            user = db.session.query(User).filter_by(username=form.username.data).first()
+            if user:
+                print(f"Fetched role for {user.username}: {user.role}")  # Debug role value
+                user_role = user.role.strip().lower()
+                session['user_role'] = user.role  # Assuming 'role' is a field in your User model
+ 
+                # Redirect to respective dashboard based on user role
+                if user_role == 'driver':
+                    flash('Logged in successfully!', 'success')
+                    return redirect(url_for('main.driver_dash'))  # Redirect to driver dashboard
+                elif user_role == 'sponsor':
+                    flash('Logged in successfully!', 'success')
+                    return redirect(url_for('main.sponsor_dash'))  # Redirect to sponsor dashboard
+                elif user_role == 'admin':
+                    flash('Logged in successfully!', 'success')
+                    return redirect(url_for('main.admin_dash'))  # Redirect to admin dashboard
+                else:
+                    flash('User role is not recognized.', 'danger')
+                    return redirect(url_for('auth.login'))  # Redirect if role is not recognized
+            else:
+                flash('User not found.', 'danger')
+ 
         except cognito_client.exceptions.NotAuthorizedException:
             flash('Invalid username or password.', 'danger')
         except Exception as e:
             flash(f'An error occurred: {str(e)}', 'danger')
-
+ 
     return render_template('Destination/login.html', form=form)
 
 @auth_bp.route('/signup', methods=['GET', 'POST'])
@@ -83,7 +109,8 @@ def signup():
 @auth_bp.route('/logout')
 @login_required
 def logout():
-    session.pop('id_token', None)
+    session.clear()
+    logout_user()
     flash('You have been logged out.', 'info')
     return redirect(url_for('main.destination'))
 
@@ -165,3 +192,22 @@ def delete_user():
         flash(f'An error occurred: {str(e)}', 'error')
     return redirect(url_for('auth.login'))
 
+
+@auth_bp.route('/profile', methods=['GET', 'POST'])
+@login_required
+def profile():
+    if request.method == 'POST':
+        # Update user information
+        current_user.username = request.form['username']
+        current_user.email = request.form['email']
+        # Add more fields as necessary
+        try:
+            db.session.commit()  # Save the changes to the database
+            flash('Your profile has been updated successfully!', 'success')
+        except Exception as e:
+            db.session.rollback()
+            flash('An error occurred while updating your profile.', 'error')
+        return redirect(url_for('auth.profile'))
+    
+    # Render the profile page
+    return render_template('profile.html', user=current_user)

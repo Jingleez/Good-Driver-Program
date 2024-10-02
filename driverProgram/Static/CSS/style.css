@@ -193,3 +193,85 @@ footer {
     margin: 10px 0; /* Space between names */
     font-size: 1.2rem; /* Font size for names */
 }
+
+/*  Sponsor dashboard */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: Arial, sans-serif;
+    background-color: #f4f4f4;
+}
+
+header {
+    background-color: #333;
+    color: #fff;
+    padding: 10px;
+    text-align: center;
+}
+
+nav ul {
+    list-style-type: none;
+}
+
+nav ul li {
+    display: inline;
+    margin-right: 20px;
+}
+
+nav ul li a {
+    color: #fff;
+    text-decoration: none;
+}
+
+.dashboard-container {
+    display: flex;
+}
+
+.sidebar-menu {
+    width: 250px;
+    background-color: #222;
+    padding: 20px;
+    height: 100vh;
+    position: fixed;
+}
+
+.sidebar-menu ul {
+    list-style-type: none;
+}
+
+.sidebar-menu ul li {
+    margin-bottom: 20px;
+}
+
+.sidebar-menu ul li a {
+    color: #fff;
+    text-decoration: none;
+    font-size: 18px;
+    display: block;
+    padding: 10px;
+    background-color: #333;
+    border-radius: 5px;
+}
+
+.sidebar-menu ul li a:hover {
+    background-color: #575757;
+}
+
+.content-area {
+    flex: 1;
+    margin-left: 270px;
+    padding: 20px;
+}
+
+.content-area h2 {
+    margin-bottom: 20px;
+}
+
+.content-area section {
+    margin-bottom: 30px;
+}
+

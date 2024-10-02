@@ -1,0 +1,38 @@
+<!-- dash.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ title }}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='CSS/style.css') }}">
+</head>
+<body>
+    <header>
+        <h1>{{ title }}</h1>
+        <nav>
+            <ul>
+                <li><a href="{{ url_for('main.destination') }}">Home</a></li>
+                <li><a href="{{ url_for('auth.logout') }}">Logout</a></li>
+            </ul>
+        </nav>
+    </header>
+    
+    <div class="dashboard-container">
+        <!-- Sidebar Menu -->
+        <nav class="sidebar-menu">
+            <ul>
+                <!-- Placeholder for role-specific links -->
+                {% block sidebar %}{% endblock %}
+            </ul>
+        </nav>
+        
+        <!-- Main Content Area -->
+        <main class="content-area">
+            <h2>{{ title }}</h2>
+            <!-- Placeholder for role-specific content -->
+            {% block content %}{% endblock %}
+        </main>
+    </div>
+</body>
+</html>

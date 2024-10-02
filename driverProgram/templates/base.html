@@ -54,6 +54,16 @@
             color: #721c24; /* Error message text color */
         }
     </style>
+    
+    <script>
+        window.onload = function() {
+            const flashMessage = "{{ get_flashed_messages()[0] if get_flashed_messages() else '' }}";
+            if (flashMessage) {
+                alert(flashMessage);  // Show flash message as a pop-up
+            }
+        }
+    </script>
+
 </head>
 <body>
     <nav>

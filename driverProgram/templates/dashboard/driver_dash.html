@@ -1,35 +1,16 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Driver Dashboard</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='CSS/style.css') }}">
-</head>
-<body>
-    <header>
-        <h1>Welcome to the Driver Dashboard, {{ current_user.first_name }}!</h1>
-        <nav>
-            <ul>
-                <li><a href="{{ url_for('main.destination') }}">Home</a></li>
-                <li><a href="{{ url_for('main.messages') }}">Messages</a></li>
-                <li><a href="{{ url_for('main.browse_organizations') }}">Browse Organizations</a></li>
-                <li><a href="{{ url_for('main.current_organization') }}">Current Organization</a></li>
-                <li><a href="{{ url_for('auth.logout') }}">Logout</a></li>
-            </ul>
-        </nav>
-    </header>
-    <main>
-        <h2>Your Trips</h2>
-        <table>
-            <thead>
-                <tr>
-                    <th>Trip ID</th>
-                    <th>Destination</th>
-                    <th>Status</th>
-                </tr>
-            </thead>
-        </table>
-    </main>
-</body>
-</html>
+<!-- driver_dash.html -->
+{% extends 'dash.html' %}
+
+{% block title %}Driver Dashboard{% endblock %}
+
+{% block sidebar %}
+    <li>Profile</li>
+    <li>View Points</li>
+    <li>Redeem Rewards</li>
+{% endblock %}
+
+{% block content %}
+    <section>
+        <p>This is the driver dashboard content.</p>
+    </section>
+{% endblock %}
