@@ -5,8 +5,144 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Driver Dashboard</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='CSS/style.css') }}">
+    <style>
+        /* General Styling */
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f5f5f5;
+        }
+
+        header {
+            background-color: #007bff;
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+
+        nav ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+        }
+
+        nav ul li {
+            display: inline;
+        }
+
+        nav ul li a {
+            color: white;
+            text-decoration: none;
+            font-weight: bold;
+        }
+
+        main {
+            max-width: 1200px;
+            margin: 40px auto;
+            padding: 20px;
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        h2 {
+            margin-bottom: 20px;
+            color: #007bff;
+        }
+
+        .points-section, .trips-section, .purchase-history {
+            margin-bottom: 40px;
+        }
+
+        .points-box {
+            background-color: #e9f5ff;
+            padding: 20px;
+            border-radius: 8px;
+            text-align: center;
+            font-size: 1.5rem;
+            margin-bottom: 20px;
+        }
+
+        .points-box h3 {
+            margin: 0 0 10px 0;
+            font-size: 2rem;
+            color: #007bff;
+        }
+
+        .catalog-btn {
+            background-color: #007bff;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            font-size: 1rem;
+            cursor: pointer;
+            text-decoration: none;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        table th, table td {
+            padding: 15px;
+            text-align: left;
+            border: 1px solid #ddd;
+        }
+
+        table th {
+            background-color: #007bff;
+            color: white;
+        }
+
+        .purchase-history table th {
+            background-color: #28a745;
+        }
+
+        .status {
+            font-weight: bold;
+            color: #28a745; /* Green for good status */
+        }
+
+        .status.pending {
+            color: #ffc107; /* Yellow for pending */
+        }
+
+        .status.canceled {
+            color: #dc3545; /* Red for canceled */
+        }
+
+        .btn-container {
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .update-btn, .cancel-btn {
+            padding: 10px;
+            border: none;
+            color: white;
+            cursor: pointer;
+            border-radius: 5px;
+            font-size: 1rem;
+        }
+
+        .update-btn {
+            background-color: #28a745;
+        }
+
+        .cancel-btn {
+            background-color: #dc3545;
+        }
+
+    </style>
 </head>
 <body>
+    <!-- Header Section -->
     <header>
         <h1>Welcome to the Driver Dashboard, {{ current_user.first_name }}!</h1>
         <nav>
@@ -19,17 +155,79 @@
             </ul>
         </nav>
     </header>
+
+    <!-- Main Content Section -->
     <main>
-        <h2>Your Trips</h2>
-        <table>
-            <thead>
-                <tr>
-                    <th>Trip ID</th>
-                    <th>Destination</th>
-                    <th>Status</th>
-                </tr>
-            </thead>
-        </table>
+        <!-- Points Section -->
+        <div class="points-section">
+            <h2>Your Points</h2>
+            <div class="points-box">
+                <h3>{{ current_user.points }} Points</h3>
+                <p>Earn more points by practicing safe driving behavior!</p>
+            </div>
+            <a href="{{ url_for('main.browse_catalog') }}" class="catalog-btn">Browse Product Catalog</a>
+        </div>
+
+        <!-- Trips Section -->
+        <div class="trips-section">
+            <h2>Your Trips</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Trip ID</th>
+                        <th>Destination</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for trip in trips %}
+                    <tr>
+                        <td>{{ trip.id }}</td>
+                        <td>{{ trip.destination }}</td>
+                        <td class="status {% if trip.status == 'Pending' %}pending{% elif trip.status == 'Canceled' %}canceled{% else %}completed{% endif %}">
+                            {{ trip.status }}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Purchase History Section -->
+        <div class="purchase-history">
+            <h2>Purchase History</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Product</th>
+                        <th>Date Purchased</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for purchase in purchases %}
+                    <tr>
+                        <td>{{ purchase.product_name }}</td>
+                        <td>{{ purchase.date_purchased }}</td>
+                        <td class="status {% if purchase.status == 'Pending' %}pending{% elif purchase.status == 'Canceled' %}canceled{% else %}completed{% endif %}">
+                            {{ purchase.status }}
+                        </td>
+                        <td>
+                            <div class="btn-container">
+                                {% if purchase.status == 'Pending' %}
+                                    <button class="update-btn">Update</button>
+                                    <button class="cancel-btn">Cancel</button>
+                                {% else %}
+                                    <span>N/A</span>
+                                {% endif %}
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
     </main>
 </body>
 </html>

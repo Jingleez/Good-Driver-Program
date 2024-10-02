@@ -1,27 +1,152 @@
 {% extends "base.html" %}
 
 {% block content %}
-    <div class="destination-page">
-        <section class="welcome-section">
-            <h1 class="page-title">Welcome to BigRig Bonuses</h1>
-            <p class="intro-text">
-                Discover your rewards and track your journey to better driving performance. Earn points, redeem prizes, and see your progress!
+    <!-- Hero Section -->
+    <section class="hero-section">
+        <div class="hero-overlay">
+            <h1 class="hero-title">Welcome to BigRig Bonuses</h1>
+            <p class="hero-text">
+                Discover your rewards and track your journey to better driving performance. Earn points, redeem prizes, and improve your skills!
             </p>
-        </section>
+            <a href="#" class="hero-btn">Get Started</a>
+        </div>
+    </section>
 
-        <section class="features-section">
+    <!-- Features Section -->
+    <section class="features-section">
+        <div class="container">
             <div class="feature-card">
+                <div class="feature-icon">
+                    <i class="fas fa-tachometer-alt"></i>
+                </div>
                 <h2>Track Your Points</h2>
-                <p>Stay on top of your performance and see how many points you've earned.</p>
+                <p>Monitor your driving performance and see how many points you've earned.</p>
+                <a href="#" class="cta-btn">Check Your Points</a>
             </div>
+
             <div class="feature-card">
+                <div class="feature-icon">
+                    <i class="fas fa-gift"></i>
+                </div>
                 <h2>Redeem Amazing Prizes</h2>
-                <p>Use your points to claim rewards from the BigRig Bonuses catalog.</p>
+                <p>Use your points to claim exciting rewards from our catalog.</p>
+                <a href="#" class="cta-btn">Browse Catalog</a>
             </div>
+
             <div class="feature-card">
+                <div class="feature-icon">
+                    <i class="fas fa-award"></i>
+                </div>
                 <h2>Improve Your Skills</h2>
                 <p>Earn more points by becoming a top driver and following safe driving practices.</p>
+                <a href="#" class="cta-btn">Learn More</a>
             </div>
-        </section>
-    </div>
+        </div>
+    </section>
+
+    <style>
+        /* Hero Section */
+        .hero-section {
+            background: url('{{ url_for('static', filename='img/background.jpg') }}') no-repeat center center/cover;
+            height: 80vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            text-align: center;
+            position: relative;
+        }
+
+        .hero-overlay {
+            background-color: rgba(0, 0, 0, 0.5);
+            padding: 50px;
+            border-radius: 10px;
+        }
+
+        .hero-title {
+            font-size: 3rem;
+            font-weight: bold;
+        }
+
+        .hero-text {
+            font-size: 1.2rem;
+            margin: 20px 0;
+        }
+
+        .hero-btn {
+            padding: 15px 30px;
+            background-color: #007bff;
+            color: white;
+            text-decoration: none;
+            font-size: 1.2rem;
+            border-radius: 5px;
+            transition: background-color 0.3s ease;
+        }
+
+        .hero-btn:hover {
+            background-color: #0056b3;
+        }
+
+        /* Features Section */
+        .features-section {
+            padding: 60px 20px;
+            background-color: #f8f9fa;
+        }
+
+        .container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 40px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .feature-card {
+            background-color: white;
+            border-radius: 10px;
+            padding: 40px;
+            text-align: center;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .feature-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+        }
+
+        .feature-icon {
+            font-size: 3rem;
+            color: #007bff;
+            margin-bottom: 20px;
+        }
+
+        .cta-btn {
+            padding: 12px 20px;
+            background-color: #007bff;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+            transition: background-color 0.3s ease;
+        }
+
+        .cta-btn:hover {
+            background-color: #0056b3;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .hero-title {
+                font-size: 2.5rem;
+            }
+
+            .hero-text {
+                font-size: 1rem;
+            }
+
+            .container {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
 {% endblock %}

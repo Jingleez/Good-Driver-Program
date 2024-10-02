@@ -1,29 +1,152 @@
-<!-- app/templates/login.html -->
 {% extends "base.html" %}
+
 {% block content %}
-    <h2>Login</h2>
-    <form method="POST" action="{{ url_for('auth.login') }}">
-        {{ form.hidden_tag() }}
-        <p>
-            {{ form.username.label }}<br>
-            {{ form.username(size=32, value=form.username.data or '') }}<br>
-            {% for error in form.username.errors %}
-                <span class="error">{{ error }}</span>
-            {% endfor %}
-        </p>
-        <p>
-            {{ form.password.label }}<br>
-            {{ form.password(size=32) }}<br>
-            {% for error in form.password.errors %}
-                <span class="error">{{ error }}</span>
-            {% endfor %}
-        </p>
-        <p>
-            {{form.remember_me() }} {{form.remember_me.label }}
-            <span style="padding-left: 40px;">
-                <a href="{{ url_for('auth.reset_request') }}">Forgot Password?</a>
-            </span>
-        <p>
-        <p>{{ form.submit() }}</p>
-    </form>
+    <div class="login-container">
+        <div class="login-card">
+            <h2 class="login-title">Login to Your Account</h2>
+            <form method="POST" action="{{ url_for('auth.login') }}" class="login-form">
+                {{ form.hidden_tag() }}
+
+                <!-- Username Field -->
+                <div class="form-group">
+                    <label for="username">{{ form.username.label.text }}</label>
+                    {{ form.username(class="form-control", id="username") }}
+                    {% for error in form.username.errors %}
+                        <span class="error">{{ error }}</span>
+                    {% endfor %}
+                </div>
+
+                <!-- Password Field -->
+                <div class="form-group">
+                    <label for="password">{{ form.password.label.text }}</label>
+                    {{ form.password(class="form-control", id="password") }}
+                    {% for error in form.password.errors %}
+                        <span class="error">{{ error }}</span>
+                    {% endfor %}
+                </div>
+
+                <!-- Remember Me & Forgot Password -->
+                <div class="form-group remember-group">
+                    <label class="form-check-label">
+                        {{ form.remember_me(class="form-check-input") }} Remember Me
+                    </label>
+                    <a href="{{ url_for('auth.reset_request') }}" class="forgot-password">Forgot Password?</a>
+                </div>
+
+                <!-- Submit Button -->
+                <div class="form-group">
+                    {{ form.submit(class="btn btn-primary btn-block") }}
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Add styling for the page -->
+    <style>
+        /* Page Container */
+        .login-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background-color: #f7f9fc;
+            padding: 20px;
+        }
+
+        /* Login Card */
+        .login-card {
+            background-color: #fff;
+            padding: 40px;
+            border-radius: 10px;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 400px;
+            transition: box-shadow 0.3s ease;
+        }
+
+        .login-card:hover {
+            box-shadow: 0 12px 25px rgba(0, 0, 0, 0.2);
+        }
+
+        /* Form Styles */
+        .login-title {
+            font-size: 1.8rem;
+            color: #007bff;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            font-size: 1rem;
+        }
+
+        .form-check-input {
+            margin-right: 10px;
+        }
+
+        .remember-group {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .forgot-password {
+            color: #007bff;
+            text-decoration: none;
+            font-size: 0.9rem;
+        }
+
+        .forgot-password:hover {
+            text-decoration: underline;
+        }
+
+        /* Submit Button */
+        .btn-block {
+            width: 100%;
+            padding: 12px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: 1.2rem;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        .btn-block:hover {
+            background-color: #0056b3;
+        }
+
+        /* Error Messages */
+        .error {
+            color: #dc3545;
+            font-size: 0.9rem;
+            margin-top: 5px;
+            display: block;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .login-card {
+                padding: 30px;
+            }
+
+            .login-title {
+                font-size: 1.5rem;
+            }
+
+            .btn-block {
+                font-size: 1rem;
+            }
+        }
+    </style>
 {% endblock %}
