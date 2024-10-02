@@ -1,195 +1,170 @@
 /* General Styles */
 body {
     font-family: Arial, sans-serif;
+    background-color: #f8f9fa; /* Light background color */
     margin: 0;
     padding: 0;
-    line-height: 1.6;
-    background-color: white;
 }
 
-/* Header Styles */
-#top-navbar {
+/* Navbar Styles */
+nav {
+    background-color: #007bff; /* Primary color for the navbar */
+    color: white;
+    padding: 10px;
     display: flex;
     justify-content: space-between;
     align-items: center;
-    background-color: #333;
-    color: white;
-    padding: 15px 30px;
 }
 
-#top-navbar a {
-    color: white;
-    text-decoration: none;
-}
-
-/* Hero Section */
-#hero {
-    background-color: #3498db;
-    color: white;
-    text-align: center;
-    padding: 100px 0;
-}
-
-.hero-content {
-    max-width: 600px;
-    margin: 0 auto;
-}
-
-.btn {
-    background-color: #28a745;
-    color: white;
-    padding: 10px 20px;
-    border-radius: 5px;
-    text-decoration: none;
-}
-
-.btn:hover {
-    background-color: #218838;
-}
-
-/* Features Section */
-#features {
-    padding: 50px 0;
-}
-
-.feature-list {
-    display: flex;
-    justify-content: space-around;
-}
-
-.feature-item {
-    text-align: center;
-    max-width: 200px;
-}
-
-/* Footer Styles */
-footer {
-    background-color: #333;
-    color: white;
-    text-align: center;
-    padding: 20px 0;
-}
-
-.footer-links {
-    list-style: none;
+nav ul {
+    list-style-type: none;
     padding: 0;
+    margin: 0;
 }
 
-.footer-links li {
+nav ul li {
     display: inline;
-    margin: 0 10px;
+    margin-right: 15px;
 }
 
-/* Destination Page Styles */
-.destination-page {
+nav a {
+    color: white;
+    text-decoration: none;
+}
+
+nav a:hover {
+    text-decoration: underline; /* Add underline on hover */
+}
+
+/* Profile dropdown */
+.profile-dropdown {
+    position: relative;
+    display: inline-block;
+}
+
+.profile-dropdown-content {
+    display: none;
+    position: absolute;
+    right: 0;
+    background-color: white;
+    min-width: 160px;
+    box-shadow: 0px 8px 16px rgba(0, 0, 0, 0.2);
+    z-index: 1;
+}
+
+.profile-dropdown-content a {
+    color: black;
+    padding: 12px 16px;
+    text-decoration: none;
+    display: block;
+}
+
+.profile-dropdown-content a:hover {
+    background-color: #f1f1f1;
+}
+
+.profile-dropdown:hover .profile-dropdown-content {
+    display: block;
+}
+
+.profile-dropdown img {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    cursor: pointer;
+}
+
+/* Container Styles */
+.container {
+    max-width: 800px;
+    margin: 20px auto;
+    padding: 20px;
+    background-color: white; /* White background for content */
+    border-radius: 5px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1); /* Subtle shadow effect */
+}
+
+/* Flash Messages */
+.flash {
+    padding: 10px;
+    margin-bottom: 20px;
+    border-radius: 5px;
+}
+
+.flash.success {
+    background-color: #d4edda; /* Success message background */
+    color: #155724; /* Success message text color */
+}
+
+.flash.error {
+    background-color: #f8d7da; /* Error message background */
+    color: #721c24; /* Error message text color */
+}
+
+/* Dashboard Border */
+.dashboard-section {
+    border: 3px solid #007bff; /* Blue border for consistency */
+    border-radius: 8px;
+    padding: 20px;
+    margin: 20px;
+    background-color: white;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+/* Common border styles */
+.dashboard-section, 
+#sponsor-dashboard {
     max-width: 1200px;
     margin: 40px auto;
     padding: 20px;
-    background-color: white;
+    background-color: var(--amazon-white);
     border-radius: 10px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Subtle shadow effect */
+    border: 1px solid #007bff; /* Blue border consistent with header */
 }
 
-.welcome-section {
-    text-align: center;
-    margin-bottom: 50px;
-    background: url('../img/background.jpg') no-repeat center center/cover;
-    padding: 100px 20px;
+/* Sidebar for sponsor dashboard */
+.sponsor-sidebar {
+    background-color: #007bff;
+    padding: 20px;
     color: white;
     border-radius: 10px;
 }
 
-.page-title {
-    font-size: 2.5rem;
-    color: white;
-    margin-bottom: 20px;
-}
-
-.intro-text {
-    font-size: 1.2rem;
-    color: white;
-    margin-bottom: 30px;
-}
-
-.cta-button {
-    display: inline-block;
-    padding: 10px 20px;
-    background-color: #e67e22;
+/* Links inside the sponsor sidebar */
+.sponsor-sidebar a {
+    display: block;
     color: white;
     text-decoration: none;
+    padding: 10px;
+    background-color: #0056b3;
     border-radius: 5px;
-    transition: background-color 0.3s ease;
-}
-
-.cta-button:hover {
-    background-color: #d35400;
-}
-
-/* Features Section for Destination Page */
-.features-section {
-    display: flex;
-    justify-content: space-around;
-    flex-wrap: wrap;
-    gap: 20px;
-}
-
-.feature-card {
-    flex: 1 1 calc(33% - 20px);
-    padding: 20px;
-    background-color: #ecf0f1;
-    border-radius: 10px;
-    text-align: center;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-    transition: transform 0.3s ease;
-}
-
-.feature-card h2 {
-    color: #2980b9;
-    margin-bottom: 15px;
-}
-
-.feature-card p {
-    color: #7f8c8d;
-}
-
-.feature-card:hover {
-    transform: translateY(-5px);
-}
-
-/* Responsive Design */
-@media (max-width: 768px) {
-    .features-section {
-        flex-direction: column;
-    }
-
-    .feature-card {
-        flex: 1 1 100%;
-    }
-}
-
-/* Founders Section Styles */
-#founders {
-    margin: 40px 0;
-    padding: 20px;
-    background-color: #ecf0f1; /* Light gray background */
-    border-radius: 10px;
+    margin-bottom: 10px;
     text-align: center;
 }
 
-#founders h2 {
-    color: #2980b9; /* Blue color for the title */
+.sponsor-sidebar a:hover {
+    background-color: #004085;
 }
 
-#founders p {
-    color: #34495e; /* Dark gray for the paragraph */
-}
-
-#founders ul {
-    list-style-type: none; /* Remove default list styling */
+/* General adjustments */
+body {
+    font-family: Arial, sans-serif;
+    background-color: #f8f9fa;
+    margin: 0;
     padding: 0;
 }
 
-#founders li {
-    margin: 10px 0; /* Space between names */
-    font-size: 1.2rem; /* Font size for names */
+/* Ensure that the whole sponsor dashboard container is aligned */
+#sponsor-dashboard-container {
+    display: flex;
+    gap: 20px;
+}
+
+#sponsor-content {
+    flex-grow: 1;
+    background-color: var(--amazon-white);
+    border-radius: 10px;
+    padding: 20px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Subtle shadow effect */
+    border: 1px solid #007bff;
 }

@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>View Profile</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='CSS/style.css') }}">
+    <style>
+        body {
+            font-family: 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #f0f2f5, #e3ebf0);
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+        .profile-container {
+            max-width: 600px;
+            margin: 50px auto;
+            padding: 40px;
+            background-color: white;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+            text-align: center;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        .profile-container:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+        }
+        .profile-container h1 {
+            font-size: 32px;
+            color: #333;
+            margin-bottom: 20px;
+            font-weight: 700;
+            letter-spacing: 1px;
+        }
+        .profile-picture img {
+            width: 150px;
+            height: 150px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 4px solid #007bff;
+            margin-bottom: 20px;
+            transition: transform 0.3s ease;
+        }
+        .profile-picture img:hover {
+            transform: scale(1.1);
+        }
+        .profile-info {
+            text-align: left;
+            margin-bottom: 30px;
+        }
+        .profile-info p {
+            margin: 15px 0;
+            font-size: 18px;
+            line-height: 1.6;
+        }
+        .profile-info label {
+            font-weight: 600;
+            margin-right: 10px;
+            color: #555;
+            font-size: 18px;
+        }
+        .edit-btn {
+            background-color: #007bff;
+            color: white;
+            padding: 12px 25px;
+            border: none;
+            border-radius: 30px;
+            cursor: pointer;
+            text-decoration: none;
+            font-size: 16px;
+            transition: background-color 0.3s ease, transform 0.2s ease;
+            box-shadow: 0 5px 15px rgba(0, 123, 255, 0.4);
+        }
+        .edit-btn:hover {
+            background-color: #0056b3;
+            transform: scale(1.05);
+        }
+        .profile-settings {
+            margin-top: 20px;
+        }
+    </style> 
+</head>
+<body>
+    <div class="profile-container">
+        <h1>View Profile</h1>
+        <div class="profile-picture">
+            <img src="{{ url_for('static', filename='img/https://i.seadn.io/gae/liO0lpJHRuZtRTl0Y0g7D3MLfJu6FbF95k_whIbsyRtkXSTTaG_XjKL25LNW_R6l9HPn580vbYSBoJ_4Evi0CPGCVavqJoR90boi?auto=format&w=3840') }}" alt="Profile Picture">
+        </div>
+        <div class="profile-info">
+            <p><label>Username:</label> {{ current_user.username }}</p>
+            <p><label>Email:</label> {{ current_user.email }}</p>
+            <p><label>First Name:</label>{{ 'Add later' }}</p>
+            <p><label>Last Name:</label> {{ 'Add later'}}</p>
+            <p><label>Role:</label> {{ 'Add later' }}</p>
+        </div>
+        <a href="{{ url_for('main.edit_profile') }}" class="edit-btn">Edit Profile</a>
+        <!--come back and work on profile setting later
+        <a href="{{ url_for('main.edit_profile') }}" class="edit-btn">Profile Settings</a> -->
+    </div>
+</body>
+</html>
