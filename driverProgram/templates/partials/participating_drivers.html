@@ -1,0 +1,10 @@
+<section>
+    <h2>Participating Drivers</h2>
+    <p>List of drivers participating in the sponsor's program.</p>
+
+    <ul>
+        {% for driver in drivers %}
+        <li>{{ driver.name }} - {{ driver.company }}</li>
+        {% endfor %}
+    </ul>
+</section>

@@ -1,0 +1,81 @@
+<section>
+    <style>
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            font-size: 16px;
+        }
+    
+        table thead {
+            background-color: #007bff;
+            color: white;
+        }
+    
+        table th, table td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+    
+        button {
+            padding: 8px 12px;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-right: 5px;
+        }
+    
+        .approve-btn {
+            background-color: #28a745;
+        }
+    
+        .reject-btn {
+            background-color: #dc3545;
+        }
+    
+        button:hover {
+            opacity: 0.8;
+        }
+    </style>
+    
+    <h2>Approve Driver Applications</h2>
+    <p>List of driver applications pending approval.</p>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Driver Name</th>
+                <th>Application Date</th>
+                <th>Status</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for app in applications %}
+            <tr>
+                <td>{{ app.name }}</td>
+                <td>{{ app.date }}</td>
+                <td>{{ app.status }}</td>
+                <td>
+                    <button class="approve-btn" onclick="approveApplication({{ app.id }})">Approve</button>
+                    <button class="reject-btn" onclick="rejectApplication({{ app.id }})">Reject</button>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>        
+    </table>
+
+    <script>
+        function approveApplication(appId) {
+            // Handle approval logic
+            console.log('Approved Application ID:', appId);
+        }
+
+        function rejectApplication(appId) {
+            // Handle rejection logic
+            console.log('Rejected Application ID:', appId);
+        }
+    </script>
+</section>

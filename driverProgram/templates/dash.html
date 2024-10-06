@@ -13,7 +13,11 @@
         <nav>
             <ul>
                 <li><a href="{{ url_for('main.destination') }}">Home</a></li>
-                <li><a href="{{ url_for('auth.logout') }}">Logout</a></li>
+                {% if current_user.is_authenticated %}
+                    <li><a href="{{ url_for('main.dashboard') }}">Dashboard</a></li>
+                    <li><a href="{{ url_for('auth.logout') }}">Logout</a></li>
+                {% endif %}
+                <li><a href="{{ url_for('main.about') }}">About</a></li>
             </ul>
         </nav>
     </header>

@@ -83,8 +83,14 @@ def signup():
             if not phone_number.startswith('+'):
                 phone_number = '+1' + re.sub(r'\D', '', phone_number)
 
-            # Once the user signs up, the program adds the user with Cognito
-            response = cognito_client.sign_up( ClientId=CognitoClientId, Username=form.username.data, Password=form.password.data,
+            # Hash the password before signing up
+            password_hash = generate_password_hash(form.password.data)
+
+            # Sign up with Cognito
+            response = cognito_client.sign_up(
+                ClientId=CognitoClientId,
+                Username=form.username.data,
+                Password=form.password.data,
                 UserAttributes=[
                     {'Name': 'email', 'Value': form.email.data},
                     {'Name': 'name', 'Value': form.first_name.data + " " + form.last_name.data},
@@ -95,7 +101,10 @@ def signup():
                 ]
             )
             new_user = User(
-                username=form.username.data, email=form.email.data, role=form.role.data,
+                username=form.username.data,
+                email=form.email.data,
+                password_hash=password_hash,  # Set the hashed password here
+                role=form.role.data,
                 sponsor_code=form.sponsor_code.data if form.role.data == 'sponsor' else None
             )
             db.session.add(new_user)
@@ -112,7 +121,7 @@ def logout():
     session.clear()
     logout_user()
     flash('You have been logged out.', 'info')
-    return redirect(url_for('main.destination'))
+    return redirect(url_for('auth.login'))
 
 # This function implements the password reset and confirmation functionality using Cognito
 @auth_bp.route('/reset_request', methods=['GET', 'POST'])

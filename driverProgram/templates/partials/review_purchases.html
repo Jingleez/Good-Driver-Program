@@ -1,0 +1,20 @@
+<h2>Review Purchases</h2>
+<p>Here is a list of your past and pending purchases:</p>
+
+<ul>
+    {% for purchase in purchases %}
+    <li>
+        <strong>{{ purchase.product_name }}</strong> - {{ purchase.status }}
+        {% if purchase.status == 'Pending' %}
+        <button onclick="cancelPurchase({{ purchase.id }})">Cancel</button>
+        {% endif %}
+    </li>
+    {% endfor %}
+</ul>
+
+<script>
+    function cancelPurchase(purchaseId) {
+        // Handle purchase cancellation logic
+        console.log('Cancelled Purchase ID:', purchaseId);
+    }
+</script>

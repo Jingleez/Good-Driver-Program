@@ -1,4 +1,3 @@
-# driverProgram/__init__.py
 from flask import Flask
 from flask_login import LoginManager
 from flask_sqlalchemy import SQLAlchemy
@@ -29,9 +28,12 @@ def create_app():
     login_manager.login_view = 'auth.login'
     login_manager.init_app(app)
 
+    # Import models inside the create_app function to avoid circular import
+    from .models import User
+
     @login_manager.user_loader
     def load_user(user_id):
-        return User.query.get(int(user_id)) if User else None
+        return User.query.get(int(user_id))
 
     from .routes.auth import auth_bp
     from .routes.main import main_bp
@@ -43,7 +45,7 @@ def create_app():
     app.config['MAIL_USE_SSL'] = True
     app.config['MAIL_USERNAME'] = os.environ.get('MAIL_USERNAME')
     app.config['MAIL_PASSWORD'] = os.environ.get('MAIL_PASSWORD')
-    mail = Mail(app)
+    mail.init_app(app)
 
     app.config['REMEMBER_COOKIE_DURATION'] = timedelta(days=7)
 

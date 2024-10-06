@@ -1,15 +1,290 @@
-<!-- admin_dash.html -->
-{% extends 'dash.html' %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - Fortune 500 Style</title>
 
-{% block title %}Admin Dashboard{% endblock %}
+    <!-- Google Fonts for Professional Typography -->
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
 
-{% block sidebar %}
-    <li>Manage Users</li>
-    <li>Review Reports</li>
-{% endblock %}
+    <!-- Font Awesome for Icons -->
+    <script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
 
-{% block content %}
-    <section>
-        <p>This is the admin dashboard content.</p>
-    </section>
-{% endblock %}
+    <style>
+        /* General Body Styling */
+        body {
+            font-family: 'Roboto', sans-serif;
+            background-color: #f4f6f8;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            color: #333;
+            overflow-x: hidden;
+        }
+
+        /* Top Navigation Bar */
+        nav.top-nav {
+            background-color: #0b3d91;
+            color: white;
+            padding: 10px 30px;
+            position: fixed;
+            top: 0;
+            width: 100%;
+            z-index: 1000;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        /* Top Nav Links */
+        nav.top-nav ul {
+            list-style: none;
+            margin: 0;
+            padding: 0;
+            display: flex;
+        }
+
+        nav.top-nav ul li {
+            margin: 0 15px;
+        }
+
+        nav.top-nav ul li a {
+            color: white;
+            text-decoration: none;
+            font-size: 1.1em;
+            font-weight: 500;
+            padding: 10px;
+        }
+
+        nav.top-nav ul li a:hover {
+            background-color: #274c9d;
+            border-radius: 5px;
+            transition: background-color 0.3s;
+        }
+
+        /* Container for Sidebar and Content */
+        .container {
+            display: flex;
+            margin-top: 60px; /* Offset for top nav */
+            height: 100%;
+        }
+
+        /* Sidebar Styling */
+        .sidebar-menu {
+            background-color: #ffffff;
+            color: #0b3d91;
+            padding-top: 20px;
+            width: 250px;
+            height: calc(100vh - 60px); /* Adjust height with top nav */
+            transition: all 0.3s ease;
+            box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .sidebar-menu.collapsed {
+            width: 70px;
+        }
+
+        .sidebar-menu ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .sidebar-menu ul li {
+            padding: 15px 20px;
+            display: flex;
+            align-items: center;
+            white-space: nowrap;
+            overflow: hidden;
+        }
+
+        .sidebar-menu ul li a {
+            color: #0b3d91;
+            text-decoration: none;
+            font-size: 1.1em;
+            display: flex;
+            align-items: center;
+            transition: color 0.3s;
+        }
+
+        .sidebar-menu ul li a:hover {
+            background-color: #f0f4ff;
+            border-radius: 8px;
+        }
+
+        .sidebar-menu ul li a i {
+            margin-right: 10px;
+            font-size: 1.2em;
+        }
+
+        .sidebar-menu.collapsed ul li a span {
+            display: none;
+        }
+
+        /* Sidebar Toggle */
+        .sidebar-toggle {
+            padding: 10px;
+            background-color: #0b3d91;
+            border: none;
+            color: white;
+            position: fixed;
+            top: 70px;
+            left: 260px;
+            font-size: 20px;
+            cursor: pointer;
+            z-index: 1001;
+            transition: left 0.3s ease;
+        }
+
+        .collapsed + .sidebar-toggle {
+            left: 90px;
+        }
+
+        /* Main Content Area */
+        .content-area {
+            margin-left: 250px;
+            padding: 40px;
+            flex-grow: 1;
+            background-color: #ffffff;
+            border-radius: 10px;
+            margin: 20px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            overflow-y: auto;
+            height: calc(100vh - 110px); /* Full height minus nav and padding */
+            transition: margin-left 0.3s ease;
+        }
+
+        .collapsed + .content-area {
+            margin-left: 90px;
+        }
+
+        h2 {
+            margin-top: 0;
+            font-size: 2em;
+            font-weight: 500;
+            color: #0b3d91;
+        }
+
+        p {
+            line-height: 1.8;
+            font-size: 1.1em;
+            color: #555;
+        }
+
+        /* Sidebar collapsed state */
+        .sidebar-menu.collapsed ul li a i {
+            font-size: 1.6em;
+            margin-right: 0;
+            text-align: center;
+            width: 100%;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .sidebar-menu {
+                width: 200px;
+            }
+
+            .collapsed + .sidebar-toggle {
+                left: 80px;
+            }
+
+            .content-area {
+                margin-left: 200px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            nav.top-nav ul li {
+                margin: 0 5px;
+            }
+
+            .sidebar-menu {
+                width: 150px;
+            }
+
+            .collapsed + .sidebar-toggle {
+                left: 70px;
+            }
+
+            .content-area {
+                margin-left: 150px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Top Navigation Bar -->
+    <nav class="top-nav">
+        <ul>
+            <li><a href="{{ url_for('main.destination') }}">Home</a></li>
+            <li><a href="{{ url_for('main.dashboard') }}">Dashboard</a></li>
+            <li><a href="{{ url_for('main.about') }}">About</a></li>
+        </ul>
+        <ul>
+            <li><a href="{{ url_for('auth.profile') }}">Profile</a></li>
+        </ul>
+    </nav>
+
+    <!-- Container for Sidebar and Content -->
+    <div class="container">
+        <!-- Sidebar Menu -->
+        <nav class="sidebar-menu" id="sidebar">
+            <ul>
+                <li><a href="#" onclick="loadContent('{{ url_for('main.manage_users') }}')"><i class="fas fa-users-cog"></i><span>Manage Users</span></a></li>
+                <li><a href="#" onclick="loadContent('{{ url_for('main.review_reports') }}')"><i class="fas fa-chart-line"></i><span>Review Reports</span></a></li>
+                <li><a href="#" onclick="loadContent('{{ url_for('main.add_users') }}')"><i class="fas fa-user-plus"></i><span>Add New Users</span></a></li>
+                <li><a href="#" onclick="loadContent('{{ url_for('main.admin_reports') }}')"><i class="fas fa-file-alt"></i><span>Generate Reports</span></a></li>
+            </ul>
+        </nav>
+
+        <!-- Sidebar Toggle Button -->
+        <button class="sidebar-toggle" id="sidebarToggle"><i class="fas fa-bars"></i></button>
+
+        <!-- Main Content Area -->
+        <main class="content-area">
+            <section id="dashboard-content">
+                <h2>Welcome to the Admin Dashboard</h2>
+                <p>Manage users, review reports, and perform administrative tasks here.</p>
+            </section>
+        </main>
+    </div>
+
+    <script>
+        // Toggle the sidebar on and off
+        const sidebar = document.getElementById('sidebar');
+        const sidebarToggle = document.getElementById('sidebarToggle');
+        const contentArea = document.querySelector('.content-area');
+
+        sidebarToggle.addEventListener('click', () => {
+            sidebar.classList.toggle('collapsed');
+            sidebarToggle.classList.toggle('collapsed');
+            contentArea.classList.toggle('collapsed');
+        });
+
+        function loadContent(url) {
+            console.log("Loading content from:", url);
+
+            fetch(url)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok');
+                    }
+                    return response.text();
+                })
+                .then(html => {
+                    document.getElementById('dashboard-content').innerHTML = html;
+                })
+                .catch(err => {
+                    console.error('Error loading content:', err);
+                });
+        }
+    </script>
+
+</body>
+</html>

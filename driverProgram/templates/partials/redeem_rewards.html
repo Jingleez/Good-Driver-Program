@@ -1,0 +1,17 @@
+<h2>Redeem Rewards</h2>
+<p>Select from the list of rewards below to redeem your points.</p>
+
+<ul>
+    {% for reward in rewards %}
+    <li><strong>{{ reward.name }}</strong> - {{ reward.points }} Points 
+        <button onclick="redeemReward({{ reward.id }})">Redeem</button>
+    </li>
+    {% endfor %}
+</ul>
+
+<script>
+    function redeemReward(rewardId) {
+        // Handle reward redemption logic
+        console.log('Redeemed Reward ID:', rewardId);
+    }
+</script>
