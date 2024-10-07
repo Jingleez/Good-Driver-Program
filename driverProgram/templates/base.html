@@ -4,95 +4,55 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{{ title if title else "BigRig Bonuses" }}</title>
-<<<<<<< HEAD
-    <link rel="stylesheet" href="{{ url_for('static', filename='CSS/style.css') }}">
-=======
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
->>>>>>> jswanie
     <style>
-        /* General Styles */
         body {
-            font-family: 'Roboto', sans-serif;
-            background-color: #f8f9fa;
-            color: #333;
+            font-family: Arial, sans-serif;
+            background-color: #f8f9fa; /* Light background color */
             margin: 0;
             padding: 0;
         }
-
-        /* Main Header */
-        .main-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 20px;
-            background-color: #007bff;
+        nav {
+            background-color: #007bff; /* Primary color for the navbar */
             color: white;
+            padding: 10px;
         }
-
-        .logo {
-            font-size: 1.8rem;
-            font-weight: bold;
+        nav ul {
+            list-style-type: none;
+            padding: 0;
         }
-
-        .nav-bar ul {
-            list-style: none;
-            display: flex;
-            gap: 20px;
-            margin: 0;
-        }
-
-        .nav-bar ul li {
+        nav ul li {
             display: inline;
+            margin-right: 15px;
         }
-
-        .nav-bar ul li a {
-            text-decoration: none;
+        nav a {
             color: white;
-            font-weight: 500;
-            padding: 10px 20px;
-        }
-
-        .nav-bar ul li a:hover {
-            background-color: #0056b3;
-            border-radius: 5px;
-        }
-
-        .auth-buttons {
-            display: flex;
-            gap: 15px;
-        }
-
-        .auth-btn {
-            padding: 10px 15px;
-            border-radius: 5px;
             text-decoration: none;
-            font-weight: bold;
-            color: white;
         }
-
-        .login-btn {
-            background-color: #0056b3;
+        nav a:hover {
+            text-decoration: underline; /* Add underline on hover */
         }
-
-        .signup-btn {
-            background-color: #28a745;
-        }
-
-        .login-btn:hover, .signup-btn:hover {
-            opacity: 0.9;
-        }
-
-        /* Main Footer */
-        .main-footer {
-            text-align: center;
+        .container {
+            max-width: 800px;
+            margin: 20px auto;
             padding: 20px;
-            background-color: #007bff;
-            color: white;
-            position: relative;
-            bottom: 0;
-            width: 100%;
+            background-color: white; /* White background for content */
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1); /* Subtle shadow effect */
         }
-
+        .flash {
+            padding: 10px;
+            margin-bottom: 20px;
+            border-radius: 5px;
+        }
+        .flash.success {
+            background-color: #d4edda; /* Success message background */
+            color: #155724; /* Success message text color */
+        }
+        .flash.error {
+            background-color: #f8d7da; /* Error message background */
+            color: #721c24; /* Error message text color */
+        }
     </style>
     
     <script>
@@ -106,38 +66,31 @@
 
 </head>
 <body>
-
-    <!-- Header -->
-    <header class="main-header">
-        <div class="logo">BigRig Bonuses</div>
-        <nav class="nav-bar">
-            <ul>
-                <li><a href="{{ url_for('main.destination') }}">Home</a></li>
-                <li><a href="#">Features</a></li>
-                <li><a href="#">About Us</a></li>
-                <li><a href="#">Contact</a></li>
-            </ul>
-        </nav>
-        <div class="auth-buttons">
-            <a href="{{ url_for('auth.login') }}" class="login-btn">Login</a>
-            <a href="{{ url_for('auth.signup') }}" class="signup-btn">Sign Up</a>
-        </div>
-    </header>
-
-    <!-- Content Block -->
-    <main>
+    <nav>
+        <ul>
+            <li><a href="{{ url_for('main.destination') }}">Home</a></li>
+            {% if current_user.is_authenticated %}
+                <li><a href="{{ url_for('main.dashboard') }}">Dashboard</a></li>
+                <li><a href="{{ url_for('auth.logout') }}">Logout</a></li>
+            {% else %}
+                <li><a href="{{ url_for('auth.login') }}">Login</a></li>
+                <li><a href="{{ url_for('auth.signup') }}">Signup</a></li>
+            {% endif %}
+            <li><a href="{{ url_for('main.about') }}">About</a></li>
+        </ul>
+    </nav>
+    
+    <div class="container">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+          {% if messages %}
+            {% for category, message in messages %}
+              <div class="flash {{ category }}">
+                  {{ message }}
+              </div>
+            {% endfor %}
+          {% endif %}
+        {% endwith %}
+        
         {% block content %}{% endblock %}
-<<<<<<< HEAD
-    </main>
-
-    <!-- Footer -->
-    <footer class="main-footer">
-        <p>&copy; 2024 BigRig Bonuses. All rights reserved.</p>
-    </footer>
-
-</body>
-</html>
-=======
     </div>
 </html>
->>>>>>> jswanie
