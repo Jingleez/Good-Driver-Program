@@ -28,6 +28,7 @@ def login():
     form = LoginForm()
     if form.validate_on_submit():
         try:
+            # Authenticate with Cognito
             response = cognito_client.admin_initiate_auth(
                 UserPoolId=CognitoUserPoolId,
                 ClientId=CognitoClientId,
@@ -37,14 +38,22 @@ def login():
                     'PASSWORD': form.password.data,
                 }
             )
+
+            # Get the Cognito IdToken
             id_token = response['AuthenticationResult']['IdToken']
             session['id_token'] = id_token
+
+            # Query the local database for the user
             user = db.session.query(User).filter_by(username=form.username.data).first()
+
             if user:
-                print(f"Fetched role for {user.username}: {user.role}")  # Debug role value
+                # Authenticate the user with Flask-Login
+                login_user(user, remember=True)  # This logs the user into your Flask app
+
+                # Store user role in session if needed
                 user_role = user.role.strip().lower()
-                session['user_role'] = user.role  # Assuming 'role' is a field in your User model
- 
+                session['user_role'] = user_role
+
                 # Redirect to respective dashboard based on user role
                 if user_role == 'driver':
                     flash('Logged in successfully!', 'success')
@@ -59,14 +68,15 @@ def login():
                     flash('User role is not recognized.', 'danger')
                     return redirect(url_for('auth.login'))  # Redirect if role is not recognized
             else:
-                flash('User not found.', 'danger')
- 
+                flash('User not found in local database.', 'danger')
+
         except cognito_client.exceptions.NotAuthorizedException:
             flash('Invalid username or password.', 'danger')
         except Exception as e:
             flash(f'An error occurred: {str(e)}', 'danger')
- 
+
     return render_template('Destination/login.html', form=form)
+
 
 @auth_bp.route('/signup', methods=['GET', 'POST'])
 def signup():
@@ -200,23 +210,3 @@ def delete_user():
     except Exception as e:
         flash(f'An error occurred: {str(e)}', 'error')
     return redirect(url_for('auth.login'))
-
-
-@auth_bp.route('/profile', methods=['GET', 'POST'])
-@login_required
-def profile():
-    if request.method == 'POST':
-        # Update user information
-        current_user.username = request.form['username']
-        current_user.email = request.form['email']
-        # Add more fields as necessary
-        try:
-            db.session.commit()  # Save the changes to the database
-            flash('Your profile has been updated successfully!', 'success')
-        except Exception as e:
-            db.session.rollback()
-            flash('An error occurred while updating your profile.', 'error')
-        return redirect(url_for('auth.profile'))
-    
-    # Render the profile page
-    return render_template('profile.html', user=current_user)

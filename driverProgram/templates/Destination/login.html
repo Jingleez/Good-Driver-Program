@@ -1,29 +1,247 @@
-<!-- app/templates/login.html -->
-{% extends "base.html" %}
-{% block content %}
-    <h2>Login</h2>
-    <form method="POST" action="{{ url_for('auth.login') }}">
-        {{ form.hidden_tag() }}
-        <p>
-            {{ form.username.label }}<br>
-            {{ form.username(size=32, value=form.username.data or '') }}<br>
-            {% for error in form.username.errors %}
-                <span class="error">{{ error }}</span>
-            {% endfor %}
-        </p>
-        <p>
-            {{ form.password.label }}<br>
-            {{ form.password(size=32) }}<br>
-            {% for error in form.password.errors %}
-                <span class="error">{{ error }}</span>
-            {% endfor %}
-        </p>
-        <p>
-            {{form.remember_me() }} {{form.remember_me.label }}
-            <span style="padding-left: 40px;">
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+    <style>
+        /* General Reset */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body, html {
+            height: 100%;
+            font-family: 'Poppins', sans-serif;
+            color: #fff;
+            background-color: #1a1a1a; /* Dark background */
+            overflow-x: hidden;
+            overflow-y: auto;
+        }
+
+        /* Fullscreen background image */
+        .background-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: url('{{ url_for('static', filename='background.jpg') }}') no-repeat center center/cover;
+            z-index: -1;
+            filter: brightness(0.7); /* Darkens the background image slightly */
+        }
+
+        /* Navigation */
+        nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 50px;
+            background-color: rgba(0, 0, 0, 0.8); /* Transparent navbar */
+            position: fixed;
+            width: 100%;
+            z-index: 10;
+        }
+
+        nav .logo {
+            font-size: 1.8rem;
+            font-weight: 600;
+            color: #4a90e2; /* Accent color */
+        }
+
+        nav ul {
+            list-style: none;
+            display: flex;
+        }
+
+        nav ul li {
+            margin-left: 30px;
+        }
+
+        nav ul li a {
+            color: #fff;
+            text-decoration: none;
+            font-size: 1.1rem;
+            font-weight: 400;
+            transition: color 0.3s;
+        }
+
+        nav ul li a:hover {
+            color: #4a90e2;
+        }
+
+        /* Login Form Container */
+        .login-container {
+            padding: 150px 50px 80px;
+            max-width: 600px;
+            margin: 0 auto;
+            background-color: rgba(43, 43, 43, 0.9); /* Darker background for the form */
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
+        }
+
+        .login-container h2 {
+            font-size: 2.5rem;
+            margin-bottom: 20px;
+            text-align: center;
+            color: #4a90e2;
+        }
+
+        .login-container p {
+            margin-bottom: 20px;
+        }
+
+        label {
+            font-size: 1rem;
+            color: #ddd;
+        }
+
+        input, select {
+            width: 100%;
+            padding: 12px;
+            margin-top: 5px;
+            margin-bottom: 20px;
+            background-color: #2b2b2b;
+            border: 1px solid #4a90e2;
+            color: #fff;
+            border-radius: 5px;
+        }
+
+        .error {
+            color: #dc3545;
+            font-size: 0.9rem;
+        }
+
+        input[type="submit"] {
+            background-color: #4a90e2;
+            border: none;
+            font-size: 1.1rem;
+            color: #fff;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        input[type="submit"]:hover {
+            background-color: #367bb7;
+        }
+
+        /* Remember me checkbox and forgot password */
+        .remember-forgot {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .remember-forgot label {
+            display: flex;
+            align-items: center;
+        }
+
+        .remember-forgot input[type="checkbox"] {
+            margin-right: 10px;
+        }
+
+        .remember-forgot a {
+            color: #4a90e2;
+            text-decoration: none;
+        }
+
+        .remember-forgot a:hover {
+            color: #367bb7;
+        }
+
+        /* Footer */
+        footer {
+            background-color: #111;
+            padding: 20px 0;
+            text-align: center;
+            color: #bbb;
+            font-size: 0.9rem;
+        }
+
+        footer a {
+            color: #4a90e2;
+            text-decoration: none;
+            transition: color 0.3s;
+        }
+
+        footer a:hover {
+            color: #367bb7;
+        }
+
+        @media (max-width: 768px) {
+            .login-container {
+                padding: 100px 20px 50px;
+            }
+
+            .remember-forgot {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .remember-forgot a {
+                margin-top: 10px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Background Image -->
+    <div class="background-container"></div>
+
+    <!-- Navigation Bar -->
+    <nav>
+        <div class="logo">BigRig Bonuses</div>
+        <ul>
+            <li><a href="{{ url_for('main.destination') }}">Home</a></li>
+            <li><a href="{{ url_for('auth.login') }}">Login</a></li>
+            <li><a href="{{ url_for('auth.signup') }}">Signup</a></li>
+            <li><a href="{{ url_for('main.about') }}">About</a></li>
+        </ul>
+    </nav>
+
+    <!-- Login Form -->
+    <div class="login-container">
+        <h2>Login</h2>
+        <form method="POST" action="{{ url_for('auth.login') }}">
+            {{ form.hidden_tag() }}
+
+            <p>
+                {{ form.username.label }}<br>
+                {{ form.username(size=32, value=form.username.data or '') }}<br>
+                {% for error in form.username.errors %}
+                    <span class="error">{{ error }}</span>
+                {% endfor %}
+            </p>
+
+            <p>
+                {{ form.password.label }}<br>
+                {{ form.password(size=32) }}<br>
+                {% for error in form.password.errors %}
+                    <span class="error">{{ error }}</span>
+                {% endfor %}
+            </p>
+
+            <!-- Remember me and Forgot password in one line -->
+            <div class="remember-forgot">
+                <label>
+                    {{ form.remember_me() }} {{ form.remember_me.label }}
+                </label>
                 <a href="{{ url_for('auth.reset_request') }}">Forgot Password?</a>
-            </span>
-        <p>
-        <p>{{ form.submit() }}</p>
-    </form>
-{% endblock %}
+            </div>
+            
+            <p>{{ form.submit() }}</p>
+        </form>
+    </div>
+
+    <!-- Footer -->
+    <footer>
+        <p>&copy; 2024 BigRig Bonuses</p>
+    </footer>
+</body>
+</html>

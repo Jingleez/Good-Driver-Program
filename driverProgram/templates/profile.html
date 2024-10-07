@@ -3,21 +3,20 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reset Password</title>
+    <title>Profile - Read Only</title>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
     <style>
-        /* General Reset */
-        * {
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: #1a1a1a;
+            color: #fff;
             margin: 0;
             padding: 0;
-            box-sizing: border-box;
-        }
-
-        body, html {
-            height: 100%;
-            font-family: 'Poppins', sans-serif;
-            background-color: #1a1a1a; /* Dark background */
-            color: #fff;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
         }
 
         /* Navigation */
@@ -28,8 +27,8 @@
             padding: 20px 50px;
             background-color: rgba(0, 0, 0, 0.8); /* Transparent navbar */
             position: fixed;
-            top: 0;
             width: 100%;
+            top: 0;
             z-index: 10;
         }
 
@@ -60,99 +59,110 @@
             color: #4a90e2;
         }
 
-        /* Form Container */
-        .form-container {
-            max-width: 500px;
+        .profile-container {
+            max-width: 600px;
             background-color: #2b2b2b;
             padding: 2rem;
             border-radius: 12px;
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-            margin: 120px auto 0;
-            color: #fff;
+            text-align: center;
+            margin-top: 100px; /* Space for the navbar */
         }
 
-        .form-container h2 {
-            text-align: center;
-            color: #4a90e2;
+        .profile-header {
             margin-bottom: 1.5rem;
         }
 
-        .form-container label {
+        .profile-header h1 {
+            font-size: 2rem;
             color: #4a90e2;
-            font-weight: bold;
         }
 
-        .form-container .form-control {
-            background-color: #333;
-            color: #fff;
-            border-radius: 8px;
-            border: 1px solid #555;
-            padding: 0.75rem;
-            width: 100%;
+        .profile-item {
             margin-bottom: 1rem;
+            text-align: left;
         }
 
-        .form-container .form-control:focus {
-            border-color: #4a90e2;
-            outline: none;
-            box-shadow: 0 0 0 0.25rem rgba(74, 144, 226, 0.5);
+        .profile-item span {
+            font-weight: bold;
+            color: #4a90e2;
         }
 
-        .form-container .error {
-            color: #dc3545;
-            font-size: 0.875rem;
-        }
-
-        .form-container .btn-submit {
+        .edit-button {
             background-color: #4a90e2;
             color: #fff;
-            padding: 0.75rem;
+            padding: 10px 20px;
             border: none;
             border-radius: 8px;
-            width: 100%;
             font-size: 1rem;
             cursor: pointer;
             transition: background-color 0.3s;
+            margin-top: 1.5rem;
         }
 
-        .form-container .btn-submit:hover {
+        .edit-button:hover {
             background-color: #367bb7;
         }
     </style>
 </head>
 <body>
 
-    <!-- Navigation -->
+
     <nav>
         <div class="logo">BigRig Bonuses</div>
         <ul>
             <li><a href="{{ url_for('main.destination') }}">Home</a></li>
-            <li><a href="{{ url_for('main.about') }}">About</a></li>
             {% if current_user.is_authenticated %}
+                <li><a href="{{ url_for('main.dashboard') }}">Dashboard</a></li>
                 <li><a href="{{ url_for('auth.logout') }}">Logout</a></li>
             {% else %}
                 <li><a href="{{ url_for('auth.login') }}">Login</a></li>
+                <li><a href="{{ url_for('auth.signup') }}">Signup</a></li>
             {% endif %}
+            <li><a href="{{ url_for('main.about') }}">About</a></li>
         </ul>
     </nav>
 
-    <!-- Reset Password Form -->
-    <div class="form-container">
-        <h2>Reset Password</h2>
-        <form method="POST" action="{{ url_for('auth.reset_request') }}">
-            {{ form.hidden_tag() }}
-            <div class="form-group">
-                {{ form.email.label }}<br>
-                {{ form.email(class="form-control") }}<br>
-                {% for error in form.email.errors %}
-                    <span class="error">{{ error }}</span>
-                {% endfor %}
-            </div>
-            <div class="form-group">
-                {{ form.submit(class="btn-submit") }}
-            </div>
+
+    <div class="profile-container">
+        <div class="profile-header">
+            <h1>Profile</h1>
+        </div>
+
+        <div class="profile-item">
+            <span>Username:</span> {{ user.username }}
+        </div>
+
+        <div class="profile-item">
+            <span>Email:</span> {{ user.email }}
+        </div>
+
+        <div class="profile-item">
+            <span>Phone:</span> {{ user.phone or 'N/A' }}
+        </div>
+
+        <div class="profile-item">
+            <span>Address:</span> {{ user.address or 'N/A' }}
+        </div>
+
+        <div class="profile-item">
+            <span>Date of Birth:</span> {{ user.date_of_birth or 'N/A' }}
+        </div>
+
+        <div class="profile-item">
+            <span>Gender:</span> {{ user.gender or 'N/A' }}
+        </div>
+
+        {% if user.role == 'sponsor' %}
+        <div class="profile-item">
+            <span>Sponsor Code:</span> {{ user.sponsor_code or 'N/A' }}
+        </div>
+        {% endif %}
+
+        <!-- Button to Edit Profile -->
+        <form action="{{ url_for('main.edit_profile') }}" method="GET">
+            <button type="submit" class="edit-button">Edit Profile</button>
         </form>
     </div>
-
 </body>
 </html>

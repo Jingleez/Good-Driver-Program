@@ -3,10 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Dashboard - Fortune 500 Style</title>
+    <title>Admin Dashboard</title>
 
     <!-- Google Fonts for Professional Typography -->
-    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
 
     <!-- Font Awesome for Icons -->
     <script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
@@ -14,20 +14,20 @@
     <style>
         /* General Body Styling */
         body {
-            font-family: 'Roboto', sans-serif;
-            background-color: #f4f6f8;
+            font-family: 'Poppins', sans-serif;
+            background-color: #1a1a1a; /* Dark background */
             margin: 0;
             padding: 0;
             display: flex;
             flex-direction: column;
             height: 100vh;
-            color: #333;
+            color: #fff; /* Text color white */
             overflow-x: hidden;
         }
 
         /* Top Navigation Bar */
         nav.top-nav {
-            background-color: #0b3d91;
+            background-color: #0b3d91; /* Dark Blue for the Navbar */
             color: white;
             padding: 10px 30px;
             position: fixed;
@@ -40,16 +40,16 @@
             box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
         }
 
-        /* Top Nav Links */
         nav.top-nav ul {
             list-style: none;
             margin: 0;
             padding: 0;
             display: flex;
+            align-items: center;
         }
 
         nav.top-nav ul li {
-            margin: 0 15px;
+            margin-left: 30px;
         }
 
         nav.top-nav ul li a {
@@ -58,12 +58,12 @@
             font-size: 1.1em;
             font-weight: 500;
             padding: 10px;
+            transition: background-color 0.3s;
         }
 
         nav.top-nav ul li a:hover {
             background-color: #274c9d;
             border-radius: 5px;
-            transition: background-color 0.3s;
         }
 
         /* Container for Sidebar and Content */
@@ -75,8 +75,8 @@
 
         /* Sidebar Styling */
         .sidebar-menu {
-            background-color: #ffffff;
-            color: #0b3d91;
+            background-color: #2b2b2b; /* Darker sidebar */
+            color: #fff;
             padding-top: 20px;
             width: 250px;
             height: calc(100vh - 60px); /* Adjust height with top nav */
@@ -103,7 +103,7 @@
         }
 
         .sidebar-menu ul li a {
-            color: #0b3d91;
+            color: #fff;
             text-decoration: none;
             font-size: 1.1em;
             display: flex;
@@ -112,7 +112,7 @@
         }
 
         .sidebar-menu ul li a:hover {
-            background-color: #f0f4ff;
+            background-color: #3e3e3e;
             border-radius: 8px;
         }
 
@@ -149,7 +149,8 @@
             margin-left: 250px;
             padding: 40px;
             flex-grow: 1;
-            background-color: #ffffff;
+            background-color: #333; /* Dark content background */
+            color: #fff;
             border-radius: 10px;
             margin: 20px;
             box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
@@ -166,13 +167,13 @@
             margin-top: 0;
             font-size: 2em;
             font-weight: 500;
-            color: #0b3d91;
+            color: #4a90e2; /* Lighter blue for headers */
         }
 
         p {
             line-height: 1.8;
             font-size: 1.1em;
-            color: #555;
+            color: #d4d4d4;
         }
 
         /* Sidebar collapsed state */
@@ -225,9 +226,12 @@
             <li><a href="{{ url_for('main.destination') }}">Home</a></li>
             <li><a href="{{ url_for('main.dashboard') }}">Dashboard</a></li>
             <li><a href="{{ url_for('main.about') }}">About</a></li>
+            {% if current_user.is_authenticated %}
+                <li><a href="{{ url_for('auth.logout') }}">Logout</a></li>
+            {% endif %}
         </ul>
         <ul>
-            <li><a href="{{ url_for('auth.profile') }}">Profile</a></li>
+            <li><a href="{{ url_for('main.profile') }}">Profile</a></li>
         </ul>
     </nav>
 

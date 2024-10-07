@@ -6,7 +6,7 @@
     <title>Driver Dashboard</title>
 
     <!-- Google Fonts for Professional Typography -->
-    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
 
     <!-- Font Awesome for Icons -->
     <script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
@@ -14,20 +14,20 @@
     <style>
         /* General Body Styling */
         body {
-            font-family: 'Roboto', sans-serif;
-            background-color: #f4f6f8;
+            font-family: 'Poppins', sans-serif;
+            background-color: #1a1a1a; /* Dark background */
             margin: 0;
             padding: 0;
             display: flex;
             flex-direction: column;
             height: 100vh;
-            color: #333;
+            color: #fff;
             overflow-x: hidden;
         }
 
         /* Top Navigation Bar */
         nav.top-nav {
-            background-color: #0b3d91;
+            background-color: #0b3d91; /* Dark Blue for the Navbar */
             color: white;
             padding: 10px 30px;
             position: fixed;
@@ -40,16 +40,28 @@
             box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
         }
 
-        /* Top Nav Links */
+        /* Top Nav Container */
         nav.top-nav ul {
             list-style: none;
             margin: 0;
             padding: 0;
             display: flex;
+            gap: 30px; /* Ensure spacing between each link */
+        }
+
+        /* Left nav alignment */
+        nav.top-nav ul.left-nav {
+            flex: 1; /* Takes available space on the left */
+        }
+
+        /* Right nav alignment */
+        nav.top-nav ul.right-nav {
+            flex: 0;
+            margin-right: 30px; /* Margin to ensure it doesn't touch screen edge */
         }
 
         nav.top-nav ul li {
-            margin: 0 15px;
+            margin: 0;
         }
 
         nav.top-nav ul li a {
@@ -58,12 +70,12 @@
             font-size: 1.1em;
             font-weight: 500;
             padding: 10px;
+            transition: background-color 0.3s;
         }
 
         nav.top-nav ul li a:hover {
             background-color: #274c9d;
             border-radius: 5px;
-            transition: background-color 0.3s;
         }
 
         /* Container for Sidebar and Content */
@@ -75,8 +87,8 @@
 
         /* Sidebar Styling */
         .sidebar-menu {
-            background-color: #ffffff;
-            color: #0b3d91;
+            background-color: #2b2b2b; /* Darker sidebar */
+            color: #fff;
             padding-top: 20px;
             width: 250px;
             height: calc(100vh - 60px); /* Adjust height with top nav */
@@ -100,10 +112,15 @@
             align-items: center;
             white-space: nowrap;
             overflow: hidden;
+            transition: background-color 0.3s ease;
+        }
+
+        .sidebar-menu ul li:hover {
+            background-color: #3e3e3e;
         }
 
         .sidebar-menu ul li a {
-            color: #0b3d91;
+            color: #fff;
             text-decoration: none;
             font-size: 1.1em;
             display: flex;
@@ -111,18 +128,19 @@
             transition: color 0.3s;
         }
 
-        .sidebar-menu ul li a:hover {
-            background-color: #f0f4ff;
-            border-radius: 8px;
-        }
-
         .sidebar-menu ul li a i {
             margin-right: 10px;
-            font-size: 1.2em;
+            font-size: 1.4em;
+        }
+
+        .sidebar-menu ul li a span {
+            display: inline-block;
+            opacity: 1;
+            transition: opacity 0.3s ease;
         }
 
         .sidebar-menu.collapsed ul li a span {
-            display: none;
+            opacity: 0;
         }
 
         /* Sidebar Toggle */
@@ -138,10 +156,16 @@
             cursor: pointer;
             z-index: 1001;
             transition: left 0.3s ease;
+            display: flex;
+            align-items: center;
         }
 
         .collapsed + .sidebar-toggle {
             left: 90px;
+        }
+
+        .sidebar-toggle i {
+            margin-right: 10px;
         }
 
         /* Main Content Area */
@@ -149,7 +173,8 @@
             margin-left: 250px;
             padding: 40px;
             flex-grow: 1;
-            background-color: #ffffff;
+            background-color: #333; /* Dark content background */
+            color: #fff;
             border-radius: 10px;
             margin: 20px;
             box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
@@ -166,13 +191,13 @@
             margin-top: 0;
             font-size: 2em;
             font-weight: 500;
-            color: #0b3d91;
+            color: #4a90e2; /* Lighter blue for headers */
         }
 
         p {
             line-height: 1.8;
             font-size: 1.1em;
-            color: #555;
+            color: #d4d4d4;
         }
 
         /* Sidebar collapsed state */
@@ -221,13 +246,18 @@
 
     <!-- Top Navigation Bar -->
     <nav class="top-nav">
-        <ul>
+        <ul class="left-nav">
             <li><a href="{{ url_for('main.destination') }}">Home</a></li>
             <li><a href="{{ url_for('main.dashboard') }}">Dashboard</a></li>
             <li><a href="{{ url_for('main.about') }}">About</a></li>
         </ul>
-        <ul>
-            <li><a href="{{ url_for('auth.profile') }}">Profile</a></li>
+        <ul class="right-nav">
+            {% if current_user.is_authenticated %}
+                <li><a href="{{ url_for('auth.logout') }}">Logout</a></li>
+            {% else %}
+                <li><a href="{{ url_for('auth.login') }}">Login</a></li>
+            {% endif %}
+            <li><a href="{{ url_for('main.profile') }}">Profile</a></li>
         </ul>
     </nav>
 
@@ -244,7 +274,7 @@
         </nav>
 
         <!-- Sidebar Toggle Button -->
-        <button class="sidebar-toggle" id="sidebarToggle"><i class="fas fa-bars"></i></button>
+        <button class="sidebar-toggle" id="sidebarToggle"><i class="fas fa-bars"></i><span>Menu</span></button>
 
         <!-- Main Content Area -->
         <main class="content-area">
