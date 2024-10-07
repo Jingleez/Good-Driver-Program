@@ -4,6 +4,7 @@ body {
     background-color: #f8f9fa; /* Light background color */
     margin: 0;
     padding: 0;
+<<<<<<< HEAD
 }
 
 /* Navbar Styles */
@@ -187,3 +188,116 @@ body {
     margin: 10px 0; /* Space between names */
     font-size: 1.2rem; /* Font size for names */
 }
+=======
+    line-height: 1.6;
+    background-color: #f4f4f4;
+    height: 100vh;
+    overflow: hidden;  /* Prevent body from scrolling */
+}
+
+header {
+    background-color: #333;
+    color: white;
+    padding: 15px;
+    text-align: center;
+    position: fixed;
+    width: 100%;
+    top: 0;
+    z-index: 1000;
+}
+
+header h1 {
+    margin: 0;
+    font-size: 24px;
+}
+
+/* Sidebar Menu */
+.sidebar-menu {
+    width: 250px;
+    background-color: #333;
+    color: white;
+    height: 100vh;  /* Full height */
+    padding-top: 20px;
+    position: relative;  /* Change to relative */
+    overflow-y: auto;  /* Enable scrolling inside the sidebar if needed */
+}
+
+.sidebar-menu ul {
+    list-style: none;
+    padding: 0;
+}
+
+.sidebar-menu ul li {
+    padding: 15px 20px;
+    cursor: pointer;
+}
+
+.sidebar-menu ul li:hover {
+    background-color: #444;
+}
+
+.sidebar-menu ul li a {
+    color: white;
+    text-decoration: none;
+    display: block;
+    transition: color 0.3s ease;
+}
+
+.sidebar-menu ul li a:hover {
+    color: #ddd;
+}
+
+/* Dashboard Container */
+.dashboard-container {
+    display: flex;
+    height: 100vh;  /* Take up full height */
+    overflow: hidden;  /* Prevent container from scrolling separately */
+}
+
+.content-area {
+    flex-grow: 1;
+    padding: 20px;
+    background-color: #fff;
+    overflow-y: auto;  /* Allow main content area to scroll */
+    margin-left: 250px;  /* This matches the sidebar width */
+}
+
+/* Buttons */
+.button {
+    background-color: #007bff;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.button:hover {
+    background-color: #0056b3;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .sidebar-menu {
+        width: 100%;
+        height: auto;
+        position: relative;
+    }
+
+    .content-area {
+        margin-left: 0;
+        width: 100%;
+    }
+
+    .sidebar-menu ul {
+        display: flex;
+        flex-direction: row;
+        justify-content: space-around;
+    }
+
+    .sidebar-menu ul li {
+        padding: 10px;
+    }
+}
+>>>>>>> jswanie

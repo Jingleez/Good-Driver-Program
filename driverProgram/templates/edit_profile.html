@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Edit Profile - BigRig Bonuses</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body, html {
+            height: 100%;
+            font-family: 'Poppins', sans-serif;
+            background-color: #1a1a1a;
+            color: #fff;
+        }
+
+        /* Navigation */
+        nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 50px;
+            background-color: rgba(0, 0, 0, 0.8);
+            position: fixed;
+            width: 100%;
+            z-index: 10;
+            top: 0;
+        }
+
+        nav .logo {
+            font-size: 1.8rem;
+            font-weight: 600;
+            color: #4a90e2;
+        }
+
+        nav ul {
+            list-style: none;
+            display: flex;
+        }
+
+        nav ul li {
+            margin-left: 30px;
+        }
+
+        nav ul li a {
+            color: #fff;
+            text-decoration: none;
+            font-size: 1.1rem;
+            font-weight: 400;
+            transition: color 0.3s;
+        }
+
+        nav ul li a:hover {
+            color: #4a90e2;
+        }
+
+        /* Profile Edit Container */
+        .profile-edit-wrapper {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+
+        .profile-edit-container {
+            background-color: #2b2b2b;
+            padding: 2.5rem;
+            border-radius: 12px;
+            max-width: 600px;
+            width: 100%;
+            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.3);
+            margin-top: 100px;
+        }
+
+        .profile-edit-container h2 {
+            text-align: center;
+            margin-bottom: 1.5rem;
+            color: #4a90e2;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: #4a90e2;
+            font-size: 1rem;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 0.75rem;
+            background-color: #333;
+            color: #fff;
+            border: 1px solid #555;
+            border-radius: 8px;
+        }
+
+        .form-control:focus {
+            border-color: #4a90e2;
+            outline: none;
+            box-shadow: 0 0 0 0.2rem rgba(74, 144, 226, 0.3);
+        }
+
+        .btn-save {
+            background-color: #4a90e2;
+            border: none;
+            padding: 0.75rem 2rem;
+            width: 100%;
+            color: #fff;
+            font-size: 1.1rem;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            margin-top: 1.5rem;
+        }
+
+        .btn-save:hover {
+            background-color: #367bb7;
+        }
+
+        .form-row {
+            display: flex;
+            gap: 20px;
+        }
+
+        .form-row .form-group {
+            flex: 1;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 600px) {
+            .form-row {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Navigation Bar -->
+    <nav>
+        <div class="logo">BigRig Bonuses</div>
+        <ul>
+            <li><a href="{{ url_for('main.destination') }}">Home</a></li>
+            {% if current_user.is_authenticated %}
+                <li><a href="{{ url_for('main.dashboard') }}">Dashboard</a></li>
+                <li><a href="{{ url_for('auth.logout') }}">Logout</a></li>
+            {% else %}
+                <li><a href="{{ url_for('auth.login') }}">Login</a></li>
+                <li><a href="{{ url_for('auth.signup') }}">Signup</a></li>
+            {% endif %}
+            <li><a href="{{ url_for('main.about') }}">About</a></li>
+        </ul>
+    </nav>
+
+    <div class="profile-edit-wrapper">
+        <div class="profile-edit-container">
+            <h2>Edit Profile</h2>
+            <form method="POST" action="{{ url_for('main.update_profile') }}">
+                <div class="form-group">
+                    <label for="username">Username</label>
+                    <input type="text" id="username" name="username" class="form-control" value="{{ user.username }}" required>
+                </div>
+                <div class="form-group">
+                    <label for="email">Email</label>
+                    <input type="email" id="email" name="email" class="form-control" value="{{ user.email }}" required>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="phone">Phone Number</label>
+                        <input type="tel" id="phone" name="phone" class="form-control" value="{{ user.phone or '' }}">
+                    </div>
+                    <div class="form-group">
+                        <label for="address">Address</label>
+                        <input type="text" id="address" name="address" class="form-control" value="{{ user.address or '' }}">
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="gender">Gender</label>
+                        <select id="gender" name="gender" class="form-control">
+                            <option value="male" {% if user.gender == 'male' %}selected{% endif %}>Male</option>
+                            <option value="female" {% if user.gender == 'female' %}selected{% endif %}>Female</option>
+                            <option value="other" {% if user.gender == 'other' %}selected{% endif %}>Other</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="date_of_birth">Date of Birth</label>
+                        <input type="date" id="date_of_birth" name="date_of_birth" class="form-control" value="{{ user.date_of_birth or '' }}">
+                    </div>
+                </div>
+
+                {% if user.role == 'sponsor' %}
+                <div class="form-group">
+                    <label for="sponsor_code">Sponsor Code</label>
+                    <input type="text" id="sponsor_code" name="sponsor_code" class="form-control" value="{{ user.sponsor_code or '' }}" readonly>
+                </div>
+                {% endif %}
+
+                <button type="submit" class="btn-save">Save Changes</button>
+            </form>
+        </div>
+    </div>
+
+</body>
+</html>

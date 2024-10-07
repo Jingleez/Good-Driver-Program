@@ -1,15 +1,158 @@
-{% extends "base.html" %}
-{% block content %}
-    <h2>Reset Password</h2>
-    <form method="POST" action="{{ url_for('auth.reset_request') }}">
-        {{ form.hidden_tag() }}
-        <p>
-            {{ form.email.label }}<br>
-            {{ form.email(size=32) }}<br>
-            {% for error in form.email.errors %}
-                <span class="error">{{ error }}</span>
-            {% endfor %}
-        </p>
-        <p>{{ form.submit() }}</p>
-    </form>
-{% endblock %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reset Password</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+    <style>
+        /* General Reset */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body, html {
+            height: 100%;
+            font-family: 'Poppins', sans-serif;
+            background-color: #1a1a1a; /* Dark background */
+            color: #fff;
+        }
+
+        /* Navigation */
+        nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 50px;
+            background-color: rgba(0, 0, 0, 0.8); /* Transparent navbar */
+            position: fixed;
+            top: 0;
+            width: 100%;
+            z-index: 10;
+        }
+
+        nav .logo {
+            font-size: 1.8rem;
+            font-weight: 600;
+            color: #4a90e2;
+        }
+
+        nav ul {
+            list-style: none;
+            display: flex;
+        }
+
+        nav ul li {
+            margin-left: 30px;
+        }
+
+        nav ul li a {
+            color: #fff;
+            text-decoration: none;
+            font-size: 1.1rem;
+            font-weight: 400;
+            transition: color 0.3s;
+        }
+
+        nav ul li a:hover {
+            color: #4a90e2;
+        }
+
+        /* Form Container */
+        .form-container {
+            max-width: 500px;
+            background-color: #2b2b2b;
+            padding: 2rem;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            margin: 120px auto 0;
+            color: #fff;
+        }
+
+        .form-container h2 {
+            text-align: center;
+            color: #4a90e2;
+            margin-bottom: 1.5rem;
+        }
+
+        .form-container label {
+            color: #4a90e2;
+            font-weight: bold;
+        }
+
+        .form-container .form-control {
+            background-color: #333;
+            color: #fff;
+            border-radius: 8px;
+            border: 1px solid #555;
+            padding: 0.75rem;
+            width: 100%;
+            margin-bottom: 1rem;
+        }
+
+        .form-container .form-control:focus {
+            border-color: #4a90e2;
+            outline: none;
+            box-shadow: 0 0 0 0.25rem rgba(74, 144, 226, 0.5);
+        }
+
+        .form-container .error {
+            color: #dc3545;
+            font-size: 0.875rem;
+        }
+
+        .form-container .btn-submit {
+            background-color: #4a90e2;
+            color: #fff;
+            padding: 0.75rem;
+            border: none;
+            border-radius: 8px;
+            width: 100%;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        .form-container .btn-submit:hover {
+            background-color: #367bb7;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Navigation -->
+    <nav>
+        <div class="logo">BigRig Bonuses</div>
+        <ul>
+            <li><a href="{{ url_for('main.destination') }}">Home</a></li>
+            <li><a href="{{ url_for('main.about') }}">About</a></li>
+            {% if current_user.is_authenticated %}
+                <li><a href="{{ url_for('auth.logout') }}">Logout</a></li>
+            {% else %}
+                <li><a href="{{ url_for('auth.login') }}">Login</a></li>
+            {% endif %}
+        </ul>
+    </nav>
+
+    <!-- Reset Password Form -->
+    <div class="form-container">
+        <h2>Reset Password</h2>
+        <form method="POST" action="{{ url_for('auth.reset_request') }}">
+            {{ form.hidden_tag() }}
+            <div class="form-group">
+                {{ form.email.label }}<br>
+                {{ form.email(class="form-control") }}<br>
+                {% for error in form.email.errors %}
+                    <span class="error">{{ error }}</span>
+                {% endfor %}
+            </div>
+            <div class="form-group">
+                {{ form.submit(class="btn-submit") }}
+            </div>
+        </form>
+    </div>
+
+</body>
+</html>
