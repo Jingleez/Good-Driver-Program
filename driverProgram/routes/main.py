@@ -49,3 +49,15 @@ def browse_organizations():
 @main_bp.route('/current-organization')
 def current_organization():
     return render_template('Destination/current_organization.html')  
+
+@main_bp.route('/admin/dashboard', methods=['GET'])
+def admin_dash():
+    return render_template('dashboard/admin_dash.html')
+
+@main_bp.route('/driver/dashboard', methods=['GET'])
+def driver_dash():
+    return render_template('dashboard/driver_dash.html')
+
+@main_bp.route('/sponsor/dashboard', methods=['GET'])
+def sponsor_dash():
+    return render_template('dashboard/sponsor_dash.html')

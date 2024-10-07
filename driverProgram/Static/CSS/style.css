@@ -165,6 +165,25 @@ body {
     background-color: var(--amazon-white);
     border-radius: 10px;
     padding: 20px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Subtle shadow effect */
-    border: 1px solid #007bff;
+    background-color: #ecf0f1; /* Light gray background */
+    border-radius: 10px;
+    text-align: center;
+}
+
+#founders h2 {
+    color: #2980b9; /* Blue color for the title */
+}
+
+#founders p {
+    color: #34495e; /* Dark gray for the paragraph */
+}
+
+#founders ul {
+    list-style-type: none; /* Remove default list styling */
+    padding: 0;
+}
+
+#founders li {
+    margin: 10px 0; /* Space between names */
+    font-size: 1.2rem; /* Font size for names */
 }
