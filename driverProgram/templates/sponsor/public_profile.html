@@ -1,0 +1,26 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<h2>Edit Public Profile</h2>
+<form method="POST">
+    <label for="company_name">Company Name</label>
+    <input type="text" id="company_name" name="company_name" value="{{ sponsor.company_name }}">
+
+    <label for="location">Location</label>
+    <input type="text" id="location" name="location" value="{{ sponsor.location }}">
+
+    <label for="phone">Phone Number</label>
+    <input type="text" id="phone" name="phone" value="{{ sponsor.phone }}">
+
+    <label for="email">Email</label>
+    <input type="email" id="email" name="email" value="{{ sponsor.email }}">
+
+    <label for="website">Website</label>
+    <input type="text" id="website" name="website" value="{{ sponsor.website }}">
+
+    <label for="bio">Bio</label>
+    <textarea id="bio" name="bio">{{ sponsor.bio }}</textarea>
+
+    <button type="submit">Save</button>
+</form>
+{% endblock %}

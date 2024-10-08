@@ -87,6 +87,50 @@ def about():
     db_status = 'connected' if check_database_connection() else 'disconnected'
     return render_template('Destination/about.html', db_status=db_status)
 
+# New route for the public profile of sponsors
+@main_bp.route('/public_profile', methods=['GET', 'POST'])
+@login_required
+def public_profile():
+    if request.method == 'POST':
+        # Retrieve and update sponsor details from form
+        sponsor = current_user.sponsor  # Assuming current_user is linked to a Sponsor model
+        sponsor.company_name = request.form['company_name']
+        sponsor.location = request.form['location']
+        sponsor.phone = request.form['phone']
+        sponsor.email = request.form['email']
+        sponsor.website = request.form['website']
+        sponsor.bio = request.form['bio']
+        db.session.commit()
+        flash('Public profile updated successfully!', 'success')
+        return redirect(url_for('main.public_profile'))
+    
+    sponsor = current_user.sponsor
+    return render_template('sponsor/public_profile.html', sponsor=sponsor)
+
+# New route for sponsor job postings
+@main_bp.route('/job_postings', methods=['GET', 'POST'])
+@login_required
+def job_postings():
+    if request.method == 'POST':
+        # Create new job posting from form
+        new_job = JobPosting(
+            title=request.form['title'],
+            description=request.form['description'],
+            location=request.form['location'],
+            salary=request.form['salary'],
+            hours=request.form['hours'],
+            experience=request.form['experience'],
+            sponsor_id=current_user.sponsor.id
+        )
+        db.session.add(new_job)
+        db.session.commit()
+        flash('Job posting created successfully!', 'success')
+        return redirect(url_for('main.job_postings'))
+    
+    jobs = JobPosting.query.filter_by(sponsor_id=current_user.sponsor.id).all()
+    return render_template('sponsor/job_postings.html', jobs=jobs)
+
+
 # Authentication check helper function
 def is_token_valid(token):
     try:

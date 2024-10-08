@@ -1,0 +1,41 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<h2>Job Postings</h2>
+<button onclick="document.getElementById('new-job-form').style.display='block'">Create New Job Posting</button>
+
+<!-- Form for creating a new job posting -->
+<div id="new-job-form" style="display:none;">
+    <form method="POST">
+        <label for="title">Job Title</label>
+        <input type="text" id="title" name="title" required>
+
+        <label for="description">Job Description</label>
+        <textarea id="description" name="description" required></textarea>
+
+        <label for="location">Location</label>
+        <input type="text" id="location" name="location" required>
+
+        <label for="salary">Salary</label>
+        <input type="text" id="salary" name="salary" required>
+
+        <label for="hours">Required Hours</label>
+        <select id="hours" name="hours" required>
+            <option value="Full-time">Full-time</option>
+            <option value="Part-time">Part-time</option>
+        </select>
+
+        <label for="experience">Experience</label>
+        <input type="text" id="experience" name="experience" required>
+
+        <button type="submit">Post Job</button>
+    </form>
+</div>
+
+<!-- Display existing job postings -->
+<ul>
+    {% for job in jobs %}
+    <li>{{ job.title }} - {{ job.location }} - {{ job.salary }}</li>
+    {% endfor %}
+</ul>
+{% endblock %}
