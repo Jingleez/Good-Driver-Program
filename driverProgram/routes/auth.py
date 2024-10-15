@@ -8,7 +8,7 @@ from .. import db
 import boto3, os, re
 from botocore.exceptions import ClientError
 from dotenv import load_dotenv
-from datetime import datetime
+from datetime import datetime, timedelta
 from ..forms import ConfirmResetForm
 
 load_dotenv()
@@ -23,9 +23,28 @@ CognitoRegion = os.environ.get('COGNITO_REGION')
 # Create a Cognito client
 cognito_client = boto3.client('cognito-idp', region_name=CognitoRegion)
 
+# Max login attempts before lockout
+MAX_LOGIN_ATTEMPTS = 3
+LOCK_TIME_MINUTES = 1
+
 @auth_bp.route('/login', methods=['GET', 'POST'])
 def login():
     form = LoginForm()
+
+    # Initialize login attempt tracking
+    if 'login_attempts' not in session:
+        session['login_attempts'] = 0
+    if 'lock_until' not in session:
+        session['lock_until'] = None
+
+    # Check if the user is locked out
+    if session['lock_until']:
+        lock_until = datetime.strptime(session['lock_until'], '%Y-%m-%d %H:%M:%S')
+        if datetime.now() < lock_until:
+            time_remaining = (lock_until - datetime.now()).seconds
+            flash(f'Your account is locked. Try again in {time_remaining // 60} minute(s).', 'error')
+            return render_template('Destination/login.html', form=form)
+
     if form.validate_on_submit():
         try:
             # Authenticate with Cognito
@@ -47,8 +66,12 @@ def login():
             user = db.session.query(User).filter_by(username=form.username.data).first()
 
             if user:
+                # Reset login attempts on successful login
+                session['login_attempts'] = 0
+                session['lock_until'] = None
+
                 # Authenticate the user with Flask-Login
-                login_user(user, remember=True)  # This logs the user into your Flask app
+                login_user(user, remember=True)
 
                 # Store user role in session if needed
                 user_role = user.role.strip().lower()
@@ -57,26 +80,32 @@ def login():
                 # Redirect to respective dashboard based on user role
                 if user_role == 'driver':
                     flash('Logged in successfully!', 'success')
-                    return redirect(url_for('main.driver_dash'))  # Redirect to driver dashboard
+                    return redirect(url_for('main.driver_dash'))
                 elif user_role == 'sponsor':
                     flash('Logged in successfully!', 'success')
-                    return redirect(url_for('main.sponsor_dash'))  # Redirect to sponsor dashboard
+                    return redirect(url_for('main.sponsor_dash'))
                 elif user_role == 'admin':
                     flash('Logged in successfully!', 'success')
-                    return redirect(url_for('main.admin_dash'))  # Redirect to admin dashboard
+                    return redirect(url_for('main.admin_dash'))
                 else:
                     flash('User role is not recognized.', 'danger')
-                    return redirect(url_for('auth.login'))  # Redirect if role is not recognized
+                    return redirect(url_for('auth.login'))
             else:
                 flash('User not found in local database.', 'danger')
 
         except cognito_client.exceptions.NotAuthorizedException:
-            flash('Invalid username or password.', 'danger')
+            # Handle incorrect username/password
+            session['login_attempts'] += 1
+            remaining_attempts = MAX_LOGIN_ATTEMPTS - session['login_attempts']
+            if remaining_attempts <= 0:
+                session['lock_until'] = (datetime.now() + timedelta(minutes=LOCK_TIME_MINUTES)).strftime('%Y-%m-%d %H:%M:%S')
+                flash(f'Too many failed login attempts. Your account is locked for {LOCK_TIME_MINUTES} minute(s).', 'danger')
+            else:
+                flash(f'Invalid username or password. You have {remaining_attempts} attempt(s) left.', 'danger')
         except Exception as e:
             flash(f'An error occurred: {str(e)}', 'danger')
 
     return render_template('Destination/login.html', form=form)
-
 
 @auth_bp.route('/signup', methods=['GET', 'POST'])
 def signup():

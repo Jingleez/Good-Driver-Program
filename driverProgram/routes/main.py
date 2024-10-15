@@ -4,6 +4,7 @@ from driverProgram import check_database_connection
 from sqlalchemy import text 
 from flask_login import login_required, current_user
 import jwt
+from driverProgram.models import JobPosting, Sponsor
 
 # Define the blueprint
 main_bp = Blueprint('main', __name__)
