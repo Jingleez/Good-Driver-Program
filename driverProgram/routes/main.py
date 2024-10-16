@@ -1,10 +1,13 @@
-from flask import Blueprint, render_template, redirect, url_for, session, flash, request
+from flask import Blueprint, render_template, redirect, url_for, session, flash, request, current_app
 from driverProgram import db 
 from driverProgram import check_database_connection
 from sqlalchemy import text 
 from flask_login import login_required, current_user
 import jwt
-from driverProgram.models import JobPosting, Sponsor
+from driverProgram.models import JobPosting, Sponsor, Application
+from driverProgram.forms import ApplyToJobPosting
+from werkzeug.utils import secure_filename
+import os
 
 # Define the blueprint
 main_bp = Blueprint('main', __name__)
@@ -196,3 +199,35 @@ def driver_product_catalog():
 @login_required
 def review_purchases():
     return render_template('partials/review_purchases.html')  # Ensure this template exists
+
+# Route for driver applications
+@main_bp.route('/apply_to_job_posting/<int:job_id>', methods=['GET', 'POST'])
+@login_required
+def apply_to_job_posting(job_id):
+    form = ApplyToJobPosting()
+    job = JobPosting.query.get_or_404(job_id)
+
+    if form.validate_on_submit():
+        # Handle file saving
+        resume_file = form.resume.data
+        filename = secure_filename(resume_file.filename)
+        resume_path = os.path.join(current_app.config['UPLOAD_FOLDER'], filename)
+        resume_file.save(resume_path)
+
+        # Create a new application with the additional fields
+        new_application = Application(
+            user_id = current_user.id,
+            job_id = job_id,
+            first_name = form.first_name.data,
+            last_name = form.last_name.data,
+            email = form.email.data,
+            phone = form.phone.data,
+            resume = filename
+        )
+        db.session.add(new_application)
+        db.session.commit()
+
+        flash('Your application has been submitted successfully.', 'success')
+        return redirect(url_for('main.job_postings'))
+
+    return render_template('Destination/apply_to_job_posting.html', form=form, job=job)

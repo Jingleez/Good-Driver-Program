@@ -40,3 +40,20 @@ class JobPosting(db.Model):
 
     # Foreign key to the Sponsor table
     sponsor_id = db.Column(db.Integer, db.ForeignKey('sponsors.id'), nullable=False)
+
+# Application model for storing driver job applications
+class Application(db.Model):
+    __tablename__ = 'applications'
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    job_id = db.Column(db.Integer, db.ForeignKey('job_postings.id'), nullable=False)
+    first_name = db.Column(db.String(100), nullable=False)
+    last_name = db.Column(db.String(100), nullable=False)
+    email = db.Column(db.String(150), nullable=False)
+    phone = db.Column(db.String(15), nullable=False)
+    resume = db.Column(db.String(200), nullable=False)
+    status = db.Column(db.String(50), default='Pending')
+
+    # Relationships to job postings and users
+    user = db.relationship('User', backref='applications')
+    job = db.relationship('JobPosting', backref='applications')
