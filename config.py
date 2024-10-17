@@ -19,3 +19,7 @@ class Config:
     COGNITO_USER_POOL_ID = os.environ.get('COGNITO_USER_POOL_ID')
     COGNITO_CLIENT_ID = os.environ.get('COGNITO_CLIENT_ID')
     COGNITO_REGION = os.environ.get('COGNITO_REGION')
+
+    #Path for uploads (temp)
+    UPLOAD_FOLDER = os.path.join(os.getcwd(), 'uploads')
+    MAX_CONTENT_LENGTH = 16 * 1024 * 1024

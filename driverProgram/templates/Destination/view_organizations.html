@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>View Organizations</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+    <h1>Organizations</h1>
+
+    <!-- Check if there are any organizations -->
+    {% if organizations %}
+        <div class="organization-list">
+            <!-- Loop through each organization and display its details -->
+            {% for org in organizations %}
+                <div class="organization-item">
+                    <h2>{{ org.company_name }}</h2> <!-- Assuming company_name is a field -->
+                    <p><strong>Location:</strong> {{ org.location }}</p>
+                    <p><strong>Phone:</strong> {{ org.phone }}</p> <!-- Assuming phone is a field -->
+                    <p><strong>Email:</strong> <a href="mailto:{{ org.email }}">{{ org.email }}</a></p> <!-- Assuming email is a field -->
+                    <p><strong>Website:</strong> <a href="{{ org.website }}" target="_blank">{{ org.website }}</a></p> <!-- Assuming website is a field -->
+                    <p><strong>Bio:</strong> {{ org.bio }}</p> <!-- Assuming bio is a field -->
+                    
+                    <!-- Button to view available jobs for this organization -->
+                    <a href="{{ url_for('main.view_job_postings_by_sponsor', sponsor_id=org.id) }}" class="btn">Available Jobs</a>
+                </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <p>No organizations available at the moment. Please check back later.</p>
+    {% endif %}
+
+    <a href="{{ url_for('main.index') }}">Back to Home</a>
+</body>
+</html>
