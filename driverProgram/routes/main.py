@@ -112,24 +112,7 @@ def public_profile():
 @main_bp.route('/job_postings', methods=['GET', 'POST'])
 @login_required
 def job_postings():
-    if request.method == 'POST':
-        # Create new job posting from form
-        new_job = JobPosting(
-            title=request.form['title'],
-            description=request.form['description'],
-            location=request.form['location'],
-            salary=request.form['salary'],
-            hours=request.form['hours'],
-            experience=request.form['experience'],
-            sponsor_id=current_user.sponsor.id
-        )
-        db.session.add(new_job)
-        db.session.commit()
-        flash('Job posting created successfully!', 'success')
-        return redirect(url_for('main.job_postings'))
-    
-    jobs = JobPosting.query.filter_by(sponsor_id=current_user.sponsor.id).all()
-    return render_template('sponsor/job_postings.html', jobs=jobs)
+    return render_template('sponsor/job_postings.html')
 
 
 # Authentication check helper function
