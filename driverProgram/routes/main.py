@@ -200,6 +200,21 @@ def driver_product_catalog():
 def review_purchases():
     return render_template('partials/review_purchases.html')  # Ensure this template exists
 
+# Route for viewing all organization profiles
+@main_bp.route('/view_organizations', methods=['GET'])
+@login_required
+def view_organizations():
+    # Query the database for all organizations (sponsors)
+    organizations = Sponsor.query.all()  # Assuming you have a Sponsor model
+    return render_template('Destination/view_organizations.html', organizations=organizations)
+
+# Route to view all job postings (for drivers or public)
+@main_bp.route('/job_postings', methods=['GET'])
+@login_required
+def view_job_postings():
+    job_postings = JobPosting.query.all()  # Retrieve all job postings from the database
+    return render_template('Destination/view_job_postings.html', job_postings=job_postings)
+
 # Route for driver applications
 @main_bp.route('/apply_to_job_posting/<int:job_id>', methods=['GET', 'POST'])
 @login_required
