@@ -255,6 +255,7 @@
                     <span class="error">{{ error }}</span>
                 {% endfor %}
             </p>
+            
 
             <p>
                 {{ form.birthdate.label }}<br>
@@ -283,17 +284,19 @@
         <p>&copy; 2024 BigRig Bonuses
     </footer>
 
-    <!-- Script to show/hide sponsor code -->
     <script>
         const roleSelect = document.querySelector('select[name="role"]');
         const sponsorCodeField = document.getElementById('sponsor-code-field');
-
+    
         roleSelect.addEventListener('change', function() {
             sponsorCodeField.style.display = this.value === 'sponsor' ? 'block' : 'none';
         });
-
+    
+        // Ensure the sponsor code field shows when the page loads if "sponsor" is already selected
         window.addEventListener('DOMContentLoaded', () => {
             if (roleSelect.value === 'sponsor') {
                 sponsorCodeField.style.display = 'block';
             }
-       
+        });
+    </script>
+    
