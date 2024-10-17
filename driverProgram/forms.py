@@ -57,7 +57,7 @@ class ApplyToJobPosting(FlaskForm):
     resume = FileField('Upload Resume', validators=[DataRequired()])
     submit = SubmitField('Submit Application')
 
-class JobPostingForm(FlaskForm):
+class JobPostForm(FlaskForm):
     job_title = StringField('Job Title', validators=[DataRequired()])
     job_description = TextAreaField('Job Description', validators=[DataRequired()])
     location = StringField('Location', validators=[DataRequired()])

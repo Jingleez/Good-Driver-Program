@@ -5,7 +5,7 @@ from sqlalchemy import text
 from flask_login import login_required, current_user
 import jwt
 from driverProgram.models import JobPosting, Sponsor, Application
-from driverProgram.forms import ApplyToJobPosting
+from driverProgram.forms import ApplyToJobPosting, JobPostForm
 from werkzeug.utils import secure_filename
 import os
 
@@ -115,7 +115,10 @@ def public_profile():
 @main_bp.route('/job_postings', methods=['GET', 'POST'])
 @login_required
 def job_postings():
-    return render_template('sponsor/job_postings.html')
+    form = JobPostForm()
+    if form.validate_on_submit():
+        pass
+    return render_template('sponsor/job_postings.html', form=form)
 
 
 # Authentication check helper function
@@ -196,7 +199,7 @@ def view_organizations():
 @login_required
 def view_job_postings():
     job_postings = JobPosting.query.all()  # Retrieve all job postings from the database
-    return render_template('Destination/view_job_postings.html', job_postings=job_postings)
+    return render_template('sponsor/view_job_postings.html', job_postings=job_postings)
 
 # Route for driver applications
 @main_bp.route('/apply_to_job_posting/<int:job_id>', methods=['GET', 'POST'])
