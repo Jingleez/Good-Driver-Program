@@ -106,26 +106,26 @@
 
     <div class="form-container">
         <form method="POST">
-            {{ form.hidden_tag() }}
+            {{ form.hidden_tag() }}  <!-- Ensure CSRF token is present -->
             <h2>Edit Public Profile</h2>
 
             <label for="company_name">Company Name</label>
-            <input type="text" id="company_name" name="company_name" value="{{ sponsor.company_name }}">
+            {{ form.company_name }}
 
             <label for="location">Location</label>
-            <input type="text" id="location" name="location" value="{{ sponsor.location }}">
+            {{ form.location }}
 
             <label for="phone">Phone Number</label>
-            <input type="text" id="phone" name="phone" value="{{ sponsor.phone }}">
+            {{ form.phone }}
 
             <label for="email">Email</label>
-            <input type="email" id="email" name="email" value="{{ sponsor.email }}">
+            {{ form.email }}
 
             <label for="website">Website</label>
-            <input type="text" id="website" name="website" value="{{ sponsor.website }}">
+            {{ form.website }}
 
             <label for="bio">Bio</label>
-            <textarea id="bio" name="bio">{{ sponsor.bio }}</textarea>
+            {{ form.bio }}
 
             <button type="submit">Save</button>
         </form>

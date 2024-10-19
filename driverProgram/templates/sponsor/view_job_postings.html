@@ -19,11 +19,8 @@
                     <p><strong>Location:</strong> {{ job.location }}</p>
                     <p><strong>Description:</strong> {{ job.description }}</p>
                     <p><strong>Salary:</strong> {{ job.salary }}</p>
-                    <p><strong>Required Hours:</strong> {{ job.required_hours }}</p>
+                    <p><strong>Required Hours:</strong> {{ job.hours }}</p>
                     <p><strong>Experience:</strong> {{ job.experience }}</p>
-                    
-                    <!-- Apply button to go to the application page for this job -->
-                    <a href="{{ url_for('main.apply_to_job_posting', job_id=job.id) }}" class="btn">Apply Now</a>
                 </div>
             {% endfor %}
         </div>
@@ -31,6 +28,6 @@
         <p>No job postings available at the moment. Please check back later.</p>
     {% endif %}
 
-    <a href="{{ url_for('main.index') }}">Back to Home</a>
+    <a href="{{ url_for('main.dashboard') }}">Back to Dashboard</a>
 </body>
 </html>

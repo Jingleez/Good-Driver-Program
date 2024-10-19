@@ -58,13 +58,14 @@ class ApplyToJobPosting(FlaskForm):
     submit = SubmitField('Submit Application')
 
 class JobPostForm(FlaskForm):
-    job_title = StringField('Job Title', validators=[DataRequired()])
-    job_description = TextAreaField('Job Description', validators=[DataRequired()])
+    title = StringField('Job Title', validators=[DataRequired()])  # Changed from 'job_title' to 'title'
+    description = TextAreaField('Job Description', validators=[DataRequired()])
     location = StringField('Location', validators=[DataRequired()])
-    salary = FloatField('Salary', validators=[DataRequired(), NumberRange(min=0)])
-    required_hours = IntegerField('Required Hours Per Week', validators=[DataRequired(), NumberRange(min=1, max=168)])
+    salary = StringField('Salary', validators=[DataRequired()])  # Changed from FloatField to StringField to match your model
+    hours = StringField('Required Hours', validators=[DataRequired()])  # Changed from 'required_hours' to 'hours'
     experience = StringField('Required Experience', validators=[DataRequired()])
     submit = SubmitField('Create Job Posting')
+
 
 class SponsorProfileForm(FlaskForm):
     company_name = StringField('Company Name', validators=[DataRequired()])
@@ -73,5 +74,5 @@ class SponsorProfileForm(FlaskForm):
     email = StringField('Email', validators=[DataRequired(), Email()])
     website = StringField('Website', validators=[Optional()])
     bio = TextAreaField('Company Bio', validators=[Optional()])
-    profile_picture = FileField('Upload Profile Picture', validators=[Optional()])
+    #profile_picture = FileField('Upload Profile Picture', validators=[Optional()])
     submit = SubmitField('Save Profile')
