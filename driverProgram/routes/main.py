@@ -204,22 +204,28 @@ def job_postings():
     form = JobPostForm()
 
     if form.validate_on_submit() and request.method == 'POST':
+        # Create a new job posting
         new_job = JobPosting(
             title=form.title.data,
             description=form.description.data,
             location=form.location.data,
             salary=form.salary.data,
-            hours=form.hours.data,
+            hours=form.required_hours.data,
             experience=form.experience.data,
-            sponsor_id=current_user.sponsor.id 
+            sponsor_id=current_user.sponsor.id  # Ensure that sponsor_id is saved
         )
         db.session.add(new_job)
         db.session.commit()
 
+        # Flash success message and redirect
         flash('Job posted successfully!', 'success')
         return redirect(url_for('main.job_postings'))
-    job_postings = JobPosting.query.filter_by(sponsor_id=current_user.sponsor.id).all()
+
+    # Fetch all job postings without filtering by sponsor
+    job_postings = JobPosting.query.all()
+
     return render_template('sponsor/job_postings.html', form=form, job_postings=job_postings)
+
 
 
 @main_bp.route('/view_job_postings', methods=['GET'])
