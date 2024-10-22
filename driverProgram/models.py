@@ -57,3 +57,28 @@ class Application(db.Model):
     # Relationships to job postings and users
     user = db.relationship('User', backref='applications')
     job = db.relationship('JobPosting', backref='applications')
+
+
+# New ApplicationSponsor model (many-to-many between applications and sponsors)
+class ApplicationSponsor(db.Model):
+    __tablename__ = 'application_sponsor'
+    id = db.Column(db.Integer, primary_key=True)
+    application_id = db.Column(db.Integer, db.ForeignKey('applications.id'), nullable=False)
+    sponsor_id = db.Column(db.Integer, db.ForeignKey('sponsors.id'), nullable=False)
+    status = db.Column(db.String(50), default='pending')  # Status of the application for this sponsor
+    # Foreign key relationships
+    application = db.relationship('Application', backref='application_sponsors')
+    sponsor = db.relationship('Sponsor', backref='application_sponsors')
+
+# Notification model
+class Notification(db.Model):
+    __tablename__ = 'notifications'
+    id = db.Column(db.Integer, primary_key=True)
+    message = db.Column(db.String(255), nullable=False)
+    sponsor_id = db.Column(db.Integer, db.ForeignKey('sponsors.id'), nullable=False)
+    job_id = db.Column(db.Integer, db.ForeignKey('job_postings.id'), nullable=True)
+    application_id = db.Column(db.Integer, db.ForeignKey('applications.id'), nullable=True)
+    is_read = db.Column(db.Boolean, default=False)
+    created_at = db.Column(db.DateTime, default=db.func.current_timestamp())
+    # Relationships
+    sponsor = db.relationship('Sponsor', backref='notifications')

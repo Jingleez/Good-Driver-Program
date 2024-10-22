@@ -1,10 +1,11 @@
+from datetime import datetime
 from flask import Blueprint, render_template, redirect, url_for, session, flash, request, current_app
 from driverProgram import db 
 from driverProgram import check_database_connection
 from sqlalchemy import text 
 from flask_login import login_required, current_user
 import jwt
-from driverProgram.models import JobPosting, Sponsor, Application
+from driverProgram.models import JobPosting, Sponsor, Application, Notification, ApplicationSponsor
 from driverProgram.forms import ApplyToJobPosting, JobPostForm, SponsorProfileForm
 from werkzeug.utils import secure_filename
 import os
@@ -143,10 +144,51 @@ def admin_reports():
 
 
 # Sponsor dashboard navigation links
-@main_bp.route('/approve-applications')
+@main_bp.route('/approve_applications', methods=['GET'])
 @login_required
 def approve_applications():
-    return render_template('sponsor/approve_applications.html')
+    sponsor = current_user.sponsor
+    if not sponsor:
+        flash('Sponsor profile not found.', 'danger')
+        return redirect(url_for('main.dashboard'))
+    # Mark notifications related to applications as read
+    Notification.query.filter_by(sponsor_id=sponsor.id, is_read=False).update({'is_read': True})
+    db.session.commit()
+    pending_applications = Application.query.join(ApplicationSponsor).filter(
+        ApplicationSponsor.sponsor_id == sponsor.id,
+        ApplicationSponsor.status == 'pending'
+    ).all()
+    return render_template('sponsor/approve_applications.html', applications=pending_applications)
+
+@main_bp.route('/approve_application/<int:application_id>/<string:action>', methods=['POST'])
+@login_required
+def approve_application_action(application_id, action):
+    sponsor = current_user.sponsor
+    if not sponsor:
+        flash('Sponsor profile not found.', 'danger')
+        return redirect(url_for('main.dashboard'))
+    association = ApplicationSponsor.query.filter_by(
+        application_id=application_id,
+        sponsor_id=sponsor.id
+    ).first()
+    if not association:
+        flash('Application not found or already processed.', 'danger')
+        return redirect(url_for('main.approve_applications'))
+    if action == 'approve':
+        association.status = 'accepted'
+        db.session.commit()
+        # Remove notification for this application for all sponsors in the organization
+        Notification.query.filter_by(application_id=application_id).delete()
+        db.session.commit()
+        flash('Application approved.', 'success')
+    elif action == 'reject':
+        association.status = 'rejected'
+        db.session.commit()
+        flash('Application rejected.', 'info')
+    else:
+        flash('Invalid action.', 'danger')
+    return redirect(url_for('main.approve_applications'))
+
 
 @main_bp.route('/sponsor/product-catalog')
 @login_required
@@ -281,28 +323,44 @@ def view_organizations():
 def apply_to_job_posting(job_id):
     form = ApplyToJobPosting()
     job = JobPosting.query.get_or_404(job_id)
-
     if form.validate_on_submit():
         # Handle file saving
         resume_file = form.resume.data
         filename = secure_filename(resume_file.filename)
         resume_path = os.path.join(current_app.config['UPLOAD_FOLDER'], filename)
         resume_file.save(resume_path)
-
-        # Create a new application with the additional fields
+        # Create a new application
         new_application = Application(
-            user_id = current_user.id,
-            job_id = job_id,
-            first_name = form.first_name.data,
-            last_name = form.last_name.data,
-            email = form.email.data,
-            phone = form.phone.data,
-            resume = filename
+            user_id=current_user.id,
+            job_id=job_id,
+            first_name=form.first_name.data,
+            last_name=form.last_name.data,
+            email=form.email.data,
+            phone=form.phone.data,
+            resume=filename,
+            date_submitted=datetime.utcnow()
         )
         db.session.add(new_application)
         db.session.commit()
-
+        # Create notifications for all sponsors in the organization
+        organization = job.organization
+        for sponsor in organization.sponsors:
+            notification_message = f"New application from {new_application.first_name} {new_application.last_name} for the job {job.title}."
+            notification = Notification(
+                message=notification_message,
+                sponsor_id=sponsor.id,
+                job_id=job.id,
+                application_id=new_application.id
+            )
+            db.session.add(notification)
+        db.session.commit()
         flash('Your application has been submitted successfully.', 'success')
         return redirect(url_for('main.job_postings'))
-
     return render_template('Destination/apply_to_job_posting.html', form=form, job=job)
+
+
+@main_bp.route('/notifications', methods=['GET'])
+@login_required
+def notifications():
+    #unread_notifications = Notification.query.filter_by(sponsor_id=sponsor.id, is_read=False).all()
+    return render_template('sponsor/notification.html')
