@@ -60,23 +60,36 @@
         <form id="job-form" method="POST" action="{{ url_for('main.job_postings') }}">
             {{ form.hidden_tag() }}
 
-            <label for="title">Job Title</label>
-            {{ form.title(class="form-control") }}
-
-            <label for="description">Job Description</label>
-            {{ form.description(class="form-control") }}
-
-            <label for="location">Location</label>
-            {{ form.location(class="form-control") }}
-
-            <label for="salary">Salary</label>
-            {{ form.salary(class="form-control") }}
-
-            <label for="hours">Required Hours</label>
-            {{ form.hours(class="form-control") }}
-
-            <label for="experience">Experience</label>
-            {{ form.experience(class="form-control") }}
+            <div style="margin-bottom: 15px;">
+                <label for="title">Job Title</label>
+                {{ form.title(class="form-control", style="width: 100%;") }}
+            </div>
+    
+            <div style="margin-bottom: 15px;">
+                <label for="description">Job Description</label>
+                {{ form.description(class="form-control", style="width: 100%;") }}
+            </div>
+    
+            <div style="margin-bottom: 15px;">
+                <label for="location">Location</label>
+                {{ form.location(class="form-control", style="width: 100%;") }}
+            </div>
+    
+            <div style="margin-bottom: 15px;">
+                <label for="salary">Salary</label>
+                {{ form.salary(class="form-control", style="width: 100%;") }}
+            </div>
+    
+            <div style="margin-bottom: 15px;">
+                <label for="hours">Required Hours</label>
+                {{ form.hours(class="form-control", style="width: 100%;") }}
+            </div>
+    
+            <div style="margin-bottom: 15px;">
+                <label for="experience">Experience</label>
+                {{ form.experience(class="form-control", style="width: 100%;") }}
+            </div>
+    
 
             <button type="submit" class="btn btn-primary" style="
                 background-color: #4a90e2;

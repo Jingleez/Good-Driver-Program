@@ -1,135 +1,85 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Edit Public Profile</title>
+<div class="content-area">
+    <h2>Your Public Profile</h2>
+    
+    <!-- Display section -->
+    <div id="view-section">
+        <div>
+            <label for="company_name">Company Name:</label>
+            <p id="company_name">{{ sponsor.company_name }}</p>
+        </div>
+        <div>
+            <label for="location">Location:</label>
+            <p id="location">{{ sponsor.location }}</p>
+        </div>
+        <div>
+            <label for="phone">Phone Number:</label>
+            <p id="phone">{{ sponsor.phone }}</p>
+        </div>
+        <div>
+            <label for="email">Email:</label>
+            <p id="email">{{ sponsor.email }}</p>
+        </div>
+        <div>
+            <label for="website">Website:</label>
+            <p id="website">{{ sponsor.website }}</p>
+        </div>
+        <div>
+            <label for="bio">Bio:</label>
+            <p id="bio">{{ sponsor.bio }}</p>
+        </div>
+        
+    </div>
 
-    <!-- Google Fonts for Professional Typography -->
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
-
-    <!-- Font Awesome for Icons (optional) -->
-    <script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
-
-    <style>
-        /* General Styling */
-        body {
-            font-family: 'Poppins', sans-serif;
-            background-color: #1a1a1a; /* Dark background */
-            margin: 0;
-            padding: 0;
-            display: flex;
-            flex-direction: column;
-            height: 100vh;
-            color: #fff;
-            overflow-x: hidden;
-        }
-
-        /* Container for Form */
-        .form-container {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100%;
-            padding: 20px;
-        }
-
-        /* Form Styling */
-        form {
-            background-color: #333; /* Darker background for form */
-            padding: 40px;
-            border-radius: 10px;
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-            width: 100%; /* Full width */
-            max-width: 600px; /* Limit max width */
-            color: #fff;
-        }
-
-        h2 {
-            font-size: 1.8em;
-            color: #4a90e2; /* Light blue */
-            text-align: center;
-            margin-bottom: 20px;
-        }
-
-        label {
-            display: block;
-            margin-bottom: 10px;
-            color: #d4d4d4;
-            font-weight: 600;
-        }
-
-        input[type="text"],
-        input[type="email"],
-        textarea {
-            width: 100%;
-            padding: 10px;
-            margin-bottom: 15px;
-            border: none;
-            border-radius: 5px;
-            background-color: #2b2b2b;
-            color: #fff;
-            box-sizing: border-box; /* Ensure padding doesn't affect width */
-        }
-
-        textarea {
-            resize: vertical;
-            height: 100px;
-        }
-
-        button {
-            width: 100%;
-            padding: 10px;
-            background-color: #0b3d91;
-            color: #fff;
-            border: none;
-            border-radius: 5px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: background-color 0.3s ease;
-        }
-
-        button:hover {
-            background-color: #274c9d;
-        }
-
-        /* Responsive */
-        @media (max-width: 768px) {
-            form {
-                width: 100%; /* Use full width for smaller screens */
-                padding: 20px;
-            }
-        }
-    </style>
-</head>
-<body>
-
-    <div class="form-container">
-        <form method="POST">
-            {{ form.hidden_tag() }}  <!-- Ensure CSRF token is present -->
-            <h2>Edit Public Profile</h2>
-
-            <label for="company_name">Company Name</label>
-            {{ form.company_name }}
-
-            <label for="location">Location</label>
-            {{ form.location }}
-
-            <label for="phone">Phone Number</label>
-            {{ form.phone }}
-
-            <label for="email">Email</label>
-            {{ form.email }}
-
-            <label for="website">Website</label>
-            {{ form.website }}
-
-            <label for="bio">Bio</label>
-            {{ form.bio }}
-
-            <button type="submit">Save</button>
+    <!-- Edit section -->
+    <div id="edit-section">
+        <h2>Edit Public Profile</h2>
+        <form action="{{ url_for('main.public_profile') }}" method="POST">
+            {{ form.hidden_tag() }}
+            <div>
+                <label for="company_name">Company Name:</label>
+                <input type="text" name="company_name" value="{{ sponsor.company_name }}">
+            </div>
+            <div>
+                <label for="location">Location:</label>
+                <input type="text" name="location" value="{{ sponsor.location }}">
+            </div>
+            <div>
+                <label for="phone">Phone Number:</label>
+                <input type="text" name="phone" value="{{ sponsor.phone }}">
+            </div>
+            <div>
+                <label for="email">Email:</label>
+                <input type="email" name="email" value="{{ sponsor.email }}">
+            </div>
+            <div>
+                <label for="website">Website:</label>
+                <input type="text" name="website" value="{{ sponsor.website }}">
+            </div>
+            <div>
+                <label for="bio">Bio:</label>
+                <textarea name="bio">{{ sponsor.bio }}</textarea>
+            </div>
+            <button type="submit" class="edit-button">Save Changes</button>
+            <button type="button" class="edit-button" onclick="toggleEdit()">Cancel</button>
         </form>
     </div>
+</div>
+
+<script>
+    function toggleEdit() {
+        const editSection = document.getElementById('edit-section');
+        const viewSection = document.getElementById('view-section');
+
+        // Toggle visibility
+        if (editSection.style.display === 'none') {
+            editSection.style.display = 'block';
+            viewSection.style.display = 'none';
+        } else {
+            editSection.style.display = 'none';
+            viewSection.style.display = 'block';
+        }
+    }
+</script>
 
 </body>
 </html>

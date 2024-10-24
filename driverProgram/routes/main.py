@@ -200,18 +200,18 @@ def sponsor_product_catalog():
 def participating_drivers():
     return render_template('sponsor/participating_drivers.html')
 
-@main_bp.route('/public_profile', methods=['GET', 'POST'])
+@main_bp.route('/public_profile', methods=['GET', 'POST']) 
 @login_required
 def public_profile():
     form = SponsorProfileForm()
 
     # Check if the current user has a sponsor associated
     sponsor = Sponsor.query.filter_by(user_id=current_user.id).first()
-    
+
     # If no sponsor record exists, create a blank sponsor record
     if sponsor is None:
         sponsor = Sponsor(user_id=current_user.id)  # Creating an empty sponsor object for the current user
-    
+
     # Prepopulate the form with sponsor details if they exist
     if request.method == 'GET':
         form.company_name.data = sponsor.company_name or ""
@@ -233,11 +233,14 @@ def public_profile():
         # Add new sponsor if it's not already in the database
         if sponsor.id is None:
             db.session.add(sponsor)
-        
+
         db.session.commit()
         flash('Public profile updated successfully!', 'success')
-        return redirect(url_for('main.public_profile'))
 
+        # After updating, render the updated profile view
+        return render_template('sponsor/public_profile.html', sponsor=sponsor, form=form)
+
+    # Render the profile view (GET request)
     return render_template('sponsor/public_profile.html', sponsor=sponsor, form=form)
 
 @main_bp.route('/job_postings', methods=['GET', 'POST'])
@@ -252,7 +255,7 @@ def job_postings():
             description=form.description.data,
             location=form.location.data,
             salary=form.salary.data,
-            hours=form.required_hours.data,
+            hours=form.hours.data,
             experience=form.experience.data,
             sponsor_id=current_user.sponsor.id  # Ensure that sponsor_id is saved
         )
