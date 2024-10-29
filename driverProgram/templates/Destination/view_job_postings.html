@@ -1,0 +1,39 @@
+{% block content %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Available Job Postings</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+    <h1>Available Job Postings</h1>
+
+    <!-- Check if there are any job postings -->
+    {% if job_postings %}
+        <div class="job-list">
+            <!-- Loop through each job posting and display its details -->
+            {% for job in job_postings %}
+                <div class="job-item">
+                    <h2>{{ job.title }}</h2> <!-- Assuming title is a field -->
+                    <p><strong>Company:</strong> {{ job.sponsor.company_name }}</p> <!-- Assuming sponsor is a relationship -->
+                    <p><strong>Location:</strong> {{ job.location }}</p>
+                    <p><strong>Description:</strong> {{ job.description }}</p>
+                    <p><strong>Salary:</strong> {{ job.salary }}</p>
+                    <p><strong>Required Hours:</strong> {{ job.hours }}</p>
+                    <p><strong>Experience:</strong> {{ job.experience }}</p>
+                    
+                    <!-- Button to apply for the job -->
+                    <a href="{{ url_for('main.apply_to_job_posting', job_id=job.id) }}" class="btn">Apply</a>
+                </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <p>No job postings available at the moment. Please check back later.</p>
+    {% endif %}
+
+    
+</body>
+</html>
+{% endblock %}

@@ -273,14 +273,6 @@ def job_postings():
 
 
 
-@main_bp.route('/view_job_postings', methods=['GET'])
-@login_required
-def view_job_postings():
-    job_postings = JobPosting.query.filter_by(sponsor_id=current_user.sponsor.id).all()
-    return render_template('sponsor/view_job_postings.html', job_postings=job_postings)
-
-
-
 
 
 
@@ -317,6 +309,13 @@ def view_organizations():
     organizations = Sponsor.query.all()  
     return render_template('Destination/view_organizations.html', organizations=organizations)
 
+
+@main_bp.route('/view_job_postings', methods=['GET'])
+@login_required
+def view_job_postings():
+    job_postings = JobPosting.query.all()  # Assuming you have a JobPosting model
+    return render_template('Destination/view_job_postings.html', job_postings=job_postings)
+
 # Route for driver applications
 @main_bp.route('/apply_to_job_posting/<int:job_id>', methods=['GET', 'POST'])
 @login_required
@@ -351,18 +350,7 @@ def apply_to_job_posting(job_id):
         db.session.commit()
         
         # Create notifications for all sponsors in the organization
-        organization = job.organization
-        for sponsor in organization.sponsors:
-            notification_message = f"New application from {new_application.first_name} {new_application.last_name} for the job {job.title}."
-            notification = Notification(
-                message=notification_message,
-                sponsor_id=sponsor.id,
-                job_id=job.id,
-                application_id=new_application.id
-            )
-            db.session.add(notification)
-        db.session.commit()
-        
+   
         #organization = job.organization
         #for sponsor in organization.sponsors:
         #    notification_message = f"New application from {new_application.first_name} {new_application.last_name} for the job {job.title}."
@@ -375,7 +363,7 @@ def apply_to_job_posting(job_id):
         #    db.session.add(notification)
         #db.session.commit()
         flash('Your application has been submitted successfully.', 'success')
-        return redirect(url_for('main.job_postings'))
+        return redirect(url_for('main.view_job_postings'))
     return render_template('Destination/apply_to_job_posting.html', form=form, job=job)
 
 
