@@ -362,7 +362,7 @@ def apply_to_job_posting(job_id):
         db.session.commit()
 
         flash('Your application has been submitted successfully.', 'success')
-        return redirect(url_for('main.job_postings'))
+        return redirect(url_for('main.view_job_postings'))
 
     return render_template('driver/apply_to_job_posting.html', form=form, job=job)
 
