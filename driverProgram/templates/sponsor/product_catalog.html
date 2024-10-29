@@ -1,24 +1,68 @@
-<div class="content-area">
-    <h2>Product Catalog</h2>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Product Catalog</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/catalog.css') }}">
+</head>
+<body>
+    <div class="content-area">
+        <!-- Header with search and edit catalog button -->
+        <header class="catalog-header">
+            <div class="catalog-title">Product Catalog</div>
+            <div class="catalog-controls">
+                <button class="nav-button">&#9664;</button>
+                <input type="text" class="search-bar" placeholder="Search">
+                <button class="search-button">&#128269;</button>
+                <button class="edit-catalog-button">&#9881; Edit Catalog</button>
+            </div>
+        </header>
 
-    <div class="product-grid">
-        {% for product in products %}
-        <div class="product-card">
-            <img src="{{ product.image_url }}" alt="{{ product.name }}">
-            <div class="product-info">
-                <h3>{{ product.name }}</h3>
-                <p>{{ product.description }}</p>
-                <div class="price">{{ product.price }} Points</div>
-                <button onclick="addToCart({{ product.id }})">Add to Cart</button>
+        <!-- "Add Product" Button -->
+        <button id="addProductButton" class="add-product-button">Add Product</button>
+        
+        <!-- Product grid -->
+        <div class="product-grid" id="productGrid">
+            <!-- Sample product card -->
+            <div class="product-card">
+                <div class="product-header">
+                    <span>Name</span>
+                    <button class="remove-product" onclick="removeProduct(this)">&#10060;</button>
+                </div>
+                <div class="product-image">IMG</div>
+                <div class="product-footer">
+                    <span>Points: X</span>
+                    <button class="settings-button">&#9881;</button>
+                </div>
             </div>
         </div>
-        {% endfor %}
     </div>
 
     <script>
-        function addToCart(productId) {
-            // Handle add to cart logic
-            console.log('Added Product ID:', productId);
+        document.getElementById('addProductButton').addEventListener('click', addProduct);
+
+        function addProduct() {
+            // Clone the first product card as a template
+            const productGrid = document.getElementById('productGrid');
+            const templateCard = productGrid.querySelector('.product-card');
+            const newCard = templateCard.cloneNode(true);
+
+            // Customize the new card content (e.g., set unique name or points)
+            newCard.querySelector('.product-header span').textContent = "New Product";
+            newCard.querySelector('.product-footer span').textContent = "Points: X";
+
+            // Update the remove button for the new card
+            newCard.querySelector('.remove-product').onclick = function() { removeProduct(this); };
+
+            // Append the new card to the product grid
+            productGrid.appendChild(newCard);
+        }
+
+        function removeProduct(button) {
+            const card = button.closest('.product-card');
+            card.remove();
         }
     </script>
-</div>
+</body>
+</html>

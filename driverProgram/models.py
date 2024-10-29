@@ -53,6 +53,7 @@ class Application(db.Model):
     phone = db.Column(db.String(15), nullable=False)
     resume = db.Column(db.String(200), nullable=False)
     status = db.Column(db.String(50), default='Pending')
+    date_submitted = db.Column(db.DateTime, nullable=False, default=db.func.current_timestamp())
 
     # Relationships to job postings and users
     user = db.relationship('User', backref='applications')
