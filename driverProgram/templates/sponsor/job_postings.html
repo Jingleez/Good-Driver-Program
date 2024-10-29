@@ -21,8 +21,6 @@
                         <p><strong>Required Hours:</strong> {{ job.hours }}</p>
                         <p><strong>Experience:</strong> {{ job.experience }}</p>
                         
-                        <!-- Apply button to go to the application page for this job -->
-                        <a href="{{ url_for('main.apply_to_job_posting', job_id=job.id) }}" class="btn">Apply Now</a>
                     </div>
                 {% endfor %}
             </div>

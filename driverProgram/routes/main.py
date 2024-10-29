@@ -200,7 +200,7 @@ def sponsor_product_catalog():
 def participating_drivers():
     return render_template('sponsor/participating_drivers.html')
 
-@main_bp.route('/public_profile', methods=['GET', 'POST']) 
+@main_bp.route('/sponsor/public_profile', methods=['GET', 'POST']) 
 @login_required
 def public_profile():
     form = SponsorProfileForm()
@@ -309,15 +309,12 @@ def review_purchases():
 
 
 
-
-
-
 # Route for viewing all organization profiles
 @main_bp.route('/view_organizations', methods=['GET'])
 @login_required
 def view_organizations():
     # Query the database for all organizations (sponsors)
-    organizations = Sponsor.query.all()  # Assuming you have a Sponsor model
+    organizations = Sponsor.query.all()  
     return render_template('Destination/view_organizations.html', organizations=organizations)
 
 # Route for driver applications
@@ -346,17 +343,17 @@ def apply_to_job_posting(job_id):
         db.session.add(new_application)
         db.session.commit()
         # Create notifications for all sponsors in the organization
-        organization = job.organization
-        for sponsor in organization.sponsors:
-            notification_message = f"New application from {new_application.first_name} {new_application.last_name} for the job {job.title}."
-            notification = Notification(
-                message=notification_message,
-                sponsor_id=sponsor.id,
-                job_id=job.id,
-                application_id=new_application.id
-            )
-            db.session.add(notification)
-        db.session.commit()
+        #organization = job.organization
+        #for sponsor in organization.sponsors:
+        #    notification_message = f"New application from {new_application.first_name} {new_application.last_name} for the job {job.title}."
+        #    notification = Notification(
+        #        message=notification_message,
+        #        sponsor_id=sponsor.id,
+        #       job_id=job.id,
+        #       application_id=new_application.id
+        #   )
+        #    db.session.add(notification)
+        #db.session.commit()
         flash('Your application has been submitted successfully.', 'success')
         return redirect(url_for('main.job_postings'))
     return render_template('Destination/apply_to_job_posting.html', form=form, job=job)

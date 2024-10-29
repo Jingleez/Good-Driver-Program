@@ -1,3 +1,4 @@
+{% block content %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -15,15 +16,16 @@
             <!-- Loop through each organization and display its details -->
             {% for org in organizations %}
                 <div class="organization-item">
-                    <h2>{{ org.company_name }}</h2> <!-- Assuming company_name is a field -->
+                    <h2>{{ org.company_name }}</h2>
                     <p><strong>Location:</strong> {{ org.location }}</p>
-                    <p><strong>Phone:</strong> {{ org.phone }}</p> <!-- Assuming phone is a field -->
-                    <p><strong>Email:</strong> <a href="mailto:{{ org.email }}">{{ org.email }}</a></p> <!-- Assuming email is a field -->
-                    <p><strong>Website:</strong> <a href="{{ org.website }}" target="_blank">{{ org.website }}</a></p> <!-- Assuming website is a field -->
-                    <p><strong>Bio:</strong> {{ org.bio }}</p> <!-- Assuming bio is a field -->
+                    <p><strong>Phone:</strong> {{ org.phone }}</p>
+                    <p><strong>Email:</strong> <a href="mailto:{{ org.email }}">{{ org.email }}</a></p>
+                    <p><strong>Website:</strong> <a href="{{ org.website }}" target="_blank">{{ org.website }}</a></p>
+                    <p><strong>Bio:</strong> {{ org.bio }}</p>
                     
+                    <!-- NOTE fix later -->
                     <!-- Button to view available jobs for this organization -->
-                    <a href="{{ url_for('main.view_job_postings_by_sponsor', sponsor_id=org.id) }}" class="btn">Available Jobs</a>
+                    <!-- <a href="{{ url_for('main.view_job_postings', sponsor_id=org.id) }}" class="btn">Available Jobs</a> -->
                 </div>
             {% endfor %}
         </div>
@@ -31,6 +33,6 @@
         <p>No organizations available at the moment. Please check back later.</p>
     {% endif %}
 
-    <a href="{{ url_for('main.index') }}">Back to Home</a>
 </body>
 </html>
+{% endblock %}
