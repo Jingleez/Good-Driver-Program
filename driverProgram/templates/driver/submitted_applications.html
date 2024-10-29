@@ -1,0 +1,10 @@
+<h2>Your Submitted Applications</h2>
+<ul>
+    {% for application in applications %}
+        <li>
+            <strong>Job:</strong> {{ application.job.title }} | <strong>Status:</strong> {{ application.status }}
+        </li>
+    {% else %}
+        <li>No applications found.</li>
+    {% endfor %}
+</ul>
