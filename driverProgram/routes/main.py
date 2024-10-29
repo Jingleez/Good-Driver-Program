@@ -151,42 +151,40 @@ def approve_applications():
     if not sponsor:
         flash('Sponsor profile not found.', 'danger')
         return redirect(url_for('main.dashboard'))
+
     # Mark notifications related to applications as read
     Notification.query.filter_by(sponsor_id=sponsor.id, is_read=False).update({'is_read': True})
     db.session.commit()
+
     pending_applications = Application.query.join(ApplicationSponsor).filter(
         ApplicationSponsor.sponsor_id == sponsor.id,
         ApplicationSponsor.status == 'pending'
     ).all()
+
     return render_template('sponsor/approve_applications.html', applications=pending_applications)
 
-@main_bp.route('/approve_application/<int:application_id>/<string:action>', methods=['POST'])
+@main_bp.route('/approve_application/<int:application_id>', methods=['POST'])
 @login_required
-def approve_application_action(application_id, action):
-    sponsor = current_user.sponsor
-    if not sponsor:
-        flash('Sponsor profile not found.', 'danger')
-        return redirect(url_for('main.dashboard'))
-    association = ApplicationSponsor.query.filter_by(
+def approve_application(application_id):
+    application_sponsor = ApplicationSponsor.query.filter_by(
         application_id=application_id,
-        sponsor_id=sponsor.id
-    ).first()
-    if not association:
-        flash('Application not found or already processed.', 'danger')
-        return redirect(url_for('main.approve_applications'))
-    if action == 'approve':
-        association.status = 'accepted'
-        db.session.commit()
-        # Remove notification for this application for all sponsors in the organization
-        Notification.query.filter_by(application_id=application_id).delete()
-        db.session.commit()
-        flash('Application approved.', 'success')
-    elif action == 'reject':
-        association.status = 'rejected'
-        db.session.commit()
-        flash('Application rejected.', 'info')
-    else:
-        flash('Invalid action.', 'danger')
+        sponsor_id=current_user.sponsor.id
+    ).first_or_404()
+    application_sponsor.status = 'Approved'
+    db.session.commit()
+    flash('Application approved.', 'success')
+    return redirect(url_for('main.approve_applications'))
+
+@main_bp.route('/reject_application/<int:application_id>', methods=['POST'])
+@login_required
+def reject_application(application_id):
+    application_sponsor = ApplicationSponsor.query.filter_by(
+        application_id=application_id,
+        sponsor_id=current_user.sponsor.id
+    ).first_or_404()
+    application_sponsor.status = 'Denied'
+    db.session.commit()
+    flash('Application rejected.', 'info')
     return redirect(url_for('main.approve_applications'))
 
 
@@ -349,19 +347,20 @@ def apply_to_job_posting(job_id):
         db.session.add(new_application)
         db.session.commit()
         
-        # Create notifications for all sponsors in the organization
-   
-        #organization = job.organization
-        #for sponsor in organization.sponsors:
-        #    notification_message = f"New application from {new_application.first_name} {new_application.last_name} for the job {job.title}."
-        #    notification = Notification(
-        #        message=notification_message,
-        #        sponsor_id=sponsor.id,
-        #       job_id=job.id,
-        #       application_id=new_application.id
-        #   )
-        #    db.session.add(notification)
-        #db.session.commit()
+        # Create a notification for the sponsor
+        sponsor = job.sponsor
+        notification_message = f"New application from {new_application.first_name} {new_application.last_name} for the job '{job.title}'."
+        notification = Notification(
+            message=notification_message,
+            sponsor_id=sponsor.id,
+            job_id=job.id,
+            application_id=new_application.id,
+            is_read=False,
+            created_at=datetime.utcnow()
+        )
+        db.session.add(notification)
+        db.session.commit()
+
         flash('Your application has been submitted successfully.', 'success')
         return redirect(url_for('main.view_job_postings'))
     return render_template('Destination/apply_to_job_posting.html', form=form, job=job)
@@ -369,6 +368,9 @@ def apply_to_job_posting(job_id):
 
 @main_bp.route('/notifications', methods=['GET'])
 @login_required
-def notifications():
-    #unread_notifications = Notification.query.filter_by(sponsor_id=sponsor.id, is_read=False).all()
-    return render_template('sponsor/notification.html')
+def view_notifications():
+    sponsor = current_user.sponsor
+    notifications_list = Notification.query.filter_by(
+        sponsor_id=sponsor.id,
+    ).order_by(Notification.created_at.desc()).all()
+    return render_template('sponsor/notification.html', notifications=notifications_list)

@@ -53,29 +53,30 @@
             </tr>
         </thead>
         <tbody>
-            {% for app in applications %}
+            {% for app_sponsor in applications %}
             <tr>
-                <td>{{ app.name }}</td>
-                <td>{{ app.date }}</td>
-                <td>{{ app.status }}</td>
+                <!-- Display the driver's full name from the Application model -->
+                <td>{{ app_sponsor.application.full_name }}</td>
+                
+                <!-- Format the application date -->
+                <td>{{ app_sponsor.date_submitted.strftime('%Y-%m-%d') }}</td>
+                
+                <!-- Display application status -->
+                <td>{{ app_sponsor.status }}</td>
+                
+                <!-- Approve and Reject buttons as form-based actions -->
                 <td>
-                    <button class="approve-btn" onclick="approveApplication({{ app.id }})">Approve</button>
-                    <button class="reject-btn" onclick="rejectApplication({{ app.id }})">Reject</button>
+                    <form action="{{ url_for('main.approve_application', application_id=app_sponsor.application_id) }}" method="post" style="display:inline;">
+                        {{ csrf_token() }}
+                        <button type="submit" class="approve-btn">Approve</button>
+                    </form>
+                    <form action="{{ url_for('main.reject_application', application_id=app_sponsor.application_id) }}" method="post" style="display:inline;">
+                        {{ csrf_token() }}
+                        <button type="submit" class="reject-btn">Reject</button>
+                    </form>
                 </td>
             </tr>
             {% endfor %}
         </tbody>        
     </table>
-
-    <script>
-        function approveApplication(appId) {
-            // Handle approval logic
-            console.log('Approved Application ID:', appId);
-        }
-
-        function rejectApplication(appId) {
-            // Handle rejection logic
-            console.log('Rejected Application ID:', appId);
-        }
-    </script>
 </section>
