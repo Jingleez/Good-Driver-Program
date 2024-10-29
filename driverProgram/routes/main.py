@@ -362,10 +362,20 @@ def apply_to_job_posting(job_id):
         db.session.commit()
 
         flash('Your application has been submitted successfully.', 'success')
-        return redirect(url_for('main.view_job_postings'))
-    return render_template('Destination/apply_to_job_posting.html', form=form, job=job)
+        return redirect(url_for('main.job_postings'))
 
+    return render_template('driver/apply_to_job_posting.html', form=form, job=job)
 
+# Route to drivers to view submitted applications
+@main_bp.route('/driver/submitted_applications', methods=['GET'])
+@login_required
+def submitted_applications():
+    # Query applications for the logged-in user
+    applications = Application.query.filter_by(user_id=current_user.id).all()
+
+    return render_template('driver/submitted_applications.html', applications=applications)
+
+# Route for notifications to send to org
 @main_bp.route('/notifications', methods=['GET'])
 @login_required
 def view_notifications():
