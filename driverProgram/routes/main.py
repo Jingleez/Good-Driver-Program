@@ -330,8 +330,15 @@ def apply_to_job_posting(job_id):
         # Handle file saving
         resume_file = form.resume.data
         filename = secure_filename(resume_file.filename)
-        resume_path = os.path.join(current_app.config['UPLOAD_FOLDER'], filename)
+        upload_folder = current_app.config['UPLOAD_FOLDER']
+        
+        # Check if the directory exists, if not create it
+        if not os.path.exists(upload_folder):
+            os.makedirs(upload_folder)
+        
+        resume_path = os.path.join(upload_folder, filename)
         resume_file.save(resume_path)
+        
         # Create a new application
         new_application = Application(
             user_id=current_user.id,
@@ -345,6 +352,7 @@ def apply_to_job_posting(job_id):
         )
         db.session.add(new_application)
         db.session.commit()
+        
         # Create notifications for all sponsors in the organization
         organization = job.organization
         for sponsor in organization.sponsors:
@@ -357,6 +365,7 @@ def apply_to_job_posting(job_id):
             )
             db.session.add(notification)
         db.session.commit()
+        
         flash('Your application has been submitted successfully.', 'success')
         return redirect(url_for('main.job_postings'))
     return render_template('Destination/apply_to_job_posting.html', form=form, job=job)
