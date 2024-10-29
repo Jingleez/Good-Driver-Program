@@ -1,0 +1,108 @@
+body {
+    background-color: #1a1a1a; /* Matches the dark background of the dashboard */
+    color: #fff; /* Ensures all text is white for visibility */
+}
+
+.content-area {
+    background-color: #333; /* Dark content background for catalog */
+    padding: 20px;
+    border-radius: 10px;
+    margin: 20px auto;
+    max-width: 1200px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+}
+
+/* Header styling */
+.catalog-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 20px;
+    color: #4a90e2; /* Light blue for header text */
+}
+
+.catalog-controls .search-bar {
+    padding: 8px;
+    font-size: 16px;
+    width: 250px;
+    border-radius: 4px;
+    border: 1px solid #555;
+    background-color: #222; /* Dark input background */
+    color: #fff;
+}
+
+.catalog-controls button {
+    background: none;
+    border: none;
+    font-size: 20px;
+    color: #4a90e2; /* Light blue for icons */
+    cursor: pointer;
+}
+
+/* Product grid and cards styling */
+.product-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 20px;
+}
+
+.product-card {
+    background-color: #2b2b2b; /* Darker card background */
+    border: 1px solid #444;
+    border-radius: 8px;
+    padding: 10px;
+    color: #d4d4d4;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    text-align: center;
+    transition: box-shadow 0.3s ease;
+}
+
+.product-card:hover {
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2);
+}
+
+.product-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 18px;
+    font-weight: bold;
+}
+
+.product-header button {
+    background: none;
+    border: none;
+    color: #e74c3c; /* Red for the remove button */
+    font-size: 20px;
+    cursor: pointer;
+}
+
+.product-image {
+    width: 100%;
+    height: 150px;
+    background-color: #555; /* Dark placeholder color */
+    margin: 10px 0;
+    border-radius: 4px;
+    color: #d4d4d4;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+}
+
+.product-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 10px;
+    font-size: 16px;
+    font-weight: bold;
+}
+
+.settings-button {
+    background: none;
+    border: none;
+    font-size: 20px;
+    cursor: pointer;
+    color: #4a90e2; /* Light blue for settings button */
+}

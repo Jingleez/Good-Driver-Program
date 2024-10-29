@@ -1,16 +1,27 @@
+from datetime import datetime
 from flask import Blueprint, render_template, redirect, url_for, session, flash, request, current_app
 from driverProgram import db 
 from driverProgram import check_database_connection
 from sqlalchemy import text 
 from flask_login import login_required, current_user
 import jwt
-from driverProgram.models import JobPosting, Sponsor, Application
-from driverProgram.forms import ApplyToJobPosting
+from driverProgram.models import JobPosting, Sponsor, Application, Notification, ApplicationSponsor
+from driverProgram.forms import ApplyToJobPosting, JobPostForm, SponsorProfileForm
 from werkzeug.utils import secure_filename
 import os
 
 # Define the blueprint
 main_bp = Blueprint('main', __name__)
+
+# Authentication check helper function
+def is_token_valid(token):
+    try:
+        decoded = jwt.decode(token, options={"verify_signature": False})
+        return True
+    except jwt.ExpiredSignatureError:
+        return False
+    except jwt.InvalidTokenError:
+        return False
 
 # Route for the dashboard, with authentication check and role-based redirection
 @main_bp.route('/dashboard')
@@ -29,12 +40,18 @@ def dashboard():
     else:
         flash('Unauthorized access.', 'danger')
         return redirect(url_for('auth.login'))
-    
+
+
+
+ 
 # Route for the home/destination page
 @main_bp.route('/')
 @main_bp.route('/destination')
 def destination():
     return render_template('Destination/destination.html')
+
+
+
 
 # Routes for each role-specific dashboard
 @main_bp.route('/driver/dashboard')
@@ -51,6 +68,9 @@ def sponsor_dash():
 @login_required
 def admin_dash():
     return render_template('dashboard/admin_dash.html')
+
+
+
 
 # Route for displaying the profile
 @main_bp.route('/profile', methods=['GET'])
@@ -86,48 +106,19 @@ def update_profile():
 
     return redirect(url_for('main.profile'))
 
+
+
+
+
 @main_bp.route('/about')
 def about():
     db_status = 'connected' if check_database_connection() else 'disconnected'
     return render_template('Destination/about.html', db_status=db_status)
 
-# New route for the public profile of sponsors
-@main_bp.route('/public_profile', methods=['GET', 'POST'])
-@login_required
-def public_profile():
-    if request.method == 'POST':
-        # Retrieve and update sponsor details from form
-        sponsor = current_user.sponsor  # Assuming current_user is linked to a Sponsor model
-        sponsor.company_name = request.form['company_name']
-        sponsor.location = request.form['location']
-        sponsor.phone = request.form['phone']
-        sponsor.email = request.form['email']
-        sponsor.website = request.form['website']
-        sponsor.bio = request.form['bio']
-        db.session.commit()
-        flash('Public profile updated successfully!', 'success')
-        return redirect(url_for('main.public_profile'))
-    
-    sponsor = current_user.sponsor
-    return render_template('sponsor/public_profile.html', sponsor=sponsor)
-
-# New route for sponsor job postings
-@main_bp.route('/job_postings', methods=['GET', 'POST'])
-@login_required
-def job_postings():
-    return render_template('sponsor/job_postings.html')
 
 
-# Authentication check helper function
-def is_token_valid(token):
-    try:
-        decoded = jwt.decode(token, options={"verify_signature": False})
-        return True
-    except jwt.ExpiredSignatureError:
-        return False
-    except jwt.InvalidTokenError:
-        return False
-    
+
+# Admin dashboard navigation links
 @main_bp.route('/manage_users')
 @login_required
 def manage_users():
@@ -148,54 +139,181 @@ def add_users():
 def admin_reports():
     return render_template('admin/admin_reports.html')
 
-@main_bp.route('/approve-applications')
+
+
+
+
+# Sponsor dashboard navigation links
+@main_bp.route('/approve_applications', methods=['GET'])
 @login_required
 def approve_applications():
-    return render_template('partials/approve_applications.html')
+    sponsor = current_user.sponsor
+    if not sponsor:
+        flash('Sponsor profile not found.', 'danger')
+        return redirect(url_for('main.dashboard'))
+    # Mark notifications related to applications as read
+    Notification.query.filter_by(sponsor_id=sponsor.id, is_read=False).update({'is_read': True})
+    db.session.commit()
+    pending_applications = Application.query.join(ApplicationSponsor).filter(
+        ApplicationSponsor.sponsor_id == sponsor.id,
+        ApplicationSponsor.status == 'pending'
+    ).all()
+    return render_template('sponsor/approve_applications.html', applications=pending_applications)
+
+@main_bp.route('/approve_application/<int:application_id>/<string:action>', methods=['POST'])
+@login_required
+def approve_application_action(application_id, action):
+    sponsor = current_user.sponsor
+    if not sponsor:
+        flash('Sponsor profile not found.', 'danger')
+        return redirect(url_for('main.dashboard'))
+    association = ApplicationSponsor.query.filter_by(
+        application_id=application_id,
+        sponsor_id=sponsor.id
+    ).first()
+    if not association:
+        flash('Application not found or already processed.', 'danger')
+        return redirect(url_for('main.approve_applications'))
+    if action == 'approve':
+        association.status = 'accepted'
+        db.session.commit()
+        # Remove notification for this application for all sponsors in the organization
+        Notification.query.filter_by(application_id=application_id).delete()
+        db.session.commit()
+        flash('Application approved.', 'success')
+    elif action == 'reject':
+        association.status = 'rejected'
+        db.session.commit()
+        flash('Application rejected.', 'info')
+    else:
+        flash('Invalid action.', 'danger')
+    return redirect(url_for('main.approve_applications'))
+
 
 @main_bp.route('/sponsor/product-catalog')
 @login_required
 def sponsor_product_catalog():
-    return render_template('partials/product_catalog.html')
+    return render_template('sponsor/product_catalog.html')
 
 @main_bp.route('/participating-drivers')
 @login_required
 def participating_drivers():
-    return render_template('partials/participating_drivers.html')
+    return render_template('sponsor/participating_drivers.html')
 
+@main_bp.route('/sponsor/public_profile', methods=['GET', 'POST']) 
+@login_required
+def public_profile():
+    form = SponsorProfileForm()
+
+    # Check if the current user has a sponsor associated
+    sponsor = Sponsor.query.filter_by(user_id=current_user.id).first()
+
+    # If no sponsor record exists, create a blank sponsor record
+    if sponsor is None:
+        sponsor = Sponsor(user_id=current_user.id)  # Creating an empty sponsor object for the current user
+
+    # Prepopulate the form with sponsor details if they exist
+    if request.method == 'GET':
+        form.company_name.data = sponsor.company_name or ""
+        form.location.data = sponsor.location or ""
+        form.phone.data = sponsor.phone or ""
+        form.email.data = sponsor.email or current_user.email  # Prepopulate email with the user's email if sponsor email is not set
+        form.website.data = sponsor.website or ""
+        form.bio.data = sponsor.bio or ""
+
+    if form.validate_on_submit():
+        # Update sponsor record with form data
+        sponsor.company_name = form.company_name.data
+        sponsor.location = form.location.data
+        sponsor.phone = form.phone.data
+        sponsor.email = form.email.data
+        sponsor.website = form.website.data
+        sponsor.bio = form.bio.data
+
+        # Add new sponsor if it's not already in the database
+        if sponsor.id is None:
+            db.session.add(sponsor)
+
+        db.session.commit()
+        flash('Public profile updated successfully!', 'success')
+
+        # After updating, render the updated profile view
+        return render_template('sponsor/public_profile.html', sponsor=sponsor, form=form)
+
+    # Render the profile view (GET request)
+    return render_template('sponsor/public_profile.html', sponsor=sponsor, form=form)
+
+@main_bp.route('/job_postings', methods=['GET', 'POST'])
+@login_required
+def job_postings():
+    form = JobPostForm()
+
+    if form.validate_on_submit() and request.method == 'POST':
+        # Create a new job posting
+        new_job = JobPosting(
+            title=form.title.data,
+            description=form.description.data,
+            location=form.location.data,
+            salary=form.salary.data,
+            hours=form.hours.data,
+            experience=form.experience.data,
+            sponsor_id=current_user.sponsor.id  # Ensure that sponsor_id is saved
+        )
+        db.session.add(new_job)
+        db.session.commit()
+
+        # Flash success message and redirect
+        flash('Job posted successfully!', 'success')
+        return redirect(url_for('main.job_postings'))
+
+    # Fetch all job postings without filtering by sponsor
+    job_postings = JobPosting.query.all()
+
+    return render_template('sponsor/job_postings.html', form=form, job_postings=job_postings)
+
+
+
+
+
+
+
+
+# Driver dashboard navigation links
 @main_bp.route('/driver/points')
 @login_required
 def view_points():
-    return render_template('partials/view_points.html')  # Ensure this template exists
+    return render_template('driver/view_points.html') 
 
 @main_bp.route('/driver/redeem-rewards')
 @login_required
 def redeem_rewards():
-    return render_template('partials/redeem_rewards.html')  # Ensure this template exists
+    return render_template('driver/redeem_rewards.html') 
 
 @main_bp.route('/driver/product-catalog')
 @login_required
 def driver_product_catalog():
-    return render_template('partials/product_catalog.html')  # Ensure this template exists
+    return render_template('driver/product_catalog.html')  
 
 @main_bp.route('/driver/review-purchases')
 @login_required
 def review_purchases():
-    return render_template('partials/review_purchases.html')  # Ensure this template exists
+    return render_template('driver/review_purchases.html') 
+
+
 
 # Route for viewing all organization profiles
 @main_bp.route('/view_organizations', methods=['GET'])
 @login_required
 def view_organizations():
     # Query the database for all organizations (sponsors)
-    organizations = Sponsor.query.all()  # Assuming you have a Sponsor model
+    organizations = Sponsor.query.all()  
     return render_template('Destination/view_organizations.html', organizations=organizations)
 
-# Route to view all job postings (for drivers or public)
-@main_bp.route('/job_postings', methods=['GET'])
+
+@main_bp.route('/view_job_postings', methods=['GET'])
 @login_required
 def view_job_postings():
-    job_postings = JobPosting.query.all()  # Retrieve all job postings from the database
+    job_postings = JobPosting.query.all()  # Assuming you have a JobPosting model
     return render_template('Destination/view_job_postings.html', job_postings=job_postings)
 
 # Route for driver applications
@@ -204,27 +322,46 @@ def view_job_postings():
 def apply_to_job_posting(job_id):
     form = ApplyToJobPosting()
     job = JobPosting.query.get_or_404(job_id)
-
     if form.validate_on_submit():
         # Handle file saving
         resume_file = form.resume.data
         filename = secure_filename(resume_file.filename)
-        resume_path = os.path.join(current_app.config['UPLOAD_FOLDER'], filename)
+        upload_folder = current_app.config['UPLOAD_FOLDER']
+        
+        # Check if the directory exists, if not create it
+        if not os.path.exists(upload_folder):
+            os.makedirs(upload_folder)
+        
+        resume_path = os.path.join(upload_folder, filename)
         resume_file.save(resume_path)
-
-        # Create a new application with the additional fields
+        
+        # Create a new application
         new_application = Application(
-            user_id = current_user.id,
-            job_id = job_id,
-            first_name = form.first_name.data,
-            last_name = form.last_name.data,
-            email = form.email.data,
-            phone = form.phone.data,
-            resume = filename
+            user_id=current_user.id,
+            job_id=job_id,
+            first_name=form.first_name.data,
+            last_name=form.last_name.data,
+            email=form.email.data,
+            phone=form.phone.data,
+            resume=filename,
+            date_submitted=datetime.utcnow()
         )
         db.session.add(new_application)
         db.session.commit()
-
+        
+        # Create notifications for all sponsors in the organization
+   
+        #organization = job.organization
+        #for sponsor in organization.sponsors:
+        #    notification_message = f"New application from {new_application.first_name} {new_application.last_name} for the job {job.title}."
+        #    notification = Notification(
+        #        message=notification_message,
+        #        sponsor_id=sponsor.id,
+        #       job_id=job.id,
+        #       application_id=new_application.id
+        #   )
+        #    db.session.add(notification)
+        #db.session.commit()
         flash('Your application has been submitted successfully.', 'success')
         return redirect(url_for('main.job_postings'))
 
@@ -239,3 +376,9 @@ def submitted_applications():
 
     return render_template('driver/submitted_applications.html', applications=applications)
 
+# Route for notifications to send to org
+@main_bp.route('/notifications', methods=['GET'])
+@login_required
+def notifications():
+    #unread_notifications = Notification.query.filter_by(sponsor_id=sponsor.id, is_read=False).all()
+    return render_template('sponsor/notification.html')

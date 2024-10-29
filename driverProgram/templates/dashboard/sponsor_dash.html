@@ -170,6 +170,12 @@
             color: #4a90e2; /* Lighter blue for headers */
         }
 
+        #view-section label {
+            font-size: 1.1em;
+            font-weight: 600;
+            color: #94c0f3; /* Slightly lighter blue color for labels */
+        }
+
         p {
             line-height: 1.8;
             font-size: 1.1em;
@@ -245,7 +251,9 @@
                 <li><a onclick="loadContent('{{ url_for('main.participating_drivers') }}')"><i class="fas fa-users"></i><span>Participating Drivers</span></a></li>
                 <li><a onclick="loadContent('{{ url_for('main.public_profile') }}')"><i class="fas fa-building"></i><span>Public Profile</span></a></li>
                 <li><a onclick="loadContent('{{ url_for('main.job_postings') }}')"><i class="fas fa-briefcase"></i><span>Job Postings</span></a></li>
+                <li><a onclick="loadContent('{{ url_for('main.notifications') }}')"><i class="fas fa-bell"></i><span>Notifications</span></a></li>
             </ul>
+            
         </nav>
 
         <!-- Sidebar Toggle Button -->

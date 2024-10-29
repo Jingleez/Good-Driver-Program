@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Notifications</title>
+    <style>
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: #1a1a1a;
+            color: white;
+            padding: 20px;
+        }
+        .notification {
+            background-color: #333;
+            padding: 15px;
+            margin-bottom: 10px;
+            border-radius: 5px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+        }
+        .notification p {
+            margin: 0;
+            font-size: 1.2em;
+        }
+        .notification a {
+            color: #4a90e2;
+            text-decoration: none;
+        }
+        .notification a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <h2>Notifications</h2>
+
+    {% if notifications %}
+        {% for notification in notifications %}
+            <div class="notification">
+                <p>{{ notification.message }}</p>
+                <p><a href="{{ url_for('main.approve_applications') }}">Go to Applications</a></p>
+            </div>
+        {% endfor %}
+    {% else %}
+        <p>No new notifications</p>
+    {% endif %}
+</body>
+</html>
