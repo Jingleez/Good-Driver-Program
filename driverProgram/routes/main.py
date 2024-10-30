@@ -151,26 +151,16 @@ def approve_applications():
     if not sponsor:
         flash('Sponsor profile not found.', 'danger')
         return redirect(url_for('main.dashboard'))
-
-    # Mark notifications related to applications as read
     Notification.query.filter_by(sponsor_id=sponsor.id, is_read=False).update({'is_read': True})
     db.session.commit()
-
-    pending_applications = Application.query.join(ApplicationSponsor).filter(
-        ApplicationSponsor.sponsor_id == sponsor.id,
-        ApplicationSponsor.status == 'pending'
-    ).all()
-
+    pending_applications = Application.query.filter_by(status='Pending').all()
     return render_template('sponsor/approve_applications.html', applications=pending_applications)
 
 @main_bp.route('/approve_application/<int:application_id>', methods=['POST'])
 @login_required
 def approve_application(application_id):
-    application_sponsor = ApplicationSponsor.query.filter_by(
-        application_id=application_id,
-        sponsor_id=current_user.sponsor.id
-    ).first_or_404()
-    application_sponsor.status = 'Approved'
+    application = Application.query.get_or_404(application_id)
+    application.status = 'Approved'
     db.session.commit()
     flash('Application approved.', 'success')
     return redirect(url_for('main.approve_applications'))
@@ -178,11 +168,8 @@ def approve_application(application_id):
 @main_bp.route('/reject_application/<int:application_id>', methods=['POST'])
 @login_required
 def reject_application(application_id):
-    application_sponsor = ApplicationSponsor.query.filter_by(
-        application_id=application_id,
-        sponsor_id=current_user.sponsor.id
-    ).first_or_404()
-    application_sponsor.status = 'Denied'
+    application = Application.query.get_or_404(application_id)
+    application.status = 'Denied'
     db.session.commit()
     flash('Application rejected.', 'info')
     return redirect(url_for('main.approve_applications'))
