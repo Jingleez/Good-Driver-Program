@@ -1,5 +1,5 @@
 from datetime import datetime
-from flask import Blueprint, render_template, redirect, url_for, session, flash, request, current_app
+from flask import Blueprint, render_template, redirect, url_for, session, flash, request, current_app, jsonify
 from driverProgram import db 
 from driverProgram import check_database_connection
 from sqlalchemy import text 
@@ -9,6 +9,7 @@ from driverProgram.models import JobPosting, Sponsor, Application, Notification,
 from driverProgram.forms import ApplyToJobPosting, JobPostForm, SponsorProfileForm
 from werkzeug.utils import secure_filename
 import os
+from ebaysdk.finding import Connection as Finding
 
 # Define the blueprint
 main_bp = Blueprint('main', __name__)
@@ -384,3 +385,69 @@ def view_notifications():
         sponsor_id=sponsor.id,
     ).order_by(Notification.created_at.desc()).all()
     return render_template('sponsor/notification.html', notifications=notifications_list)
+
+
+
+@main_bp.route('/search')
+def search():
+    query = request.args.get('query', 'electronics')
+    appid = os.getenv("EBAY_CLIENT_ID")
+    if not appid:
+        return jsonify({"error": "eBay Client ID not configured"}), 500
+
+    try:
+        # Connect to the eBay API
+        api = Finding(appid=appid, config_file=None, siteid='EBAY-US', https=True)
+        response = api.execute('findItemsByKeywords', {'keywords': query})
+        items = response.dict().get('searchResult', {}).get('item', [])
+
+        # Format the items for the frontend
+        products = [
+            {
+                'name': item.get('title'),
+                'image': item.get('galleryURL', 'https://via.placeholder.com/150'),
+                'points': item.get('sellingStatus', {}).get('currentPrice', {}).get('value', 'N/A')
+            }
+            for item in items
+        ]
+
+        return jsonify(products=products)
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@main_bp.route('/add_product', methods=['GET', 'POST'])
+def add_product():
+    if request.method == 'POST':
+        # Handle adding a product to your catalog here
+        product_data = request.json
+        # Here, you'd save the product to your catalog in the database
+        # For now, we'll just simulate this action with a success message
+        return jsonify({"message": "Product added to catalog", "product": product_data}), 201
+
+    # GET method: Display eBay items
+    query = request.args.get('query', 'electronics')
+    appid = os.getenv("EBAY_CLIENT_ID")
+
+    if not appid:
+        return jsonify({"error": "eBay Client ID not configured"}), 500
+
+    try:
+        # Initialize the eBay API connection
+        api = Finding(appid=appid, config_file=None, siteid='EBAY-US', https=True)
+        response = api.execute('findItemsByKeywords', {'keywords': query})
+        
+        # Get multiple items from the API response
+        items = response.dict().get('searchResult', {}).get('item', [])
+        products = [
+            {
+                'id': item.get('itemId', 'N/A'),
+                'name': item.get('title', 'No title available'),
+                'image': item.get('galleryURL', 'https://via.placeholder.com/150'),
+                'points': item.get('sellingStatus', {}).get('currentPrice', {}).get('value', 'N/A')
+            }
+            for item in items
+        ]
+
+        return render_template('sponsor/product_catalog.html', products=products)
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500

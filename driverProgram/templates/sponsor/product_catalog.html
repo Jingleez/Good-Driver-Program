@@ -10,11 +10,11 @@
     <div class="content-area">
         <!-- Header with search and edit catalog button -->
         <header class="catalog-header">
-            <div class="catalog-title">Product Catalog</div>
+            <h1 class="catalog-title">Product Catalog</h1>
             <div class="catalog-controls">
                 <button class="nav-button">&#9664;</button>
-                <input type="text" class="search-bar" placeholder="Search">
-                <button class="search-button">&#128269;</button>
+                <input type="text" class="search-bar" placeholder="Search for products">
+                <button class="search-button">&#128269; Search</button>
                 <button class="edit-catalog-button">&#9881; Edit Catalog</button>
             </div>
         </header>
@@ -24,45 +24,171 @@
         
         <!-- Product grid -->
         <div class="product-grid" id="productGrid">
-            <!-- Sample product card -->
+            {% for product in products %}
             <div class="product-card">
                 <div class="product-header">
-                    <span>Name</span>
+                    <span>{{ product.name }}</span>
                     <button class="remove-product" onclick="removeProduct(this)">&#10060;</button>
                 </div>
-                <div class="product-image">IMG</div>
+                <div class="product-image">
+                    <img src="{{ product.image }}" alt="Image of {{ product.name }}" />
+                </div>
                 <div class="product-footer">
-                    <span>Points: X</span>
+                    <span>Points: {{ product.points }}</span>
                     <button class="settings-button">&#9881;</button>
                 </div>
             </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- Modal for selecting a product from eBay API -->
+    <div id="productModal" class="modal">
+        <div class="modal-content">
+            <span class="close-button" onclick="closeModal()">×</span>
+            <h2>Select a Product to Add</h2>
+            <div id="modalProductList"></div>
         </div>
     </div>
 
     <script>
-        document.getElementById('addProductButton').addEventListener('click', addProduct);
+        // Function to open the modal
+        function openModal(products) {
+            const modal = document.getElementById("productModal");
+            const modalProductList = document.getElementById("modalProductList");
+            modalProductList.innerHTML = ''; // Clear existing content
 
-        function addProduct() {
-            // Clone the first product card as a template
-            const productGrid = document.getElementById('productGrid');
-            const templateCard = productGrid.querySelector('.product-card');
-            const newCard = templateCard.cloneNode(true);
+            // Populate modal with product options
+            products.forEach(product => {
+                const productItem = document.createElement('div');
+                productItem.classList.add('modal-product-item');
+                productItem.innerHTML = `
+                    <div>
+                        <img src="${product.image}" alt="Image of ${product.name}" style="width: 50px; height: 50px;">
+                        <span>${product.name}</span> - <strong>Points:</strong> ${product.points}
+                    </div>
+                    <button onclick="selectProduct(${JSON.stringify(product)})">Select</button>
+                `;
+                modalProductList.appendChild(productItem);
+            });
 
-            // Customize the new card content (e.g., set unique name or points)
-            newCard.querySelector('.product-header span').textContent = "New Product";
-            newCard.querySelector('.product-footer span').textContent = "Points: X";
-
-            // Update the remove button for the new card
-            newCard.querySelector('.remove-product').onclick = function() { removeProduct(this); };
-
-            // Append the new card to the product grid
-            productGrid.appendChild(newCard);
+            modal.style.display = "block";
         }
 
+        // Function to close the modal
+        function closeModal() {
+            document.getElementById("productModal").style.display = "none";
+        }
+
+        // Function to add a product from eBay to the catalog by opening the modal
+        document.getElementById('addProductButton').addEventListener('click', function() {
+            const query = document.querySelector('.search-bar').value || 'electronics';
+            fetch(`/add_product?query=${encodeURIComponent(query)}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.products) {
+                        openModal(data.products); // Open modal with products to select
+                    } else {
+                        alert(data.error);
+                    }
+                })
+                .catch(error => console.error('Error:', error));
+        });
+
+        // Function to handle product selection from the modal
+        function selectProduct(product) {
+            closeModal();
+            displayProduct(product);
+        }
+
+        // Function to display a selected product card in the catalog
+        function displayProduct(product) {
+            const productGrid = document.getElementById('productGrid');
+            const productCard = document.createElement('div');
+            productCard.classList.add('product-card');
+            productCard.innerHTML = `
+                <div class="product-header">
+                    <span>${product.name}</span>
+                    <button class="remove-product" onclick="removeProduct(this)">&#10060;</button>
+                </div>
+                <div class="product-image">
+                    <img src="${product.image}" alt="Image of ${product.name}" />
+                </div>
+                <div class="product-footer">
+                    <span>Points: ${product.points}</span>
+                    <button class="settings-button">&#9881;</button>
+                </div>
+            `;
+            productGrid.appendChild(productCard);
+        }
+
+        // Function to remove a product card
         function removeProduct(button) {
             const card = button.closest('.product-card');
             card.remove();
         }
+
+        // AJAX Search Function for initial product load
+        document.querySelector('.search-button').addEventListener('click', function() {
+            const query = document.querySelector('.search-bar').value;
+            fetch(`/catalog?query=${encodeURIComponent(query)}`)
+                .then(response => response.json())
+                .then(data => {
+                    const productGrid = document.getElementById('productGrid');
+                    productGrid.innerHTML = '';  // Clear current products
+                    
+                    data.products.forEach(product => {
+                        displayProduct(product);
+                    });
+                });
+        });
     </script>
+
+    <style>
+        /* Modal styling */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1;
+            padding-top: 60px;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0, 0, 0, 0.4);
+        }
+
+        .modal-content {
+            background-color: #fefefe;
+            margin: auto;
+            padding: 20px;
+            border: 1px solid #888;
+            width: 80%;
+        }
+
+        .close-button {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .close-button:hover {
+            color: black;
+        }
+
+        .modal-product-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 10px;
+        }
+
+        .modal-product-item img {
+            margin-right: 10px;
+        }
+    </style>
 </body>
 </html>
