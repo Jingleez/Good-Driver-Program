@@ -262,8 +262,22 @@
         <!-- Main Content Area -->
         <main class="content-area">
             <section id="dashboard-content">
-                <h2>Welcome to the Sponsor Dashboard</h2>
-                <p>This is where you can manage applications, view drivers, and manage your product catalog.</p>
+                {% if load_public_profile %}
+                    <script>
+                        document.addEventListener("DOMContentLoaded", function() {
+                            loadContent('{{ url_for('main.public_profile') }}');
+                        });
+                    </script>
+                {% elif load_job_postings %}
+                    <script>
+                        document.addEventListener("DOMContentLoaded", function() {
+                            loadContent('{{ url_for('main.job_postings') }}');
+                        });
+                    </script>
+                {% else %}
+                    <h2>Welcome to the Sponsor Dashboard</h2>
+                    <p>This is where you can manage applications, view drivers, and manage your product catalog.</p>
+                {% endif %}
             </section>
         </main>
     </div>

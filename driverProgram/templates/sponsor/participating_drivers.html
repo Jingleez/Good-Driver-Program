@@ -2,9 +2,28 @@
     <h2>Participating Drivers</h2>
     <p>List of drivers participating in the sponsor's program.</p>
 
-    <ul>
-        {% for driver in drivers %}
-        <li>{{ driver.name }} - {{ driver.company }}</li>
-        {% endfor %}
-    </ul>
+    {% if drivers %}
+        <table style="width: 100%; border-collapse: collapse; margin: 20px 0; font-size: 16px;">
+            <thead style="background-color: #007bff; color: white;">
+                <tr>
+                    <th style="padding: 12px; text-align: left; border-bottom: 1px solid #ddd;">Driver Name</th>
+                    <th style="padding: 12px; text-align: left; border-bottom: 1px solid #ddd;">Email</th>
+                    <th style="padding: 12px; text-align: left; border-bottom: 1px solid #ddd;">Phone</th>
+                    <th style="padding: 12px; text-align: left; border-bottom: 1px solid #ddd;">Application Date</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for driver in drivers %}
+                <tr>
+                    <td style="padding: 12px; border-bottom: 1px solid #ddd;">{{ driver.first_name }} {{ driver.last_name }}</td>
+                    <td style="padding: 12px; border-bottom: 1px solid #ddd;">{{ driver.email }}</td>
+                    <td style="padding: 12px; border-bottom: 1px solid #ddd;">{{ driver.phone }}</td>
+                    <td style="padding: 12px; border-bottom: 1px solid #ddd;">{{ driver.date_submitted.strftime('%Y-%m-%d') }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <p>No drivers have been accepted yet.</p>
+    {% endif %}
 </section>

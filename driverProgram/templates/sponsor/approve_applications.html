@@ -6,18 +6,18 @@
             margin: 20px 0;
             font-size: 16px;
         }
-    
+
         table thead {
             background-color: #007bff;
             color: white;
         }
-    
+
         table th, table td {
             padding: 12px;
             text-align: left;
             border-bottom: 1px solid #ddd;
         }
-    
+
         button {
             padding: 8px 12px;
             color: white;
@@ -26,15 +26,15 @@
             cursor: pointer;
             margin-right: 5px;
         }
-    
+
         .approve-btn {
             background-color: #28a745;
         }
-    
+
         .reject-btn {
             background-color: #dc3545;
         }
-    
+
         button:hover {
             opacity: 0.8;
         }
@@ -43,40 +43,35 @@
     <h2>Approve Driver Applications</h2>
     <p>List of driver applications pending approval.</p>
 
-    <table>
-        <thead>
-            <tr>
-                <th>Driver Name</th>
-                <th>Application Date</th>
-                <th>Status</th>
-                <th>Actions</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for app_sponsor in applications %}
-            <tr>
-                <!-- Display the driver's full name from the Application model -->
-                <td>{{ app_sponsor.application.full_name }}</td>
-                
-                <!-- Format the application date -->
-                <td>{{ app_sponsor.date_submitted.strftime('%Y-%m-%d') }}</td>
-                
-                <!-- Display application status -->
-                <td>{{ app_sponsor.status }}</td>
-                
-                <!-- Approve and Reject buttons as form-based actions -->
-                <td>
-                    <form action="{{ url_for('main.approve_application', application_id=app_sponsor.application_id) }}" method="post" style="display:inline;">
-                        {{ csrf_token() }}
-                        <button type="submit" class="approve-btn">Approve</button>
-                    </form>
-                    <form action="{{ url_for('main.reject_application', application_id=app_sponsor.application_id) }}" method="post" style="display:inline;">
-                        {{ csrf_token() }}
-                        <button type="submit" class="reject-btn">Reject</button>
-                    </form>
-                </td>
-            </tr>
-            {% endfor %}
-        </tbody>        
-    </table>
+    {% if applications %}
+        <table>
+            <thead>
+                <tr>
+                    <th>Driver Name</th>
+                    <th>Application Date</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for application in applications %}
+                <tr>
+                    <td>{{ application.first_name }} {{ application.last_name }}</td>
+                    <td>{{ application.date_submitted.strftime('%Y-%m-%d') }}</td>
+                    <td>{{ application.status }}</td>
+                    <td>
+                        <form action="{{ url_for('main.approve_application', application_id=application.id) }}" method="post" style="display:inline;">
+                            <button type="submit" class="approve-btn">Approve</button>
+                        </form>
+                        <form action="{{ url_for('main.reject_application', application_id=application.id) }}" method="post" style="display:inline;">
+                            <button type="submit" class="reject-btn">Reject</button>
+                        </form>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>        
+        </table>
+    {% else %}
+        <p>No applications pending approval.</p>
+    {% endif %}
 </section>

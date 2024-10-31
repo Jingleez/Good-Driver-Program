@@ -9,7 +9,6 @@ from driverProgram.forms import ApplyToJobPosting, JobPostForm, SponsorProfileFo
 from werkzeug.utils import secure_filename
 import os
 from ebaysdk.finding import Connection as Finding
-from flask_cors import CORS
 
 # Create the Blueprint and enable CORS for all routes
 main_bp = Blueprint('main', __name__)
@@ -59,12 +58,21 @@ def destination():
 @main_bp.route('/driver/dashboard')
 @login_required
 def driver_dash():
-    return render_template('dashboard/driver_dash.html')
+    load_view_job_postings = session.get('load_view_job_postings', False)
+    session.pop('load_view_job_postings', None)
+
+    return render_template('dashboard/driver_dash.html', load_view_job_postings=load_view_job_postings)
 
 @main_bp.route('/sponsor/dashboard')
 @login_required
 def sponsor_dash():
-    return render_template('dashboard/sponsor_dash.html')
+    load_public_profile = session.get('load_public_profile', False)
+    session.pop('load_public_profile', None)
+
+    load_job_postings = session.get('load_job_postings', False)
+    session.pop('load_job_postings', None)
+
+    return render_template('dashboard/sponsor_dash.html',  load_public_profile=load_public_profile, load_job_postings=load_job_postings)
 
 @main_bp.route('/admin/dashboard')
 @login_required
@@ -153,26 +161,16 @@ def approve_applications():
     if not sponsor:
         flash('Sponsor profile not found.', 'danger')
         return redirect(url_for('main.dashboard'))
-
-    # Mark notifications related to applications as read
     Notification.query.filter_by(sponsor_id=sponsor.id, is_read=False).update({'is_read': True})
     db.session.commit()
-
-    pending_applications = Application.query.join(ApplicationSponsor).filter(
-        ApplicationSponsor.sponsor_id == sponsor.id,
-        ApplicationSponsor.status == 'pending'
-    ).all()
-
+    pending_applications = Application.query.filter_by(status='Pending').all()
     return render_template('sponsor/approve_applications.html', applications=pending_applications)
 
 @main_bp.route('/approve_application/<int:application_id>', methods=['POST'])
 @login_required
 def approve_application(application_id):
-    application_sponsor = ApplicationSponsor.query.filter_by(
-        application_id=application_id,
-        sponsor_id=current_user.sponsor.id
-    ).first_or_404()
-    application_sponsor.status = 'Approved'
+    application = Application.query.get_or_404(application_id)
+    application.status = 'Approved'
     db.session.commit()
     flash('Application approved.', 'success')
     return redirect(url_for('main.approve_applications'))
@@ -180,11 +178,8 @@ def approve_application(application_id):
 @main_bp.route('/reject_application/<int:application_id>', methods=['POST'])
 @login_required
 def reject_application(application_id):
-    application_sponsor = ApplicationSponsor.query.filter_by(
-        application_id=application_id,
-        sponsor_id=current_user.sponsor.id
-    ).first_or_404()
-    application_sponsor.status = 'Denied'
+    application = Application.query.get_or_404(application_id)
+    application.status = 'Denied'
     db.session.commit()
     flash('Application rejected.', 'info')
     return redirect(url_for('main.approve_applications'))
@@ -198,7 +193,10 @@ def sponsor_product_catalog():
 @main_bp.route('/participating-drivers')
 @login_required
 def participating_drivers():
-    return render_template('sponsor/participating_drivers.html')
+    approved_drivers = Application.query.join(JobPosting).filter(
+        Application.status == 'Approved',
+    ).all()
+    return render_template('sponsor/participating_drivers.html', drivers=approved_drivers)
 
 @main_bp.route('/sponsor/public_profile', methods=['GET', 'POST']) 
 @login_required
@@ -237,8 +235,8 @@ def public_profile():
         db.session.commit()
         flash('Public profile updated successfully!', 'success')
 
-        # After updating, render the updated profile view
-        return render_template('sponsor/public_profile.html', sponsor=sponsor, form=form)
+        session['load_public_profile'] = True
+        return redirect(url_for('main.sponsor_dash'))  
 
     # Render the profile view (GET request)
     return render_template('sponsor/public_profile.html', sponsor=sponsor, form=form)
@@ -264,7 +262,9 @@ def job_postings():
 
         # Flash success message and redirect
         flash('Job posted successfully!', 'success')
-        return redirect(url_for('main.job_postings'))
+        
+        session['load_job_postings'] = True
+        return redirect(url_for('main.sponsor_dash'))  
 
     # Fetch all job postings without filtering by sponsor
     job_postings = JobPosting.query.all()
@@ -364,7 +364,9 @@ def apply_to_job_posting(job_id):
         db.session.commit()
 
         flash('Your application has been submitted successfully.', 'success')
-        return redirect(url_for('main.job_postings'))
+
+        session['load_view_job_postings'] = True
+        return redirect(url_for('main.driver_dash'))  
 
     return render_template('driver/apply_to_job_posting.html', form=form, job=job)
 
