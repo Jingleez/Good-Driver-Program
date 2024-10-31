@@ -199,7 +199,10 @@ def sponsor_product_catalog():
 @main_bp.route('/participating-drivers')
 @login_required
 def participating_drivers():
-    return render_template('sponsor/participating_drivers.html')
+    approved_drivers = Application.query.join(JobPosting).filter(
+        Application.status == 'Approved',
+    ).all()
+    return render_template('sponsor/participating_drivers.html', drivers=approved_drivers)
 
 @main_bp.route('/sponsor/public_profile', methods=['GET', 'POST']) 
 @login_required
