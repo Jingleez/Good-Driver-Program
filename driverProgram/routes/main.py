@@ -9,8 +9,9 @@ from driverProgram.forms import ApplyToJobPosting, JobPostForm, SponsorProfileFo
 from werkzeug.utils import secure_filename
 import os
 from ebaysdk.finding import Connection as Finding
+from flask_cors import CORS
 
-# Create the Blueprint and enable CORS for all routes
+# Define the blueprint
 main_bp = Blueprint('main', __name__)
 CORS(main_bp)
 
