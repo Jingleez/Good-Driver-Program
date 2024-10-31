@@ -17,17 +17,54 @@
             margin-bottom: 10px;
             border-radius: 5px;
             box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .notification.unread {
+            background-color: #444;
+            font-weight: bold;
         }
         .notification p {
             margin: 0;
             font-size: 1.2em;
+            cursor: pointer;
         }
-        .notification a {
-            color: #4a90e2;
-            text-decoration: none;
+        .notification .actions {
+            cursor: pointer;
+            color: #aaa;
+            font-size: 1.5em;
         }
-        .notification a:hover {
-            text-decoration: underline;
+        .popup {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: #333;
+            padding: 20px;
+            border-radius: 10px;
+            width: 80%;
+            max-width: 500px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+            display: none;
+            color: white;
+        }
+        .popup h3 {
+            margin-top: 0;
+        }
+        .popup .close-btn {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: none;
+            border: none;
+            color: #888;
+            font-size: 1.5em;
+            cursor: pointer;
+        }
+        .popup-content p {
+            font-size: 1.1em;
+            margin: 10px 0;
         }
     </style>
 </head>
@@ -36,12 +73,70 @@
 
     {% if notifications %}
         {% for notification in notifications %}
-            <div class="notification">
-                <p>{{ notification.message }}</p>
+            <div class="notification {% if not notification.is_read %}unread{% endif %}">
+                <p onclick="showPopup('{{ notification.id }}')">{{ notification.message }}</p>
+                <div class="actions" onclick="showArchiveOptions('{{ notification.id }}')">...</div>
             </div>
         {% endfor %}
     {% else %}
         <p>No new notifications</p>
     {% endif %}
+
+    <!-- Popup for Notification Details -->
+    <div id="notificationPopup" class="popup">
+        <button class="close-btn" onclick="closePopup()">X</button>
+        <div class="popup-content">
+            <!-- Dynamic content will be inserted here -->
+        </div>
+    </div>
+
+    <script>
+        // Function to display popup with application details
+        function showPopup(notificationId) {
+            fetch(`/notification_details/${notificationId}`)
+                .then(response => response.json())
+                .then(data => {
+                    const popupContent = document.querySelector('.popup-content');
+                    popupContent.innerHTML = `
+                        <h3>Driver Application Details</h3>
+                        <p><strong>Name:</strong> ${data.first_name} ${data.last_name}</p>
+                        <p><strong>Email:</strong> ${data.email}</p>
+                        <p><strong>Phone:</strong> ${data.phone}</p>
+                        <p><strong>Application Date:</strong> ${data.date_submitted}</p>
+                    `;
+                    document.getElementById('notificationPopup').style.display = 'block';
+                });
+        }
+
+        // Function to close the popup
+        function closePopup() {
+            document.getElementById('notificationPopup').style.display = 'none';
+        }
+
+        // Function to show archive options and archive notification
+    function showArchiveOptions(notificationId) {
+        if (confirm("Do you want to archive this notification?")) {
+            fetch(`/archive_notification/${notificationId}`, { 
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert("Notification archived.");
+                    location.reload(); // Reload to update the notification list
+                } else {
+                    alert("Failed to archive notification.");
+                }
+            })
+            .catch(error => {
+                console.error("Error archiving notification:", error);
+                alert("An error occurred. Please try again.");
+            });
+        }
+    }
+    </script>
 </body>
 </html>

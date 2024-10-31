@@ -385,16 +385,40 @@ def submitted_applications():
 
     return render_template('driver/submitted_applications.html', applications=applications)
 
-# Route for notifications to send to org
+# Route for viewing notifications for a sponsor's organization
 @main_bp.route('/notifications', methods=['GET'])
 @login_required
 def view_notifications():
     sponsor = current_user.sponsor
     notifications_list = Notification.query.filter_by(
-        sponsor_id=sponsor.id,
+        sponsor_id=sponsor.id
     ).order_by(Notification.created_at.desc()).all()
     return render_template('sponsor/notification.html', notifications=notifications_list)
 
+# Route to get detailed notification info (for pop-up)
+@main_bp.route('/notification_details/<int:notification_id>', methods=['GET'])
+@login_required
+def notification_details(notification_id):
+    notification = Notification.query.get_or_404(notification_id)
+    application = Application.query.get(notification.application_id)
+    if application:
+        return jsonify({
+            'first_name': application.first_name,
+            'last_name': application.last_name,
+            'email': application.email,
+            'phone': application.phone,
+            'date_submitted': application.date_submitted.strftime('%Y-%m-%d')
+        })
+    return jsonify({'error': 'Application not found'}), 404
+
+# Route to archive a notification
+@main_bp.route('/archive_notification/<int:notification_id>', methods=['POST'])
+@login_required
+def archive_notification(notification_id):
+    notification = Notification.query.get_or_404(notification_id)
+    db.session.delete(notification)
+    db.session.commit()
+    return jsonify({'success': True})
 
 
 @main_bp.route('/search')
