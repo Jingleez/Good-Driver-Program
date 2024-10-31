@@ -85,3 +85,15 @@ class Notification(db.Model):
     created_at = db.Column(db.DateTime, default=db.func.current_timestamp())
     # Relationships
     sponsor = db.relationship('Sponsor', backref='notifications')
+
+class SponsorCatalog(db.Model):
+    tablename = 'sponsor_catalog'
+    id = db.Column(db.Integer, primary_key=True)
+    sponsor_id = db.Column(db.Integer, db.ForeignKey('sponsors.id'), nullable=False)
+    product_id = db.Column(db.String(50), nullable=False)
+    name = db.Column(db.String(200))
+    image = db.Column(db.String(200), nullable=False)
+    price = db.Column(db.Float)
+
+    # Relationship back to sponsor
+    sponsor = db.relationship('Sponsor', backref='catalog_items')
