@@ -1,24 +1,19 @@
 from datetime import datetime
 from flask import Blueprint, render_template, redirect, url_for, session, flash, request, current_app, jsonify
-from driverProgram import db 
-from driverProgram import check_database_connection
-from sqlalchemy import text 
+from driverProgram import db, check_database_connection
+from sqlalchemy import text
 from flask_login import login_required, current_user
 import jwt
-from driverProgram.models import JobPosting, Sponsor, Application, Notification, ApplicationSponsor
+from driverProgram.models import JobPosting, Sponsor, Application, Notification, ApplicationSponsor, SponsorCatalog
 from driverProgram.forms import ApplyToJobPosting, JobPostForm, SponsorProfileForm
 from werkzeug.utils import secure_filename
 import os
 from ebaysdk.finding import Connection as Finding
-
-from flask import Flask
-
-app = Flask(__name__)
-app.secret_key = 'your_secret_key'  # Ensure you have a secret key set for session management
-
+from flask_cors import CORS
 
 # Define the blueprint
 main_bp = Blueprint('main', __name__)
+CORS(main_bp)
 
 # Authentication check helper function
 def is_token_valid(token):
@@ -414,22 +409,46 @@ def submitted_applications():
 
     return render_template('driver/submitted_applications.html', applications=applications)
 
-# Route for notifications to send to org
+# Route for viewing notifications for a sponsor's organization
 @main_bp.route('/notifications', methods=['GET'])
 @login_required
 def view_notifications():
     sponsor = current_user.sponsor
     notifications_list = Notification.query.filter_by(
-        sponsor_id=sponsor.id,
+        sponsor_id=sponsor.id
     ).order_by(Notification.created_at.desc()).all()
     return render_template('sponsor/notification.html', notifications=notifications_list)
 
+# Route to get detailed notification info (for pop-up)
+@main_bp.route('/notification_details/<int:notification_id>', methods=['GET'])
+@login_required
+def notification_details(notification_id):
+    notification = Notification.query.get_or_404(notification_id)
+    application = Application.query.get(notification.application_id)
+    if application:
+        return jsonify({
+            'first_name': application.first_name,
+            'last_name': application.last_name,
+            'email': application.email,
+            'phone': application.phone,
+            'date_submitted': application.date_submitted.strftime('%Y-%m-%d')
+        })
+    return jsonify({'error': 'Application not found'}), 404
 
+# Route to archive a notification
+@main_bp.route('/archive_notification/<int:notification_id>', methods=['POST'])
+@login_required
+def archive_notification(notification_id):
+    notification = Notification.query.get_or_404(notification_id)
+    db.session.delete(notification)
+    db.session.commit()
+    return jsonify({'success': True})
 
-@main_bp.route('/search')
+@main_bp.route('/search', methods=['GET'])
 def search():
-    query = request.args.get('query', 'electronics')
+    query = request.args.get('query', '')
     appid = os.getenv("EBAY_CLIENT_ID")
+
     if not appid:
         return jsonify({"error": "eBay Client ID not configured"}), 500
 
@@ -439,7 +458,7 @@ def search():
         response = api.execute('findItemsByKeywords', {'keywords': query})
         items = response.dict().get('searchResult', {}).get('item', [])
 
-        # Format the items for the frontend
+        # Format the items for JSON response
         products = [
             {
                 'name': item.get('title'),
@@ -453,16 +472,31 @@ def search():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
+
 @main_bp.route('/add_product', methods=['GET', 'POST'])
 def add_product():
     if request.method == 'POST':
-        # Handle adding a product to your catalog here
         product_data = request.json
-        # Here, you'd save the product to your catalog in the database
-        # For now, we'll just simulate this action with a success message
-        return jsonify({"message": "Product added to catalog", "product": product_data}), 201
+        print(f"Received product data: {product_data}")  # Debugging statement
 
-    # GET method: Display eBay items
+        if not product_data:
+            return jsonify({"error": "No product data received"}), 400
+
+        try:
+            new_product = SponsorCatalog(
+                product_id=product_data['product_id'],
+                name=product_data['name'],
+                image=product_data['image'],
+                price=product_data['price'],
+                sponsor_id=product_data['sponsor_id']
+            )
+            db.session.add(new_product)
+            db.session.commit()
+            return jsonify({"message": "Product added to catalog"}), 201
+        except Exception as e:
+            print(f"Error adding product: {str(e)}")  # Debugging statement
+            return jsonify({"error": str(e)}), 500
+
     query = request.args.get('query', 'electronics')
     appid = os.getenv("EBAY_CLIENT_ID")
 
@@ -470,22 +504,19 @@ def add_product():
         return jsonify({"error": "eBay Client ID not configured"}), 500
 
     try:
-        # Initialize the eBay API connection
         api = Finding(appid=appid, config_file=None, siteid='EBAY-US', https=True)
         response = api.execute('findItemsByKeywords', {'keywords': query})
-        
-        # Get multiple items from the API response
         items = response.dict().get('searchResult', {}).get('item', [])
         products = [
             {
-                'id': item.get('itemId', 'N/A'),
+                'product_id': item.get('itemId', 'N/A'),
                 'name': item.get('title', 'No title available'),
                 'image': item.get('galleryURL', 'https://via.placeholder.com/150'),
-                'points': item.get('sellingStatus', {}).get('currentPrice', {}).get('value', 'N/A')
+                'price': item.get('sellingStatus', {}).get('currentPrice', {}).get('value', 'N/A')
             }
             for item in items
         ]
-
-        return render_template('sponsor/product_catalog.html', products=products)
+        return jsonify(products=products)
     except Exception as e:
+        print(f"Error fetching products: {str(e)}")  # Debugging statement
         return jsonify({"error": str(e)}), 500
