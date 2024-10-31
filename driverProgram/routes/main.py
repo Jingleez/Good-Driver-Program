@@ -10,6 +10,12 @@ from driverProgram.forms import ApplyToJobPosting, JobPostForm, SponsorProfileFo
 from werkzeug.utils import secure_filename
 import os
 
+from flask import Flask
+
+app = Flask(__name__)
+app.secret_key = 'your_secret_key'  # Ensure you have a secret key set for session management
+
+
 # Define the blueprint
 main_bp = Blueprint('main', __name__)
 
@@ -57,12 +63,21 @@ def destination():
 @main_bp.route('/driver/dashboard')
 @login_required
 def driver_dash():
-    return render_template('dashboard/driver_dash.html')
+    load_view_job_postings = session.get('load_view_job_postings', False)
+    session.pop('load_view_job_postings', None)
+
+    return render_template('dashboard/driver_dash.html', load_view_job_postings=load_view_job_postings)
 
 @main_bp.route('/sponsor/dashboard')
 @login_required
 def sponsor_dash():
-    return render_template('dashboard/sponsor_dash.html')
+    load_public_profile = session.get('load_public_profile', False)
+    session.pop('load_public_profile', None)
+
+    load_job_postings = session.get('load_job_postings', False)
+    session.pop('load_job_postings', None)
+
+    return render_template('dashboard/sponsor_dash.html',  load_public_profile=load_public_profile, load_job_postings=load_job_postings)
 
 @main_bp.route('/admin/dashboard')
 @login_required
@@ -222,8 +237,8 @@ def public_profile():
         db.session.commit()
         flash('Public profile updated successfully!', 'success')
 
-        # After updating, render the updated profile view
-        return render_template('sponsor/public_profile.html', sponsor=sponsor, form=form)
+        session['load_public_profile'] = True
+        return redirect(url_for('main.sponsor_dash'))  
 
     # Render the profile view (GET request)
     return render_template('sponsor/public_profile.html', sponsor=sponsor, form=form)
@@ -249,7 +264,9 @@ def job_postings():
 
         # Flash success message and redirect
         flash('Job posted successfully!', 'success')
-        return redirect(url_for('main.job_postings'))
+        
+        session['load_job_postings'] = True
+        return redirect(url_for('main.sponsor_dash'))  
 
     # Fetch all job postings without filtering by sponsor
     job_postings = JobPosting.query.all()
@@ -349,7 +366,9 @@ def apply_to_job_posting(job_id):
         db.session.commit()
 
         flash('Your application has been submitted successfully.', 'success')
-        return redirect(url_for('main.view_job_postings'))
+
+        session['load_view_job_postings'] = True
+        return redirect(url_for('main.driver_dash'))  
 
     return render_template('driver/apply_to_job_posting.html', form=form, job=job)
 

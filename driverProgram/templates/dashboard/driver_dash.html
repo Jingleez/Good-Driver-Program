@@ -299,8 +299,16 @@
         <!-- Main Content Area -->
         <main class="content-area">
             <section id="dashboard-content">
-                <h2>Welcome to the Driver Dashboard</h2>
-                <p>View and manage your profile, points, rewards, and purchases here.</p>
+                {% if load_view_job_postings %}
+                    <script>
+                        document.addEventListener("DOMContentLoaded", function() {
+                            loadContent('{{ url_for('main.view_job_postings') }}');
+                        });
+                    </script>
+                {% else %}
+                    <h2>Welcome to the Driver Dashboard</h2>
+                    <p>View and manage your profile, points, rewards, and purchases here.</p>
+                {% endif %}
             </section>
         </main>
     </div>
