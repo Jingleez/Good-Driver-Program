@@ -78,7 +78,10 @@ def sponsor_dash():
     load_job_postings = session.get('load_job_postings', False)
     session.pop('load_job_postings', None)
 
-    return render_template('dashboard/sponsor_dash.html',  load_public_profile=load_public_profile, load_job_postings=load_job_postings)
+    load_approve_applications = session.get('load_approve_applications', False)
+    session.pop('load_approve_applications', None)
+
+    return render_template('dashboard/sponsor_dash.html',  load_public_profile=load_public_profile, load_job_postings=load_job_postings, load_approve_applications=load_approve_applications)
 
 @main_bp.route('/admin/dashboard')
 @login_required
@@ -179,7 +182,9 @@ def approve_application(application_id):
     application.status = 'Approved'
     db.session.commit()
     flash('Application approved.', 'success')
-    return redirect(url_for('main.approve_applications'))
+    session['load_approve_applications'] = True
+    return redirect(url_for('main.sponsor_dash')) 
+    
 
 @main_bp.route('/reject_application/<int:application_id>', methods=['POST'])
 @login_required
@@ -188,7 +193,9 @@ def reject_application(application_id):
     application.status = 'Denied'
     db.session.commit()
     flash('Application rejected.', 'info')
-    return redirect(url_for('main.approve_applications'))
+    session['load_approve_applications'] = True
+    return redirect(url_for('main.sponsor_dash')) 
+    
 
 
 @main_bp.route('/sponsor/product-catalog')
@@ -199,10 +206,7 @@ def sponsor_product_catalog():
 @main_bp.route('/participating-drivers')
 @login_required
 def participating_drivers():
-    approved_drivers = Application.query.join(JobPosting).filter(
-        Application.status == 'Approved',
-    ).all()
-    return render_template('sponsor/participating_drivers.html', drivers=approved_drivers)
+    return render_template('sponsor/participating_drivers.html')
 
 @main_bp.route('/sponsor/public_profile', methods=['GET', 'POST']) 
 @login_required
@@ -319,6 +323,31 @@ def view_organizations():
 @main_bp.route('/view_job_postings', methods=['GET'])
 @login_required
 def view_job_postings():
+    # Get search parameters from query string
+    company = request.args.get('company')
+    title = request.args.get('title')
+    location = request.args.get('location')
+    salary = request.args.get('salary')
+    hours = request.args.get('hours')
+    experience = request.args.get('experience')
+
+    # Start with all job postings
+    query = JobPosting.query
+
+    # Apply filters only if the search field is not empty
+    if company:
+        query = query.filter(JobPosting.company.ilike(f'%{company}%'))
+    if title:
+        query = query.filter(JobPosting.title.ilike(f'%{title}%'))
+    if location:
+        query = query.filter(JobPosting.location.ilike(f'%{location}%'))
+    if salary:
+        query = query.filter(JobPosting.salary == salary)  # Adjust comparison as needed
+    if hours:
+        query = query.filter(JobPosting.hours == hours)
+    if experience:
+        query = query.filter(JobPosting.experience == experience)
+
     job_postings = JobPosting.query.all()  # Assuming you have a JobPosting model
     return render_template('Destination/view_job_postings.html', job_postings=job_postings)
 

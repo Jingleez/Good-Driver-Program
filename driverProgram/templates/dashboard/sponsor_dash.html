@@ -274,6 +274,12 @@
                             loadContent('{{ url_for('main.job_postings') }}');
                         });
                     </script>
+                {% elif load_approve_applications %}
+                    <script>
+                        document.addEventListener("DOMContentLoaded", function() {
+                            loadContent('{{ url_for('main.approve_applications') }}');
+                        });
+                    </script>
                 {% else %}
                     <h2>Welcome to the Sponsor Dashboard</h2>
                     <p>This is where you can manage applications, view drivers, and manage your product catalog.</p>
