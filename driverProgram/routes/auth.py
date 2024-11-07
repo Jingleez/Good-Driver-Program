@@ -229,9 +229,8 @@ def delete_user():
     email = request.form['email']
     cognito_client = boto3.client('cognito-idp', region_name=os.getenv('COGNITO_REGION'))
     try:
-        # AdminDeleteUser requires the User Pool ID and Username (usually the email).
         response = cognito_client.admin_delete_user(
-            UserPoolId=os.getenv('COGNITO_USER_POOL_ID'),  # Make sure the User Pool ID is in your environment variables
+            UserPoolId=os.getenv('COGNITO_USER_POOL_ID'),
             Username=email
         )
         flash(f'User with email {email} has been deleted successfully.', 'success')
@@ -240,33 +239,3 @@ def delete_user():
     except Exception as e:
         flash(f'An error occurred: {str(e)}', 'error')
     return redirect(url_for('auth.login'))
-
-
-@auth_bp.route('/ebay-login')
-def ebay_login():
-    EBAY_CLIENT_ID = os.getenv("EBAY_CLIENT_ID")
-    EBAY_RU_NAME = os.getenv("EBAY_RU_NAME")
-    auth_url = (
-        f"https://auth.ebay.com/oauth2/authorize?client_id={EBAY_CLIENT_ID}"
-        f"&redirect_uri={EBAY_RU_NAME}"
-        f"&response_type=code&scope=https://api.ebay.com/oauth/api_scope"
-    )
-    return redirect(auth_url)
-
-@auth_bp.route('/callback')
-def ebay_callback():
-    code = request.args.get('code')
-    token_url = "https://api.ebay.com/identity/v1/oauth2/token"
-    client_id = os.getenv("EBAY_CLIENT_ID")
-    client_secret = os.getenv("EBAY_CLIENT_SECRET")
-    headers = {"Content-Type": "application/x-www-form-urlencoded"}
-    data = {
-        "grant_type": "authorization_code",
-        "code": code,
-        "redirect_uri": os.getenv("EBAY_RU_NAME"),
-    }
-
-    response = requests.post(token_url, headers=headers, auth=(client_id, client_secret), data=data)
-    access_token = response.json().get("access_token")
-    # Store access_token in session or database as needed
-    return jsonify(response.json())

@@ -3,11 +3,36 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Catalog</title>
+    <title>Product Catalog</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+        img {
+            max-width: 100px;
+            max-height: 100px;
+        }
+        audio {
+            margin-top: 10px;
+        }
+    </style>
 </head>
 <body>
     <header>
-        <h1> Product catalog</h1>
+        <h1>Product Catalog</h1>
     </header>
     <main>
         <form action="/search" method="get">
@@ -36,23 +61,37 @@
             {% if error %}
                 <p>{{ error }}</p>
             {% elif results %}
-                <ul>
-                    {% for item in results %}
-                        <li>
-                            <h2>{{ item.trackName or item.collectionName }}</h2>
-                            <p>Artist: {{ item.artistName }}</p>
-                            {% if item.artworkUrl100 %}
-                                <img src="{{ item.artworkUrl100 }}" alt="{{ item.trackName or item.collectionName }}">
-                            {% endif %}
-                            {% if item.previewUrl %}
-                                <audio controls>
-                                    <source src="{{ item.previewUrl }}" type="audio/mpeg">
-                                    Your browser does not support the audio element.
-                                </audio>
-                            {% endif %}
-                        </li>
-                    {% endfor %}
-                </ul>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Artwork</th>
+                            <th>Track/Collection Name</th>
+                            <th>Artist</th>
+                            <th>Preview</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in results %}
+                            <tr>
+                                <td>
+                                    {% if item.artworkUrl100 %}
+                                        <img src="{{ item.artworkUrl100 }}" alt="{{ item.trackName or item.collectionName }}">
+                                    {% endif %}
+                                </td>
+                                <td>{{ item.trackName or item.collectionName }}</td>
+                                <td>{{ item.artistName }}</td>
+                                <td>
+                                    {% if item.previewUrl %}
+                                        <audio controls>
+                                            <source src="{{ item.previewUrl }}" type="audio/mpeg">
+                                            Your browser does not support the audio element.
+                                        </audio>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
             {% else %}
                 <p>No results found. Please try a different search.</p>
             {% endif %}
