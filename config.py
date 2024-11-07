@@ -23,12 +23,4 @@ class Config:
     #Path for uploads (temp)
     UPLOAD_FOLDER = os.path.join(os.getcwd(), 'uploads')
     MAX_CONTENT_LENGTH = 16 * 1024 * 1024
-    
-    # eBay API connection details
-    EBAY_CLIENT_ID = os.getenv("EBAY_CLIENT_ID")
-    EBAY_CLIENT_SECRET = os.getenv("EBAY_CLIENT_SECRET")
-    EBAY_DEV_ID = os.getenv("EBAY_DEV_ID")
-    EBAY_RU_NAME = os.getenv("EBAY_RU_NAME")
 
-    
-    print("eBay Client ID:", os.getenv("EBAY_CLIENT_ID"))

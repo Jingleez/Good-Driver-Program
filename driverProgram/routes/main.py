@@ -1,5 +1,6 @@
 from datetime import datetime
 from flask import Blueprint, logging, render_template, redirect, url_for, session, flash, request, current_app, jsonify
+import requests
 from driverProgram import db, check_database_connection
 from sqlalchemy import text
 from flask_login import login_required, current_user
@@ -191,12 +192,6 @@ def reject_application(application_id):
     session['load_approve_applications'] = True
     return redirect(url_for('main.sponsor_dash')) 
     
-
-
-@main_bp.route('/sponsor/product-catalog')
-@login_required
-def sponsor_product_catalog():
-    return render_template('sponsor/product_catalog.html')
 
 @main_bp.route('/participating-drivers')
 @login_required
@@ -449,131 +444,26 @@ def archive_notification(notification_id):
 def sponsor_reports():
     return render_template('sponsor/sponsor_reports.html')
 
-"""
-@main_bp.route('/search', methods=['GET'])
-def search():
-    query = request.args.get('query', '')
-    logging.info(f"Search endpoint called with query: '{query}'")  # Log the received query
-    
-    appid = os.getenv("EBAY_CLIENT_ID")
-    if not appid:
-        logging.error("eBay Client ID not configured")
-        return jsonify({"error": "eBay Client ID not configured"}), 500
-    
-    try:
-        # Connect to the eBay API with the Finding API
-        api = Finding(appid=appid, config_file=None, siteid='EBAY-US', https=True)
-        response = api.execute('findItemsByKeywords', {'keywords': query})
-        items = response.dict().get('searchResult', {}).get('item', [])
-
-        # Format the items for JSON response with required details
-        products = [
-            {
-                'name': item.get('title'),
-                'image': item.get('galleryURL', 'https://via.placeholder.com/150'),
-                'points': item.get('sellingStatus', {}).get('currentPrice', {}).get('value', 'N/A'),
-                'description': item.get('subtitle', 'No description available')
-            }
-            for item in items
-        ]
-        
-        logging.info(f"Returning {len(products)} products")  # Log the number of products found
-        return jsonify(products=products)
-    except Exception as e:
-        logging.error(f"Error fetching products: {str(e)}")  # Log any errors
-        return jsonify({"error": str(e)}), 500
-
-"""
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
+@main_bp.route('/sponsor/product-catalog')
+@login_required
+def sponsor_product_catalog():
+    return render_template('sponsor/product_catalog.html')
 
 
 @main_bp.route('/search', methods=['GET'])
 def search():
-    query = request.args.get('query', '')
-    appid = os.getenv("EBAY_CLIENT_ID")
-
-    if not appid:
-        return jsonify({"error": "eBay Client ID not configured"}), 500
-
+    search_term = request.args.get('searchTerm')
+    media_type = request.args.get('mediaType', 'music')
+    if not search_term:
+        return render_template("sponsor/product_catalog.html", error="Please enter a search term.")
+    url = f"https://itunes.apple.com/search?term={search_term}&media={media_type}&limit=10"
     try:
-        # Connect to the eBay API
-        api = Finding(appid=appid, config_file=None, siteid='EBAY-US', https=True)
-        response = api.execute('findItemsByKeywords', {'keywords': query})
-        items = response.dict().get('searchResult', {}).get('item', [])
-
-        # Format the items for JSON response
-        products = [
-            {
-                'name': item.get('title'),
-                'image': item.get('galleryURL', 'https://via.placeholder.com/150'),
-                'points': item.get('sellingStatus', {}).get('currentPrice', {}).get('value', 'N/A')
-            }
-            for item in items
-        ]
-
-        return jsonify(products=products)
+        response = requests.get(url)
+        data = response.json()
+        return render_template("sponsor/product_catalog.html", results=data["results"])
     except Exception as e:
-        return jsonify({"error": str(e)}), 500
-
-
-@main_bp.route('/add_product', methods=['GET', 'POST'])
-def add_product():
-    if request.method == 'POST':
-        product_data = request.json
-        print(f"Received product data: {product_data}")  # Debugging statement
-
-        if not product_data:
-            return jsonify({"error": "No product data received"}), 400
-
-        try:
-            new_product = SponsorCatalog(
-                product_id=product_data['product_id'],
-                name=product_data['name'],
-                image=product_data['image'],
-                price=product_data['price'],
-                sponsor_id=product_data['sponsor_id']
-            )
-            db.session.add(new_product)
-            db.session.commit()
-            return jsonify({"message": "Product added to catalog"}), 201
-        except Exception as e:
-            print(f"Error adding product: {str(e)}")  # Debugging statement
-            return jsonify({"error": str(e)}), 500
-
-    query = request.args.get('query', 'electronics')
-    appid = os.getenv("EBAY_CLIENT_ID")
-
-    if not appid:
-        return jsonify({"error": "eBay Client ID not configured"}), 500
-
-    try:
-        api = Finding(appid=appid, config_file=None, siteid='EBAY-US', https=True)
-        response = api.execute('findItemsByKeywords', {'keywords': query})
-        items = response.dict().get('searchResult', {}).get('item', [])
-        products = [
-            {
-                'product_id': item.get('itemId', 'N/A'),
-                'name': item.get('title', 'No title available'),
-                'image': item.get('galleryURL', 'https://via.placeholder.com/150'),
-                'price': item.get('sellingStatus', {}).get('currentPrice', {}).get('value', 'N/A')
-            }
-            for item in items
-        ]
-        return jsonify(products=products)
-    except Exception as e:
-        print(f"Error fetching products: {str(e)}")  # Debugging statement
-        return jsonify({"error": str(e)}), 500
+        print("Error fetching data from iTunes API:", e)
+        return render_template("sponsor/product_catalog.html", error="Error fetching data from iTunes API.")

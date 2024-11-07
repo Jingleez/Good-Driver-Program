@@ -3,77 +3,60 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Product Catalog</title>
+    <title>Catalog</title>
 </head>
 <body>
-    <div class="content-area">
-        <header>
-            <h1>Product Catalog</h1>
-            <input type="text" id="searchBar" placeholder="Search for products">
-            <button id="searchButton">Search</button>
-        </header>
+    <header>
+        <h1> Product catalog</h1>
+    </header>
+    <main>
+        <form action="/search" method="get">
+            <div>
+                <label>Search Term:</label>
+                <input
+                    id="search_term"
+                    name="searchTerm"
+                    type="text"
+                    placeholder="Enter artist, song, movie, etc."
+                />
+            </div>
+            <div>
+                <label>Media Type:</label>
+                <select id="media_type" name="mediaType">
+                    <option value="music">Music</option>
+                    <option value="movie">Movie</option>
+                    <option value="podcast">Podcast</option>
+                    <option value="audiobook">Audiobook</option>
+                </select>
+            </div>
+            <button type="submit">Search</button>
+        </form>
 
-        <!-- Product grid to display search results -->
-        <div id="productGrid"></div>
-    </div>
-    <script>
-        // Debugging message to check if JavaScript is loaded
-        console.log("JavaScript is loaded and running!");
-
-        // Event listener for search button
-        document.getElementById('searchButton').addEventListener('click', function() {
-            const query = document.getElementById('searchBar').value;
-            if (query) {
-                fetchSearchResults(query);
-            } else {
-                alert("Please enter a search term.");
-            }
-        });
-
-        // Function to fetch and display search results
-        function fetchSearchResults(query) {
-            console.log("Fetching search results for:", query);
-            fetch(`/search?query=${encodeURIComponent(query)}`)
-                .then(response => {
-                    if (!response.ok) {
-                        throw new Error(`HTTP error! Status: ${response.status}`);
-                    }
-                    return response.json();
-                })
-                .then(data => {
-                    // Log the response data to verify
-                    console.log("Data received:", data);
-
-                    // Render products in the product grid
-                    const productGrid = document.getElementById('productGrid');
-                    productGrid.innerHTML = '';  // Clear current products
-                    
-                    if (data.products && data.products.length > 0) {
-                        data.products.forEach(product => {
-                            displayProduct(product);
-                        });
-                    } else {
-                        productGrid.innerHTML = '<p>No products found</p>';
-                    }
-                })
-                .catch(error => console.error('Fetch error:', error));
-}
-
-
-        // Function to display each product card in the catalog
-        function displayProduct(product) {
-            const productGrid = document.getElementById('productGrid');
-            const productCard = document.createElement('div');
-            productCard.classList.add('product-card');
-            productCard.innerHTML = `
-                <h3>${product.name}</h3>
-                <img src="${product.image}" alt="Image of ${product.name}" style="width:100px;">
-                <p><strong>Points:</strong> ${product.points}</p>
-                <p><strong>Description:</strong> ${product.description || 'No description available'}</p>
-            `;
-            productGrid.appendChild(productCard);
-            console.log("Product displayed:", product.name);
-        }
-    </script>
+        <section id="results">
+            {% if error %}
+                <p>{{ error }}</p>
+            {% elif results %}
+                <ul>
+                    {% for item in results %}
+                        <li>
+                            <h2>{{ item.trackName or item.collectionName }}</h2>
+                            <p>Artist: {{ item.artistName }}</p>
+                            {% if item.artworkUrl100 %}
+                                <img src="{{ item.artworkUrl100 }}" alt="{{ item.trackName or item.collectionName }}">
+                            {% endif %}
+                            {% if item.previewUrl %}
+                                <audio controls>
+                                    <source src="{{ item.previewUrl }}" type="audio/mpeg">
+                                    Your browser does not support the audio element.
+                                </audio>
+                            {% endif %}
+                        </li>
+                    {% endfor %}
+                </ul>
+            {% else %}
+                <p>No results found. Please try a different search.</p>
+            {% endif %}
+        </section>
+    </main>
 </body>
 </html>
