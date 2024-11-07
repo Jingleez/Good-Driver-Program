@@ -4,12 +4,6 @@ from driverProgram import db, check_database_connection
 from sqlalchemy import text
 from flask_login import login_required, current_user
 import jwt
-from datetime import datetime
-from flask import Blueprint, render_template, redirect, url_for, session, flash, request, current_app, jsonify
-from driverProgram import db, check_database_connection
-from sqlalchemy import text
-from flask_login import login_required, current_user
-import jwt
 from driverProgram.models import JobPosting, Sponsor, Application, Notification, ApplicationSponsor, SponsorCatalog
 from driverProgram.forms import ApplyToJobPosting, JobPostForm, SponsorProfileForm
 from werkzeug.utils import secure_filename
