@@ -1,5 +1,5 @@
 from datetime import datetime
-from flask import Blueprint, render_template, redirect, url_for, session, flash, request, current_app, jsonify
+from flask import Blueprint, logging, render_template, redirect, url_for, session, flash, request, current_app, jsonify
 from driverProgram import db, check_database_connection
 from sqlalchemy import text
 from flask_login import login_required, current_user
@@ -449,6 +449,63 @@ def archive_notification(notification_id):
     db.session.delete(notification)
     db.session.commit()
     return jsonify({'success': True})
+
+
+@main_bp.route('/sponsor/reports')
+def sponsor_reports():
+    return render_template('sponsor/sponsor_reports.html')
+
+"""
+@main_bp.route('/search', methods=['GET'])
+def search():
+    query = request.args.get('query', '')
+    logging.info(f"Search endpoint called with query: '{query}'")  # Log the received query
+    
+    appid = os.getenv("EBAY_CLIENT_ID")
+    if not appid:
+        logging.error("eBay Client ID not configured")
+        return jsonify({"error": "eBay Client ID not configured"}), 500
+    
+    try:
+        # Connect to the eBay API with the Finding API
+        api = Finding(appid=appid, config_file=None, siteid='EBAY-US', https=True)
+        response = api.execute('findItemsByKeywords', {'keywords': query})
+        items = response.dict().get('searchResult', {}).get('item', [])
+
+        # Format the items for JSON response with required details
+        products = [
+            {
+                'name': item.get('title'),
+                'image': item.get('galleryURL', 'https://via.placeholder.com/150'),
+                'points': item.get('sellingStatus', {}).get('currentPrice', {}).get('value', 'N/A'),
+                'description': item.get('subtitle', 'No description available')
+            }
+            for item in items
+        ]
+        
+        logging.info(f"Returning {len(products)} products")  # Log the number of products found
+        return jsonify(products=products)
+    except Exception as e:
+        logging.error(f"Error fetching products: {str(e)}")  # Log any errors
+        return jsonify({"error": str(e)}), 500
+
+"""
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 @main_bp.route('/search', methods=['GET'])
 def search():

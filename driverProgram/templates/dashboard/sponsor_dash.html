@@ -8,8 +8,6 @@
     <!-- Google Fonts for Professional Typography -->
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
 
-    <!-- Font Awesome for Icons -->
-    <script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
 
     <style>
         /* General Body Styling */
@@ -252,6 +250,7 @@
                 <li><a onclick="loadContent('{{ url_for('main.public_profile') }}')"><i class="fas fa-building"></i><span>Public Profile</span></a></li>
                 <li><a onclick="loadContent('{{ url_for('main.job_postings') }}')"><i class="fas fa-briefcase"></i><span>Job Postings</span></a></li>
                 <li><a onclick="loadContent('{{ url_for('main.view_notifications') }}')"><i class="fas fa-bell"></i><span>Notifications</span></a></li>
+                <li><a onclick="loadContent('{{ url_for('main.sponsor_reports') }}')"><i class="fas fa-bell"></i><span>Generate Reports</span></a></li>
             </ul>
             
         </nav>
