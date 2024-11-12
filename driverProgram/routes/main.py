@@ -103,26 +103,19 @@ def edit_profile():
 @main_bp.route('/update_profile', methods=['POST'])
 @login_required
 def update_profile():
-    # Update user information from the form
     current_user.username = request.form['username']
     current_user.email = request.form['email']
     current_user.phone = request.form.get('phone')
     current_user.address = request.form.get('address')
     current_user.gender = request.form.get('gender')
     current_user.date_of_birth = request.form.get('date_of_birth')
-
-    # Save changes to the database
     try:
         db.session.commit()
         flash('Your profile has been updated successfully!', 'success')
     except Exception as e:
         db.session.rollback()
         flash(f'An error occurred: {str(e)}', 'danger')
-
     return redirect(url_for('main.profile'))
-
-
-
 
 
 @main_bp.route('/about')
@@ -196,7 +189,10 @@ def reject_application(application_id):
 @main_bp.route('/participating-drivers')
 @login_required
 def participating_drivers():
-    return render_template('sponsor/participating_drivers.html')
+    approved_drivers = Application.query.join(JobPosting).filter(
+        Application.status == 'Approved',
+    ).all() 
+    return render_template('sponsor/participating_drivers.html',drivers=approved_drivers)
 
 @main_bp.route('/sponsor/public_profile', methods=['GET', 'POST']) 
 @login_required
@@ -288,11 +284,6 @@ def view_points():
 @login_required
 def redeem_rewards():
     return render_template('driver/redeem_rewards.html') 
-
-@main_bp.route('/driver/product-catalog')
-@login_required
-def driver_product_catalog():
-    return render_template('driver/product_catalog.html')  
 
 @main_bp.route('/driver/review-purchases')
 @login_required
@@ -447,7 +438,8 @@ def sponsor_reports():
 
 
 
-@main_bp.route('/sponsor/product-catalog')
+
+@main_bp.route('/product-catalog')
 @login_required
 def sponsor_product_catalog():
     return render_template('sponsor/product_catalog.html')
