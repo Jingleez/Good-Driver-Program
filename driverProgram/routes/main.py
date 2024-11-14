@@ -239,10 +239,13 @@ def job_postings():
 def sponsor_reports():
     return render_template('sponsor/sponsor_reports.html')
 
+
 @main_bp.route('/product-catalog')
 @login_required
 def sponsor_product_catalog():
     return render_template('sponsor/product_catalog.html')
+
+
 
 @main_bp.route('/search', methods=['GET'])
 def search():
@@ -258,7 +261,8 @@ def search():
     except Exception as e:
         print("Error fetching data from iTunes API:", e)
         return render_template("sponsor/product_catalog.html", error="Error fetching data from iTunes API.")
-    
+
+
 @main_bp.route('/notifications', methods=['GET'])
 @login_required
 def view_notifications():
