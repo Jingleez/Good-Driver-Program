@@ -1,6 +1,6 @@
 # driverProgram/forms.py
 from flask_wtf import FlaskForm
-from wtforms import StringField, PasswordField, FloatField, IntegerField, TextAreaField, SubmitField, SelectField, BooleanField, DateField, FileField
+from wtforms import StringField, PasswordField, FloatField, IntegerField, TextAreaField, SubmitField, SelectField, BooleanField, DateField, FileField, FieldList, FormField
 from wtforms.validators import DataRequired, Email, EqualTo, Length, ValidationError, Optional, NumberRange
 from .models import User
 
@@ -76,3 +76,13 @@ class SponsorProfileForm(FlaskForm):
     bio = TextAreaField('Company Bio', validators=[Optional()])
     #profile_picture = FileField('Upload Profile Picture', validators=[Optional()])
     submit = SubmitField('Save Profile')
+
+
+class BehaviorForm(FlaskForm):
+    name = StringField('Behavior Name', validators=[DataRequired()])
+    type = SelectField('Type', choices=[('Good', 'Good'), ('Bad', 'Bad')], validators=[DataRequired()])
+    point_value = IntegerField('Point Worth', validators=[DataRequired()])
+    submit = SubmitField('Add Behavior')
+
+class RewardSystemForm(FlaskForm):
+    behaviors = FieldList(FormField(BehaviorForm), min_entries=1)

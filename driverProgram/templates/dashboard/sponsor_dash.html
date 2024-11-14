@@ -251,6 +251,7 @@
                 <li><a onclick="loadContent('{{ url_for('main.job_postings') }}')"><i class="fas fa-briefcase"></i><span>Job Postings</span></a></li>
                 <li><a onclick="loadContent('{{ url_for('main.view_notifications') }}')"><i class="fas fa-bell"></i><span>Notifications</span></a></li>
                 <li><a onclick="loadContent('{{ url_for('main.sponsor_reports') }}')"><i class="fas fa-bell"></i><span>Generate Reports</span></a></li>
+                <li><a onclick="loadContent('{{ url_for('main.reward_system') }}')"><i class="fas fa-bell"></i><span>Reward System</span></a></li>
             </ul>
             
         </nav>
@@ -279,6 +280,12 @@
                             loadContent('{{ url_for('main.approve_applications') }}');
                         });
                     </script>
+                {% elif load_reward_system %}
+                <script>
+                    document.addEventListener("DOMContentLoaded", function() {
+                        loadContent('{{ url_for('main.reward_system') }}');
+                    });
+                </script>
                 {% else %}
                     <h2>Welcome to the Sponsor Dashboard</h2>
                     <p>This is where you can manage applications, view drivers, and manage your product catalog.</p>

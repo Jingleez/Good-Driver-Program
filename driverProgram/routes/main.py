@@ -5,8 +5,8 @@ from driverProgram import db, check_database_connection
 from sqlalchemy import text
 from flask_login import login_required, current_user
 import jwt
-from driverProgram.models import JobPosting, Sponsor, Application, Notification, ApplicationSponsor, SponsorCatalog
-from driverProgram.forms import ApplyToJobPosting, JobPostForm, SponsorProfileForm
+from driverProgram.models import JobPosting, Sponsor, Application, Notification, ApplicationSponsor, SponsorCatalog, Behavior, ReviewBoard
+from driverProgram.forms import ApplyToJobPosting, JobPostForm, SponsorProfileForm, RewardSystemForm, BehaviorForm
 from werkzeug.utils import secure_filename
 import os
 from ebaysdk.finding import Connection as Finding
@@ -72,7 +72,10 @@ def sponsor_dash():
     load_approve_applications = session.get('load_approve_applications', False)
     session.pop('load_approve_applications', None)
 
-    return render_template('dashboard/sponsor_dash.html',  load_public_profile=load_public_profile, load_job_postings=load_job_postings, load_approve_applications=load_approve_applications)
+    load_reward_system = session.get('load_reward_system', False)
+    session.pop('load_reward_system', None)
+
+    return render_template('dashboard/sponsor_dash.html',  load_public_profile=load_public_profile, load_job_postings=load_job_postings, load_approve_applications=load_approve_applications, load_reward_system=load_reward_system)
 
 @main_bp.route('/admin/dashboard')
 @login_required
@@ -288,8 +291,25 @@ def archive_notification(notification_id):
     db.session.commit()
     return jsonify({'success': True})
 
+@main_bp.route('/reward_system', methods=['GET', 'POST'])
+@login_required
+def reward_system():
+    form = BehaviorForm()
+    if form.validate_on_submit() and request.method == 'POST':
+        new_behavior = Behavior(
+            name=form.name.data,
+            type=form.type.data,
+            point_value=form.point_value.data,
+            sponsor_id=current_user.sponsor.id  # Assuming the sponsor adds the behavior
+        )
+        db.session.add(new_behavior)
+        db.session.commit()
+        flash('Behavior added successfully!', 'success')
+        session['load_reward_system'] = True
+        return redirect(url_for('main.sponsor_dash'))  # Redirect to sponsor dashboard or desired page
 
-
+    behaviors = Behavior.query.all()  # Fetch all behaviors from the database
+    return render_template('sponsor/reward_system.html', form=form, behaviors=behaviors)
 
 
 

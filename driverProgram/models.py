@@ -1,4 +1,5 @@
 from flask_login import UserMixin
+from datetime import datetime, timezone
 from . import db  # Import db from the current package
 
 class User(db.Model, UserMixin):
@@ -97,3 +98,30 @@ class SponsorCatalog(db.Model):
 
     # Relationship back to sponsor
     sponsor = db.relationship('Sponsor', backref='catalog_items')
+
+
+class Behavior(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(100), nullable=False)  # Name of the behavior (e.g., "Speeding" or "Safe Parking")
+    type = db.Column(db.String(50), nullable=False)  # Type of behavior: "Good" or "Bad"
+    point_value = db.Column(db.Integer, nullable=False)  # Points assigned for this behavior
+    sponsor_id = db.Column(db.Integer, db.ForeignKey('sponsors.id'), nullable=False)  # Corrected foreign key
+
+    # Define relationship to Sponsor
+    sponsor = db.relationship('Sponsor', backref='behaviors')
+
+    def __repr__(self):
+        return f'<Behavior {self.name}>'
+    
+class ReviewBoard(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(100), nullable=False)  # Name of the review board
+    description = db.Column(db.String(500))  # Optional description for the board
+    sponsor_id = db.Column(db.Integer, db.ForeignKey('sponsors.id'), nullable=False)  # Link to sponsor who created the board
+    created_at = db.Column(db.DateTime, default=datetime.now(timezone.utc))  # Timestamp of creation
+
+    # Relationship with Sponsor
+    sponsor = db.relationship('Sponsor', backref='review_boards')
+
+    def __repr__(self):
+        return f'<ReviewBoard {self.name}>'
