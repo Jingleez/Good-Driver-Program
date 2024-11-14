@@ -286,6 +286,12 @@
                         loadContent('{{ url_for('main.reward_system') }}');
                     });
                 </script>
+                {% elif load_product_catalog %}
+                <script>
+                    document.addEventListener("DOMContentLoaded", function() {
+                        loadContent('{{ url_for('main.sponsor_product_catalog') }}');
+                    });
+                </script>
                 {% else %}
                     <h2>Welcome to the Sponsor Dashboard</h2>
                     <p>This is where you can manage applications, view drivers, and manage your product catalog.</p>

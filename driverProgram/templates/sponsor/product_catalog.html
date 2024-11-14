@@ -1,6 +1,4 @@
 {% block content %}
-<!DOCTYPE html>
-<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -8,26 +6,91 @@
     <style>
         body {
             font-family: Arial, sans-serif;
+            background-color: #f5f5f5;
         }
-        table {
+        .Items {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            width: 90%;
+            max-width: 1200px;
+            margin: 0 auto;
+            background: #fff;
+            padding: 20px;
+        }
+        .Item {
+            padding: 20px 0;
+            width: 30%;
+            transition: box-shadow 0.4s ease-in-out;
+            border-radius: 3px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            background-color: #fff;
+            margin-bottom: 20px;
+        }
+        .Item__link {
+            text-decoration: none;
+            color: inherit;
+        }
+        .Item__title {
+            font-family: 'Montserrat', sans-serif;
+            font-size: 0.9em;
+            color: #555;
+            width: 90%;
+            margin: 20px auto 0;
+        }
+        .Item__price {
+            font-family: 'Montserrat', sans-serif;
+            font-size: 0.9em;
+            margin-top: 10px;
+            color: #777;
+        }
+        .ImageContainer {
             width: 100%;
-            border-collapse: collapse;
-            margin-top: 20px;
+            height: auto;
         }
-        th, td {
-            padding: 12px;
-            text-align: left;
-            border-bottom: 1px solid #ddd;
-        }
-        th {
-            background-color: #f2f2f2;
-        }
-        img {
+        .Image {
+            width: 100%;
+            height: auto;
             max-width: 100px;
             max-height: 100px;
         }
-        audio {
-            margin-top: 10px;
+
+        /* Modal (Popup) Styling */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0, 0, 0, 0.5);
+            justify-content: center;
+            align-items: center;
+        }
+        .modal-content {
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            width: 80%;
+            max-width: 500px;
+            text-align: center;
+        }
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        .close:hover,
+        .close:focus {
+            color: #000;
+            text-decoration: none;
+            cursor: pointer;
         }
     </style>
 </head>
@@ -58,46 +121,84 @@
             <button type="submit">Search</button>
         </form>
 
+        <!-- Results Section with new layout and CSS classes -->
         <section id="results">
             {% if error %}
                 <p>{{ error }}</p>
             {% elif results %}
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Artwork</th>
-                            <th>Track/Collection Name</th>
-                            <th>Artist</th>
-                            <th>Preview</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for item in results %}
-                            <tr>
-                                <td>
+                <div class="Items">
+                    {% for item in results %}
+                        <div class="Item" onclick="showPreview('{{ item.previewUrl }}')">
+                            <a href="javascript:void(0);" class="Item__link">
+                                <div class="ImageContainer">
                                     {% if item.artworkUrl100 %}
-                                        <img src="{{ item.artworkUrl100 }}" alt="{{ item.trackName or item.collectionName }}">
+                                        <img src="{{ item.artworkUrl100 }}" alt="{{ item.trackName or item.collectionName }}" class="Image">
+                                    {% else %}
+                                        <img src="placeholder.png" alt="No Image Available" class="Image">
                                     {% endif %}
-                                </td>
-                                <td>{{ item.trackName or item.collectionName }}</td>
-                                <td>{{ item.artistName }}</td>
-                                <td>
-                                    {% if item.previewUrl %}
-                                        <audio controls>
-                                            <source src="{{ item.previewUrl }}" type="audio/mpeg">
-                                            Your browser does not support the audio element.
-                                        </audio>
-                                    {% endif %}
-                                </td>
-                            </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
+                                </div>
+                                <div class="Item__title">{{ item.trackName or item.collectionName }}</div>
+                                <div class="Item__price">{{ (item.trackPrice | default(0) * 100) | round }} points</div>
+                                <button onclick="addToCatalog('{{ item.trackId }}')">Add to catalog</button>
+                            </a>
+                        </div>
+                    {% endfor %}
+                </div>
             {% else %}
                 <p>No results found. Please try a different search.</p>
             {% endif %}
         </section>
+        
+        <!-- Modal for Preview -->
+        <div id="previewModal" class="modal">
+            <div class="modal-content">
+                <span class="close" onclick="closeModal()">&times;</span>
+                <div id="previewContent">
+                    <!-- Preview content will be injected here -->
+                </div>
+            </div>
+        </div>
     </main>
+
+    <script>
+        function addToCatalog(trackId) {
+            alert(`Product ${trackId} added to catalog!`);
+            // Implement the logic to add the item to the catalog here
+        }
+
+        // Show the preview modal with the product preview
+        function showPreview(previewUrl) {
+            const modal = document.getElementById("previewModal");
+            const previewContent = document.getElementById("previewContent");
+
+            if (previewUrl) {
+                previewContent.innerHTML = `
+                    <p>Preview:</p>
+                    <audio controls>
+                        <source src="${previewUrl}" type="audio/mpeg">
+                        Your browser does not support the audio element.
+                    </audio>
+                `;
+            } else {
+                previewContent.innerHTML = "<p>No preview available.</p>";
+            }
+
+            modal.style.display = "flex"; // Show the modal
+        }
+
+        // Close the modal
+        function closeModal() {
+            const modal = document.getElementById("previewModal");
+            modal.style.display = "none"; // Hide the modal
+        }
+
+        // Close the modal when clicking outside of it
+        window.onclick = function(event) {
+            const modal = document.getElementById("previewModal");
+            if (event.target === modal) {
+                modal.style.display = "none";
+            }
+        }
+    </script>
 </body>
-</html>
 {% endblock %}
