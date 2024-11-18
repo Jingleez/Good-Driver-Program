@@ -5,7 +5,7 @@ from driverProgram import db, check_database_connection
 from sqlalchemy import text
 from flask_login import login_required, current_user
 import jwt
-from driverProgram.models import JobPosting, Sponsor, Application, Notification, ApplicationSponsor, SponsorCatalog, Behavior, ReviewBoard
+from driverProgram.models import JobPosting, Sponsor, Application, Notification, ApplicationSponsor, SponsorCatalog, Behavior, ReviewBoard, SponsorProduct
 from driverProgram.forms import ApplyToJobPosting, JobPostForm, SponsorProfileForm, RewardSystemForm, BehaviorForm
 from werkzeug.utils import secure_filename
 import os
@@ -240,27 +240,82 @@ def sponsor_reports():
     return render_template('sponsor/sponsor_reports.html')
 
 
-@main_bp.route('/product-catalog')
+@main_bp.route('/product-catalog', methods=['GET'])
 @login_required
 def sponsor_product_catalog():
-    return render_template('sponsor/product_catalog.html')
-
-
-
-@main_bp.route('/search', methods=['GET'])
-def search():
     search_term = request.args.get('searchTerm')
     media_type = request.args.get('mediaType', 'music')
-    if not search_term:
-        return render_template("sponsor/product_catalog.html", error="Please enter a search term.")
-    url = f"https://itunes.apple.com/search?term={search_term}&media={media_type}&limit=10"
-    try:
-        response = requests.get(url)
-        data = response.json()
-        return render_template("sponsor/product_catalog.html", results=data["results"])
-    except Exception as e:
-        print("Error fetching data from iTunes API:", e)
-        return render_template("sponsor/product_catalog.html", error="Error fetching data from iTunes API.")
+
+    if search_term:
+        url = f"https://itunes.apple.com/search?term={search_term}&media={media_type}&limit=10"
+        try:
+            response = requests.get(url)
+            data = response.json()
+            return render_template('sponsor/product_catalog.html', results=data.get("results", []))
+        except Exception as e:
+            print("Error fetching data from iTunes API:", e)
+            return render_template('sponsor/product_catalog.html', error="Error fetching data from iTunes API.")
+    
+    return render_template('sponsor/product_catalog.html')
+
+@main_bp.route('/add_to_catalog', methods=['POST'])
+@login_required
+def add_to_catalog():
+    data = request.get_json()
+    product_id = data.get('product_id')
+    product_name = data.get('product_name')
+    product_image = data.get('product_image')
+    product_price = data.get('product_price')
+    existing_product = SponsorProduct.query.filter_by(
+        sponsor_id=current_user.id,
+        product_id=product_id
+    ).first()
+    if existing_product:
+        return jsonify({'message': 'Product already in catalog'}), 400
+    new_product = SponsorProduct(
+        sponsor_id=current_user.id,
+        product_id=product_id,
+        product_name=product_name,
+        product_image=product_image,
+        product_price=product_price
+    )
+    db.session.add(new_product)
+    db.session.commit()
+    return jsonify({'message': 'Product added to catalog'}), 200
+
+@main_bp.route('/sponsor_items')
+@login_required
+def sponsor_items():
+    sponsor_products = SponsorProduct.query.filter_by(sponsor_id=current_user.id).all()
+    return render_template('sponsor/sponsor_items.html', products=sponsor_products)
+
+@main_bp.route('/remove_from_catalog', methods=['POST'])
+@login_required
+def remove_from_catalog():
+    data = request.get_json()
+    product_id = data.get('product_id')
+    product_name = data.get('product_name')
+    product_image = data.get('product_image')
+    product_price = data.get('product_price')
+    product = SponsorProduct.query.filter_by(
+        id=product_id,
+        sponsor_id=current_user.id
+    ).first()
+    if not product:
+        return jsonify({'error': 'Product not found or unauthorized'}), 404
+    if product.product_name != product_name or \
+       product.product_image != product_image or \
+       str(product.product_price) != str(product_price):
+        return jsonify({'error': 'Product data mismatch'}), 400
+    db.session.delete(product)
+    db.session.commit()
+    return jsonify({'message': 'Product removed successfully'}), 200
+
+
+
+
+
+
 
 
 @main_bp.route('/notifications', methods=['GET'])
@@ -328,7 +383,8 @@ def view_points():
 @main_bp.route('/driver/redeem-rewards')
 @login_required
 def redeem_rewards():
-    return render_template('driver/redeem_rewards.html') 
+    rewards = SponsorProduct.query.all()
+    return render_template('driver/redeem_rewards.html', rewards=rewards) 
 
 @main_bp.route('/driver/review-purchases')
 @login_required

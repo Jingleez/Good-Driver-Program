@@ -1,17 +1,101 @@
-<h2>Redeem Rewards</h2>
-<p>Select from the list of rewards below to redeem your points.</p>
+{% block content %}
+<head>
+    <title>Redeem Rewards</title>
+    <style>
+        .card {
+            cursor: pointer;
+        }
+        .modal-content {
+            position: relative;
+        }
+        .close {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #000;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <div class="container mt-4">
+        <h2>Redeem Rewards</h2>
+        <p>Select from the list of rewards below to redeem your points.</p>
+        <div class="row">
+            {% for reward in rewards %}
+            <div class="col-md-4 mb-4">
+                <div class="card" onclick="showRewardDetails({{ reward.id }})">
+                    <img src="{{ reward.image_url }}" class="card-img-top" alt="{{ reward.name }}">
+                    <div class="card-body">
+                        <h5 class="card-title">{{ reward.name }}</h5>
+                        <p class="card-text">{{ reward.points }} Points</p>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
 
-<ul>
-    {% for reward in rewards %}
-    <li><strong>{{ reward.name }}</strong> - {{ reward.points }} Points 
-        <button onclick="redeemReward({{ reward.id }})">Redeem</button>
-    </li>
-    {% endfor %}
-</ul>
+    <!-- Reward Details Modal -->
+    <div class="modal fade" id="rewardModal" tabindex="-1" role="dialog" aria-labelledby="rewardModalLabel" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <span class="close" onclick="closeModal()">&times;</span>
+                <div class="modal-body">
+                    <img id="rewardImage" src="" class="img-fluid mb-3" alt="Reward Image">
+                    <h5 id="rewardName"></h5>
+                    <p id="rewardDescription"></p>
+                    <p><strong>Points Required:</strong> <span id="rewardPoints"></span></p>
+                    <button class="btn btn-primary" onclick="addToCart()">Add to Cart</button>
+                    <button class="btn btn-secondary" onclick="addToWishlist()">Add to Wishlist</button>
+                </div>
+            </div>
+        </div>
+    </div>
 
-<script>
-    function redeemReward(rewardId) {
-        // Handle reward redemption logic
-        console.log('Redeemed Reward ID:', rewardId);
-    }
-</script>
+    <!-- Include Bootstrap JS and dependencies -->
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.2/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    <script>
+        const rewardsData = [
+            {% for reward in rewards %}
+            {
+                id: {{ reward.id }},
+                name: "{{ reward.name }}",
+                description: "{{ reward.description }}",
+                points: {{ reward.points }},
+                image_url: "{{ reward.image_url }}"
+            },
+            {% endfor %}
+        ];
+
+        function showRewardDetails(rewardId) {
+            const reward = rewardsData.find(r => r.id === rewardId);
+            if (reward) {
+                document.getElementById('rewardImage').src = reward.image_url;
+                document.getElementById('rewardName').innerText = reward.name;
+                document.getElementById('rewardDescription').innerText = reward.description;
+                document.getElementById('rewardPoints').innerText = reward.points;
+                $('#rewardModal').modal('show');
+            }
+        }
+
+        function closeModal() {
+            $('#rewardModal').modal('hide');
+        }
+
+        function addToCart() {
+            alert('Added to cart!');
+            closeModal();
+        }
+
+        function addToWishlist() {
+            alert('Added to wishlist!');
+            closeModal();
+        }
+    </script>
+</body>
+{% endblock %}

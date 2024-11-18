@@ -1,0 +1,129 @@
+{% block content %}
+<h2>Your Product Catalog</h2>
+<style>
+    body {
+        font-family: Arial, sans-serif;
+    }
+    .Items {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 20px;
+        justify-content: space-between;
+        max-width: 1200px;
+        margin: 20px auto;
+        background: #fff;
+        padding: 20px;
+    }
+    .Item {
+        flex: 1 1 calc(30% - 20px); /* Ensures 3 items per row with spacing */
+        max-width: calc(30% - 20px);
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        text-align: center;
+        background-color: #fff;
+        border-radius: 5px;
+        transition: box-shadow 0.4s ease-in-out;
+        margin: 10px 0;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+    }
+    @media (max-width: 1050px) {
+        .Item {
+            flex: 1 1 calc(48% - 20px); /* Two items per row for medium screens */
+        }
+    }
+    @media (max-width: 600px) {
+        .Item {
+            flex: 1 1 100%; /* One item per row for small screens */
+        }
+    }
+    .ImageContainer {
+        width: 100%;
+        height: auto;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        margin-bottom: 10px;
+    }
+    .Image {
+        width: 100%;
+        height: auto;
+        max-width: 150px;
+        max-height: 150px;
+        object-fit: cover;
+    }
+    .Item__title {
+        font-family: 'Montserrat', sans-serif;
+        font-size: 1em;
+        color: #333;
+        margin: 10px 0;
+    }
+    .Item__price {
+        font-family: 'Montserrat', sans-serif;
+        font-size: 0.9em;
+        margin: 5px 0;
+        color: #777;
+    }
+</style>
+<div class="Items">
+    {% for product in products %}
+        <div class="Item" id="product-{{ product.id }}">
+            <div class="ImageContainer">
+                {% if product.product_image %}
+                    <img src="{{ product.product_image }}" alt="{{ product.product_name }}" class="Image">
+                {% else %}
+                    <img src="{{ url_for('static', filename='placeholder.png') }}" alt="No Image Available" class="Image">
+                {% endif %}
+            </div>
+            <div class="Item__title">{{ product.product_name }}</div>
+            <div class="Item__price">{{ product.product_price }} points</div>
+            <button onclick="removeFromCatalog('{{ product.id }}', '{{ product.product_name }}', '{{ product.product_image }}', '{{ product.product_price }}')">
+                Remove from Catalog
+            </button>
+        </div>
+    {% endfor %}
+</div>
+
+<script>
+    function removeFromCatalog(productId, productName, productImage, productPrice) {
+        // Log that the function is being called
+        console.log('removeFromCatalog called with:', {
+            productId,
+            productName,
+            productImage,
+            productPrice
+        });
+
+        // Send a POST request to remove the product
+        fetch('/remove_from_catalog', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                product_id: productId,
+                product_name: productName,
+                product_image: productImage,
+                product_price: productPrice
+            })
+        })
+        .then(response => {
+            console.log('Fetch response status:', response.status);
+            return response.json();
+        })
+        .then(data => {
+            console.log('Fetch response data:', data);
+            if (data.message) {
+                document.getElementById(`product-${productId}`).remove();
+                alert(data.message);
+            } else {
+                alert(`Error: ${data.error || 'Failed to remove the product.'}`);
+            }
+        })
+        .catch(error => {
+            console.error('Error during fetch:', error);
+            alert('An error occurred. Please try again.');
+        });
+    }
+</script>
+{% endblock %}

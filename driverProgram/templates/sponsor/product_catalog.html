@@ -96,7 +96,7 @@
         <h1>Product Catalog</h1>
     </header>
     <main>
-        <form action="/search" method="get">
+        <form action="{{ url_for('main.sponsor_product_catalog') }}" method="get">
             <div>
                 <label>Search Term:</label>
                 <input
@@ -136,7 +136,7 @@
                                 </div>
                                 <div class="Item__title">{{ item.trackName or item.collectionName }}</div>
                                 <div class="Item__price">{{ (item.trackPrice | default(0) * 100) | round }} points</div>
-                                <button onclick="addToCatalog('{{ item.trackId }}')">Add to catalog</button>
+                                <button onclick="addToCatalog('{{ item.trackId }}', '{{ item.trackName or item.collectionName }}', '{{ item.artworkUrl100 }}', '{{ item.trackPrice }}')">Add to catalog</button>
                             </a>
                         </div>
                     {% endfor %}
@@ -158,9 +158,26 @@
     </main>
 
     <script>
-        function addToCatalog(trackId) {
-            alert(`Product ${trackId} added to catalog!`);
-            // Implement the logic to add the item to the catalog here
+        function addToCatalog(productId, productName, productImage, productPrice) {
+            fetch('/add_to_catalog', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    product_id: productId,
+                    product_name: productName,
+                    product_image: productImage,
+                    product_price: productPrice
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                alert(data.message);
+            })
+            .catch(error => {
+                console.error('Error:', error);
+            });
         }
 
         // Show the preview modal with the product preview
