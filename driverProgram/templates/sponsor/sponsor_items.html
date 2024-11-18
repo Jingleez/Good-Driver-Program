@@ -69,61 +69,45 @@
     {% for product in products %}
         <div class="Item" id="product-{{ product.id }}">
             <div class="ImageContainer">
-                {% if product.product_image %}
-                    <img src="{{ product.product_image }}" alt="{{ product.product_name }}" class="Image">
+                {% if product.image %}
+                    <img src="{{ product.image }}" alt="{{ product.name }}" class="Image">
                 {% else %}
                     <img src="{{ url_for('static', filename='placeholder.png') }}" alt="No Image Available" class="Image">
                 {% endif %}
             </div>
-            <div class="Item__title">{{ product.product_name }}</div>
-            <div class="Item__price">{{ product.product_price }} points</div>
-            <button onclick="removeFromCatalog('{{ product.id }}', '{{ product.product_name }}', '{{ product.product_image }}', '{{ product.product_price }}')">
+            <div class="Item__title">{{ product.name }}</div>
+            <div class="Item__price">{{ product.price }} points</div>
+            <button onclick="removeFromCatalog('{{ product.id }}')">
                 Remove from Catalog
-            </button>
+            </button>            
         </div>
     {% endfor %}
 </div>
 
 <script>
-    function removeFromCatalog(productId, productName, productImage, productPrice) {
-        // Log that the function is being called
-        console.log('removeFromCatalog called with:', {
-            productId,
-            productName,
-            productImage,
-            productPrice
-        });
-
-        // Send a POST request to remove the product
-        fetch('/remove_from_catalog', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-                product_id: productId,
-                product_name: productName,
-                product_image: productImage,
-                product_price: productPrice
-            })
+    function removeFromCatalog(productId) {
+    fetch('/remove_from_catalog', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            product_id: productId, 
         })
-        .then(response => {
-            console.log('Fetch response status:', response.status);
-            return response.json();
-        })
-        .then(data => {
-            console.log('Fetch response data:', data);
-            if (data.message) {
-                document.getElementById(`product-${productId}`).remove();
-                alert(data.message);
-            } else {
-                alert(`Error: ${data.error || 'Failed to remove the product.'}`);
-            }
-        })
-        .catch(error => {
-            console.error('Error during fetch:', error);
-            alert('An error occurred. Please try again.');
-        });
-    }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.message) {
+            document.getElementById(`product-${productId}`).remove();
+            alert(data.message); 
+        } else {
+            alert(`Error: ${data.error || 'Failed to remove the product.'}`);
+        }
+    })
+    .catch(error => {
+        console.error('Error during fetch:', error);
+        alert('An error occurred. Please try again.');
+    });
+}
 </script>
 {% endblock %}

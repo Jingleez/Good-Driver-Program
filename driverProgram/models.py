@@ -25,7 +25,7 @@ class Sponsor(db.Model):
     website = db.Column(db.String(150), nullable=True)
     bio = db.Column(db.Text, nullable=True)
 
-    # Relationship to job postings
+    # Relationship to job postings 
     job_postings = db.relationship('JobPosting', backref='sponsor', lazy=True)
 
 # JobPosting model for storing job postings related to sponsors
@@ -88,7 +88,7 @@ class Notification(db.Model):
     sponsor = db.relationship('Sponsor', backref='notifications')
 
 class SponsorCatalog(db.Model):
-    tablename = 'sponsor_catalog'
+    __tablename__ = 'sponsor_catalog' 
     id = db.Column(db.Integer, primary_key=True)
     sponsor_id = db.Column(db.Integer, db.ForeignKey('sponsors.id'), nullable=False)
     product_id = db.Column(db.String(50), nullable=False)
@@ -125,12 +125,15 @@ class ReviewBoard(db.Model):
 
     def __repr__(self):
         return f'<ReviewBoard {self.name}>'
-    
 
-class SponsorProduct(db.Model):
+class Wishlist(db.Model):
+    __tablename__ = 'wishlist'
     id = db.Column(db.Integer, primary_key=True)
-    sponsor_id = db.Column(db.Integer, nullable=False)
-    product_id = db.Column(db.String(100), nullable=False)
-    product_name = db.Column(db.String(200), nullable=False)
-    product_image = db.Column(db.String(200))
-    product_price = db.Column(db.Float)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)  # FK to User table
+    product_id = db.Column(db.String(50), nullable=False)  # Product ID from catalog
+    sponsor_id = db.Column(db.Integer, db.ForeignKey('sponsors.id'), nullable=False)  # FK to Sponsor table
+    date_added = db.Column(db.DateTime, default=db.func.current_timestamp())
+
+    # Relationships
+    user = db.relationship('User', backref='wishlist_items')
+    sponsor = db.relationship('Sponsor', backref='wishlist_items')

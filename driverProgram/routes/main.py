@@ -5,7 +5,7 @@ from driverProgram import db, check_database_connection
 from sqlalchemy import text
 from flask_login import login_required, current_user
 import jwt
-from driverProgram.models import JobPosting, Sponsor, Application, Notification, ApplicationSponsor, SponsorCatalog, Behavior, ReviewBoard, SponsorProduct
+from driverProgram.models import JobPosting, Sponsor, Application, Notification, ApplicationSponsor, SponsorCatalog, Behavior, ReviewBoard
 from driverProgram.forms import ApplyToJobPosting, JobPostForm, SponsorProfileForm, RewardSystemForm, BehaviorForm
 from werkzeug.utils import secure_filename
 import os
@@ -263,55 +263,70 @@ def sponsor_product_catalog():
 def add_to_catalog():
     data = request.get_json()
     product_id = data.get('product_id')
-    product_name = data.get('product_name')
-    product_image = data.get('product_image')
-    product_price = data.get('product_price')
-    existing_product = SponsorProduct.query.filter_by(
-        sponsor_id=current_user.id,
+    product_name = data.get('name')
+    product_image = data.get('image')
+    product_price = data.get('price')
+
+    # Fetch the sponsor associated with the current user
+    sponsor = Sponsor.query.filter_by(user_id=current_user.id).first()
+    if not sponsor:
+        return jsonify({'error': 'Sponsor account not found'}), 400
+
+    # Validate product price
+    if product_price is None:
+        return jsonify({'error': 'Product price is missing'}), 400
+
+    try:
+        price_in_points = float(product_price) * 100  # Convert to points if required
+    except ValueError:
+        return jsonify({'error': 'Invalid price format'}), 400
+
+    existing_product = SponsorCatalog.query.filter_by(
+        sponsor_id=current_user.sponsor_code,
         product_id=product_id
     ).first()
     if existing_product:
         return jsonify({'message': 'Product already in catalog'}), 400
-    new_product = SponsorProduct(
-        sponsor_id=current_user.id,
+    new_product = SponsorCatalog(
+        sponsor_id=sponsor.id,
         product_id=product_id,
-        product_name=product_name,
-        product_image=product_image,
-        product_price=product_price
+        name=product_name,
+        image=product_image,
+        price=price_in_points
     )
     db.session.add(new_product)
     db.session.commit()
     return jsonify({'message': 'Product added to catalog'}), 200
 
+
 @main_bp.route('/sponsor_items')
 @login_required
 def sponsor_items():
-    sponsor_products = SponsorProduct.query.filter_by(sponsor_id=current_user.id).all()
+    sponsor = Sponsor.query.filter_by(user_id=current_user.id).first()
+    if not sponsor:
+        return render_template('error.html', message="Sponsor account not found.")
+    sponsor_products = SponsorCatalog.query.filter_by(sponsor_id=sponsor.id).all()
     return render_template('sponsor/sponsor_items.html', products=sponsor_products)
+
+
 
 @main_bp.route('/remove_from_catalog', methods=['POST'])
 @login_required
 def remove_from_catalog():
     data = request.get_json()
     product_id = data.get('product_id')
-    product_name = data.get('product_name')
-    product_image = data.get('product_image')
-    product_price = data.get('product_price')
-    product = SponsorProduct.query.filter_by(
-        id=product_id,
-        sponsor_id=current_user.id
+    sponsor = Sponsor.query.filter_by(user_id=current_user.id).first()
+    if not sponsor:
+        return jsonify({'error': 'Sponsor account not found'}), 400
+    product = SponsorCatalog.query.filter_by(
+        sponsor_id=sponsor.id,
+        product_id=product_id
     ).first()
     if not product:
         return jsonify({'error': 'Product not found or unauthorized'}), 404
-    if product.product_name != product_name or \
-       product.product_image != product_image or \
-       str(product.product_price) != str(product_price):
-        return jsonify({'error': 'Product data mismatch'}), 400
     db.session.delete(product)
     db.session.commit()
     return jsonify({'message': 'Product removed successfully'}), 200
-
-
 
 
 
@@ -380,11 +395,13 @@ def reward_system():
 def view_points():
     return render_template('driver/view_points.html') 
 
-@main_bp.route('/driver/redeem-rewards')
+@main_bp.route('/redeem_rewards')
 @login_required
 def redeem_rewards():
-    rewards = SponsorProduct.query.all()
-    return render_template('driver/redeem_rewards.html', rewards=rewards) 
+    if current_user.role != "Driver" or not current_user.sponsor_code:
+        return render_template('driver/redeem_rewards.html', rewards=[], error="No associated sponsor or catalog found.")
+    sponsor_products = SponsorProduct.query.filter_by(sponsor_id=current_user.sponsor_code).all()
+    return render_template('driver/redeem_rewards.html', rewards=sponsor_products)
 
 @main_bp.route('/driver/review-purchases')
 @login_required
