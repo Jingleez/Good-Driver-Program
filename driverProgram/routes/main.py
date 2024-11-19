@@ -1,5 +1,5 @@
 from datetime import datetime
-from flask import Blueprint, logging, render_template, redirect, url_for, session, flash, request, current_app, jsonify
+from flask import Blueprint, logging, render_template, redirect, url_for, session, flash, request, current_app, jsonify, abort
 import requests
 from driverProgram import db, check_database_connection
 from sqlalchemy import text
@@ -181,7 +181,8 @@ def reject_application(application_id):
 def participating_drivers():
     approved_drivers = Application.query.join(JobPosting).filter(
         Application.status == 'Approved',
-    ).all() 
+        JobPosting.sponsor_id == current_user.sponsor.id
+    ).distinct(Application.user_id).all() 
     return render_template('sponsor/participating_drivers.html',drivers=approved_drivers)
 
 @main_bp.route('/sponsor/public_profile', methods=['GET', 'POST']) 
@@ -487,6 +488,18 @@ def view_job_postings():
 def apply_to_job_posting(job_id):
     form = ApplyToJobPosting()
     job = JobPosting.query.get_or_404(job_id)
+
+    existing_application = Application.query.join(JobPosting).filter(
+        Application.user_id == current_user.id,
+        JobPosting.sponsor_id == job.sponsor_id,
+        Application.status.in_(['Pending', 'Approved'])
+    ).first()
+
+    if existing_application:
+        flash('You have already applied to a job posting from this sponsor.', 'warning')
+        session['load_view_job_postings'] = True
+        return redirect(url_for('main.driver_dash'))
+
     if form.validate_on_submit():
         resume_file = form.resume.data
         filename = secure_filename(resume_file.filename)
@@ -507,6 +520,7 @@ def apply_to_job_posting(job_id):
         )
         db.session.add(new_application)
         db.session.commit()
+
         sponsor = job.sponsor
         notification_message = f"New application from {new_application.first_name} {new_application.last_name} for the job '{job.title}'."
         notification = Notification(
@@ -519,9 +533,10 @@ def apply_to_job_posting(job_id):
         )
         db.session.add(notification)
         db.session.commit()
+
         flash('Your application has been submitted successfully.', 'success')
         session['load_view_job_postings'] = True
-        return redirect(url_for('main.driver_dash'))  
+        return redirect(url_for('main.driver_dash'))
     return render_template('driver/apply_to_job_posting.html', form=form, job=job)
 
 @main_bp.route('/driver/submitted_applications', methods=['GET'])
