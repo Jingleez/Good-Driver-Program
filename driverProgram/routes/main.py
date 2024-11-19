@@ -5,7 +5,7 @@ from driverProgram import db, check_database_connection
 from sqlalchemy import text
 from flask_login import login_required, current_user
 import jwt
-from driverProgram.models import JobPosting, Sponsor, Application, Notification, ApplicationSponsor, SponsorCatalog, Behavior, ReviewBoard
+from driverProgram.models import JobPosting, Sponsor, Application, Notification, ApplicationSponsor, SponsorCatalog, Behavior, ReviewBoard, Wishlist
 from driverProgram.forms import ApplyToJobPosting, JobPostForm, SponsorProfileForm, RewardSystemForm, BehaviorForm
 from werkzeug.utils import secure_filename
 import os
@@ -357,13 +357,22 @@ def notification_details(notification_id):
         })
     return jsonify({'error': 'Application not found'}), 404
 
-@main_bp.route('/archive_notification/<int:notification_id>', methods=['POST'])
+@main_bp.route('/mark_as_read/<int:notification_id>', methods=['POST'])
 @login_required
-def archive_notification(notification_id):
+def mark_as_read(notification_id):
     notification = Notification.query.get_or_404(notification_id)
-    db.session.delete(notification)
+    notification.is_read = True 
     db.session.commit()
     return jsonify({'success': True})
+
+@main_bp.route('/delete_notification/<int:notification_id>', methods=['DELETE'])
+@login_required
+def delete_notification(notification_id):
+    notification = Notification.query.get_or_404(notification_id)
+    db.session.delete(notification) 
+    db.session.commit()
+    return jsonify({'success': True})
+
 
 @main_bp.route('/reward_system', methods=['GET', 'POST'])
 @login_required
@@ -398,10 +407,44 @@ def view_points():
 @main_bp.route('/redeem_rewards')
 @login_required
 def redeem_rewards():
-    if current_user.role != "Driver" or not current_user.sponsor_code:
-        return render_template('driver/redeem_rewards.html', rewards=[], error="No associated sponsor or catalog found.")
-    sponsor_products = SponsorProduct.query.filter_by(sponsor_id=current_user.sponsor_code).all()
+    sponsor = Sponsor.query.join(Application, Application.user_id == current_user.id).first()
+    if not sponsor:
+        return render_template(
+            'driver/redeem_rewards.html', 
+            rewards=[], 
+            error="No associated sponsor or catalog found."
+        )
+    sponsor_products = SponsorCatalog.query.filter_by(sponsor_id=sponsor.id).all()
     return render_template('driver/redeem_rewards.html', rewards=sponsor_products)
+
+@main_bp.route('/add_to_wishlist', methods=['POST'])
+@login_required
+def add_to_wishlist():
+    data = request.get_json()
+    product_id = data.get('product_id')
+
+    # Check if the product exists
+    product = SponsorCatalog.query.filter_by(id=product_id).first()
+    if not product:
+        return jsonify({'error': 'Product not found'}), 404
+
+    # Check if the item is already in the wishlist
+    existing_wishlist_item = Wishlist.query.filter_by(user_id=current_user.id, product_id=product_id).first()
+    if existing_wishlist_item:
+        return jsonify({'message': 'Product already in wishlist'}), 400
+
+    # Add the product to the wishlist
+    new_wishlist_item = Wishlist(
+        user_id=current_user.id,
+        product_id=product_id,
+        sponsor_id=product.sponsor_id
+    )
+    db.session.add(new_wishlist_item)
+    db.session.commit()
+
+    return jsonify({'message': 'Product added to wishlist successfully'}), 200
+
+
 
 @main_bp.route('/driver/review-purchases')
 @login_required

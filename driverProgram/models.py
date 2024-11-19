@@ -129,11 +129,10 @@ class ReviewBoard(db.Model):
 class Wishlist(db.Model):
     __tablename__ = 'wishlist'
     id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)  # FK to User table
-    product_id = db.Column(db.String(50), nullable=False)  # Product ID from catalog
-    sponsor_id = db.Column(db.Integer, db.ForeignKey('sponsors.id'), nullable=False)  # FK to Sponsor table
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    product_id = db.Column(db.String(50), nullable=False)
+    sponsor_id = db.Column(db.Integer, db.ForeignKey('sponsors.id'), nullable=False)
     date_added = db.Column(db.DateTime, default=db.func.current_timestamp())
 
-    # Relationships
     user = db.relationship('User', backref='wishlist_items')
     sponsor = db.relationship('Sponsor', backref='wishlist_items')
