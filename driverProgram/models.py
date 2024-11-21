@@ -132,6 +132,8 @@ class Wishlist(db.Model):
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
     product_id = db.Column(db.String(50), nullable=False)
     sponsor_id = db.Column(db.Integer, db.ForeignKey('sponsors.id'), nullable=False)
+    product_name = db.Column(db.String(255), nullable=False)  # New field
+    product_price = db.Column(db.Float, nullable=False)  # New field
     date_added = db.Column(db.DateTime, default=db.func.current_timestamp())
 
     user = db.relationship('User', backref='wishlist_items')

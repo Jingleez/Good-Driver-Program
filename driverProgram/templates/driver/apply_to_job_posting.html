@@ -2,7 +2,7 @@
 
 {% block content %}
 <div class="application-form-container">
-    <h1>Application for</h1>
+    <h1>Application for {{ job.title }}</h1>
     <form method="POST" enctype="multipart/form-data">
         {{ form.hidden_tag() }}
         <div class="form-group">

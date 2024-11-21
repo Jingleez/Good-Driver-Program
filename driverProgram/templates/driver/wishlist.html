@@ -1,0 +1,54 @@
+<section>
+    <h2>My Wishlist</h2>
+    <p>Items you have saved:</p>
+
+    {% if items %}
+    <table style="width: 100%; border-collapse: collapse; margin: 20px 0; font-size: 16px;">
+        <thead style="background-color: #007bff; color: white;">
+            <tr>
+                <th style="padding: 12px; text-align: left;">Product Name</th>
+                <th style="padding: 12px; text-align: left;">Price (Points)</th>
+                <th style="padding: 12px; text-align: left;">Image</th>
+                <th style="padding: 12px; text-align: left;">Sponsor</th>
+                <th style="padding: 12px; text-align: left;">Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for item in items %}
+            <tr>
+                <td>{{ item.product_name }}</td>
+                <td>{{ item.product_price }}</td>
+                <td><img src="{{ item.product_image }}" alt="{{ item.product_name }}" style="width: 50px; height: auto;"></td>
+                <td>{{ item.sponsor.company_name }}</td>
+                <td>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <p>Your wishlist is empty.</p>
+    {% endif %}
+</section>
+
+<script>
+    function removeFromWishlist(wishlistId) {
+        fetch('/remove_from_wishlist', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ wishlist_id: wishlistId })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert('Item removed from wishlist');
+                location.reload();
+            } else {
+                alert(data.error || 'An error occurred');
+            }
+        })
+        .catch(error => console.error('Error:', error));
+    }
+</script>
