@@ -138,3 +138,17 @@ class Wishlist(db.Model):
 
     user = db.relationship('User', backref='wishlist_items')
     sponsor = db.relationship('Sponsor', backref='wishlist_items')
+
+
+class PointTransaction(db.Model):
+    __tablename__ = "point_transaction"
+    id = db.Column(db.Integer, primary_key=True)
+    sponsor_id = db.Column(db.Integer, db.ForeignKey('sponsors.id'), nullable=False)
+    driver_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    points = db.Column(db.Integer, nullable=False)
+    reason = db.Column(db.String(255), nullable=False)
+    timestamp = db.Column(db.DateTime, default=datetime.utcnow)
+    transaction_type = db.Column(db.String(50), nullable=False)  
+
+    sponsor = db.relationship('Sponsor', backref='point_transactions')
+    driver = db.relationship('User', backref='point_transactions')

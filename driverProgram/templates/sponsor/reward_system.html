@@ -7,7 +7,7 @@
     <!-- Column for displaying active behaviors -->
     <div style="flex: 70%; padding-right: 20px;">
         <h1>Your Behaviors</h1>
-        
+
         <!-- Check if there are any behaviors -->
         {% if behaviors %}
             <div class="behavior-list">
@@ -25,75 +25,105 @@
         {% endif %}
     </div>
 
-    <!-- Sidebar column for adding a new behavior -->
+    <!-- Sidebar column for adding a new behavior and point transactions -->
     <div style="flex: 30%; padding-left: 20px; border-left: 1px solid #ccc; background-color: #2b2b2b; padding: 40px; border-radius: 10px; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);">
 
-    <button style="background-color: #4a90e2; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer;" onclick="document.getElementById('new-behavior-form').style.display='block'">
-        Add New Behavior
-    </button>
+        <!-- Button to toggle "Add New Behavior" form -->
+        <button style="background-color: #4a90e2; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer;" onclick="toggleBehaviorForm()">
+            Add New Behavior
+        </button>
 
-    <!-- Form for adding a new behavior -->
-    <div id="new-behavior-form" style="display:none; margin-top: 20px;">
-        <form id="behavior-form" method="POST" action="{{ url_for('main.reward_system') }}">
+        <!-- Form for adding a new behavior -->
+        <div id="new-behavior-form" style="display:none; margin-top: 20px;">
+            <form id="behavior-form" method="POST" action="{{ url_for('main.reward_system') }}">
+                {{ form.hidden_tag() }}
+                
+                <div style="margin-bottom: 15px;">
+                    <label for="name">Behavior Name</label>
+                    {{ form.name(class="form-control", style="width: 100%;") }}
+                </div>
+
+                <div style="margin-bottom: 15px;">
+                    <label for="type">Behavior Type</label>
+                    {{ form.type(class="form-control", style="width: 100%;") }}
+                </div>
+
+                <div style="margin-bottom: 15px;">
+                    <label for="point_value">Point Worth</label>
+                    {{ form.point_value(class="form-control", style="width: 100%;") }}
+                </div>
+                
+                <button type="submit" class="btn btn-primary" style="background-color: #4a90e2; cursor: pointer; padding: 10px 20px; border-radius: 5px; border: none; color: white;">
+                    Add Behavior
+                </button>
+            </form>
+        </div>
+
+        <!-- Form for point transactions -->
+        <form id="point-transaction-form" style="margin-top: 20px;" method="POST" action="{{ url_for('main.point_transaction') }}">
             {{ form.hidden_tag() }}
-            
-            <div style="margin-bottom: 15px;">
-                <label for="name">Behavior Name</label>
-                {{ form.name(class="form-control", style="width: 100%;") }}
-            </div>
+        
+            <label for="driver">Select Driver:</label>
+            <select id="driver" name="driver_id" class="form-control" required>
+                {% if approved_drivers %}
+                    {% for driver in approved_drivers %}
+                        <option value="{{ driver.user_id }}">
+                            User ID: {{ driver.user_id }} - {{ driver.first_name }} {{ driver.last_name }}
+                        </option>
+                    {% endfor %}
+                {% else %}
+                    <option value="">No drivers available</option>
+                {% endif %}
+            </select>
 
-            <div style="margin-bottom: 15px;">
-                <label for="type">Behavior Type</label>
-                {{ form.type(class="form-control", style="width: 100%;") }}
-            </div>
+            <label for="points" style="margin-top: 10px;">Points:</label>
+            <input type="number" id="points" name="points" class="form-control" required min="1">
 
-            <div style="margin-bottom: 15px;">
-                <label for="point_value">Point Worth</label>
-                {{ form.point_value(class="form-control", style="width: 100%;") }}
-            </div>
-            
-            <button type="submit" class="btn btn-primary" style="background-color: #4a90e2; cursor: pointer; padding: 10px 20px; border-radius: 5px; border: none; color: white;">
-                Add Behavior
-            </button>
+            <label for="transaction_type" style="margin-top: 10px;">Transaction Type:</label>
+            <select id="transaction_type" name="transaction_type" class="form-control" required>
+                <option value="Add">Add Points</option>
+                <option value="Deduct">Deduct Points</option>
+            </select>
+
+            <label for="reason" style="margin-top: 10px;">Reason for Transaction:</label>
+            <textarea id="reason" name="reason" class="form-control" required></textarea>
+
+            <button type="submit" class="btn btn-primary" style="margin-top: 10px;">Submit</button>
         </form>
-    </div>
 
-    <script>
-        document.getElementById('behavior-form').addEventListener('submit', function(event) {
-            event.preventDefault();  // Prevent default form submission
-
-            let formData = new FormData(this);
-
-            fetch('{{ url_for("main.reward_system") }}', {
-                method: 'POST',
-                body: formData
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    // Update the behavior list dynamically with the new behavior
-                    let behaviorList = document.querySelector('.behavior-list');
-                    let newBehavior = `
-                        <div class="behavior-item">
-                            <h2>${data.behavior.name}</h2>
-                            <p><strong>Type:</strong> ${data.behavior.type}</p>
-                            <p><strong>Point Worth:</strong> ${data.behavior.point_value}</p>
-                        </div>
-                    `;
-                    behaviorList.insertAdjacentHTML('beforeend', newBehavior);  // Append the new behavior
-
-                    // Optionally clear the form fields
-                    document.getElementById('behavior-form').reset();
-                } else {
-                    console.error('Failed to add the behavior:', data.message);
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-            });
-        });
-    </script>
+        <p id="transaction-result" style="color: white; margin-top: 10px;"></p>
 
     </div>
 </div>
+
+<script>
+    function toggleBehaviorForm() {
+        const form = document.getElementById('new-behavior-form');
+        form.style.display = form.style.display === 'none' ? 'block' : 'none';
+    }
+
+    document.getElementById('point-transaction-form').addEventListener('submit', function(event) {
+        event.preventDefault(); // Prevent default form submission
+
+        let formData = new FormData(this);
+
+        fetch('{{ url_for("main.point_transaction") }}', {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            const resultElement = document.getElementById('transaction-result');
+            if (data.success) {
+                resultElement.textContent = data.message + ' New Points: ' + data.new_points;
+            } else {
+                resultElement.textContent = 'Error: ' + data.message;
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            document.getElementById('transaction-result').textContent = 'An error occurred.';
+        });
+    });
+</script>
 {% endblock %}

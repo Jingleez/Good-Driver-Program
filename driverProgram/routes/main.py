@@ -5,7 +5,7 @@ from driverProgram import db, check_database_connection
 from sqlalchemy import text
 from flask_login import login_required, current_user
 import jwt
-from driverProgram.models import JobPosting, Sponsor, Application, Notification, ApplicationSponsor, SponsorCatalog, Behavior, ReviewBoard, Wishlist
+from driverProgram.models import JobPosting, Sponsor, Application, Notification, ApplicationSponsor, SponsorCatalog, Behavior, ReviewBoard, Wishlist, PointTransaction, User
 from driverProgram.forms import ApplyToJobPosting, JobPostForm, SponsorProfileForm, RewardSystemForm, BehaviorForm
 from werkzeug.utils import secure_filename
 import os
@@ -378,22 +378,36 @@ def delete_notification(notification_id):
 @main_bp.route('/reward_system', methods=['GET', 'POST'])
 @login_required
 def reward_system():
+    # Ensure the user is a sponsor
+    if current_user.role != 'sponsor':
+        flash('Unauthorized action.', 'danger')
+        return redirect(url_for('main.sponsor_dash'))
+
     form = BehaviorForm()
+
     if form.validate_on_submit() and request.method == 'POST':
         new_behavior = Behavior(
             name=form.name.data,
             type=form.type.data,
             point_value=form.point_value.data,
-            sponsor_id=current_user.sponsor.id  # Assuming the sponsor adds the behavior
+            sponsor_id=current_user.sponsor.id  # Associate behavior with the sponsor
         )
         db.session.add(new_behavior)
         db.session.commit()
         flash('Behavior added successfully!', 'success')
-        session['load_reward_system'] = True
-        return redirect(url_for('main.sponsor_dash'))  # Redirect to sponsor dashboard or desired page
+        return redirect(url_for('main.reward_system'))  # Stay on the reward system page after adding a behavior
 
-    behaviors = Behavior.query.all()  # Fetch all behaviors from the database
-    return render_template('sponsor/reward_system.html', form=form, behaviors=behaviors)
+    # Fetch drivers with approved status and distinct user_id
+    approved_drivers = (
+        db.session.query(Application.user_id, Application.first_name, Application.last_name)
+        .filter(Application.status == 'Approved')
+        .distinct(Application.user_id)
+        .all()
+    )
+
+    behaviors = Behavior.query.all()
+    return render_template('sponsor/reward_system.html', form=form, behaviors=behaviors, approved_drivers=approved_drivers)
+
 
 
 
@@ -404,6 +418,47 @@ def reward_system():
 @login_required
 def view_points():
     return render_template('driver/view_points.html') 
+
+@main_bp.route('/driver_points/<int:driver_id>')
+@login_required
+def driver_points(driver_id):
+    # Ensure the user accessing this route is a driver
+    if current_user.role != 'driver' or current_user.id != driver_id:
+        flash('Unauthorized access.', 'danger')
+        return redirect(url_for('main.index'))
+
+    # Calculate total points for the driver
+    try:
+        total_points = (
+            db.session.query(
+                db.func.sum(
+                    db.case(
+                        [
+                            (PointTransaction.transaction_type == 'Add', PointTransaction.points),
+                            (PointTransaction.transaction_type == 'Deduct', -PointTransaction.points),
+                        ],
+                        else_=0,  # Default case if no matching type
+                    )
+                )
+            )
+            .filter(PointTransaction.driver_id == driver_id)  # Ensure points are for this driver
+            .scalar()
+        ) or 0
+
+        # Debugging: Log the result
+        print(f"Driver ID: {driver_id}, Total Points Retrieved: {total_points}")
+
+    except Exception as e:
+        # Log any errors
+        print(f"Error calculating total points for Driver ID {driver_id}: {str(e)}")
+        total_points = 0
+
+    return render_template(
+        'driver/view_points.html', points=total_points,
+    )
+
+
+
 
 @main_bp.route('/redeem_rewards')
 @login_required
@@ -619,3 +674,48 @@ def apply_to_job_posting(job_id):
 def submitted_applications():
     applications = Application.query.filter_by(user_id=current_user.id).all()
     return render_template('driver/submitted_applications.html', applications=applications)
+
+@main_bp.route('/point_transaction', methods=['POST'])
+@login_required
+def point_transaction():
+    if current_user.role != 'sponsor':
+        return jsonify({'success': False, 'message': 'Unauthorized action.'}), 403
+
+    try:
+        # Get driver_id from the form
+        driver_id = request.form.get('driver_id')
+        if not driver_id or not driver_id.isdigit():
+            return jsonify({'success': False, 'message': 'Invalid or missing driver ID.'}), 400
+        driver_id = int(driver_id)
+
+        # Validate points
+        points = request.form.get('points')
+        if not points or not points.isdigit():
+            return jsonify({'success': False, 'message': 'Invalid or missing points value.'}), 400
+        points = int(points)
+
+        # Validate transaction type
+        transaction_type = request.form.get('transaction_type')
+        if transaction_type not in ['Add', 'Deduct']:
+            return jsonify({'success': False, 'message': 'Invalid transaction type.'}), 400
+
+        # Create a new point transaction record
+        point_transaction = PointTransaction(
+            sponsor_id=current_user.sponsor.id,
+            driver_id=driver_id,
+            points=points,
+            reason=request.form.get('reason', 'No reason provided'),
+            transaction_type=transaction_type,
+        )
+
+        # Save the transaction
+        db.session.add(point_transaction)
+        db.session.commit()
+
+        return jsonify({
+            'success': True,
+            'message': f'Points {transaction_type.lower()}ed successfully!',
+        })
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'success': False, 'message': f'An error occurred: {str(e)}'})
