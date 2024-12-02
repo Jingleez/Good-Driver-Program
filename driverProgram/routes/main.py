@@ -1,6 +1,6 @@
 from datetime import datetime
-from flask import Blueprint, logging, render_template, redirect, url_for, session, flash, request, current_app, jsonify, request, current_app
-import requests
+from flask import Blueprint, logging, render_template, redirect, url_for, session, flash, request, current_app, jsonify, request, current_app, send_file
+import requests, pandas as pd
 from driverProgram import db, check_database_connection
 from sqlalchemy import text
 from flask_login import login_required, current_user
@@ -84,7 +84,6 @@ def admin_dash():
 
 
 
-
 # Routes for displaying the profile, editing the profile, updating the profile information.
 @main_bp.route('/profile', methods=['GET'])
 @login_required
@@ -122,10 +121,26 @@ def about():
 
 
 # Routing links for Admin dashboard
-@main_bp.route('/manage_users')
+@main_bp.route('/manage_users', endpoint='manage_users')
 @login_required
-def manage_users():
-    return render_template('admin/manage_users.html')
+def sponsors_drivers():
+    sponsors = Sponsor.query.all()
+    sponsors_with_drivers = []
+    
+    for sponsor in sponsors:
+        drivers = Application.query.join(User, Application.user_id == User.id).add_columns(
+            Application.user_id.label('UserID'),
+            Application.job_id.label('JobID'),
+            (Application.first_name + ' ' + Application.last_name).label('Name')
+        ).all()
+
+        sponsors_with_drivers.append({
+            "sponsor": sponsor,
+            "drivers": [{"UserID": d.UserID, "JobID": d.JobID, "Name": d.Name} for d in drivers]
+        })
+
+    return render_template('admin/manage_users.html', sponsors_with_drivers=sponsors_with_drivers)
+
 
 @main_bp.route('/review-reports')
 @login_required
@@ -137,10 +152,72 @@ def review_reports():
 def add_users():
     return render_template('admin/add_users.html')
 
-@main_bp.route('/admin-reports')
+@main_bp.route('/admin-reports', methods=['GET'])
 @login_required
 def admin_reports():
-    return render_template('admin/admin_reports.html')
+    sponsor_id = request.args.get('sponsor_id')  # Optional: specific sponsor
+    date_start = request.args.get('start_date')
+    date_end = request.args.get('end_date')
+    detailed = request.args.get('detailed', 'false') == 'true'
+
+    query = PointTransaction.query
+
+    # Filter by sponsor ID if provided
+    if sponsor_id:
+        query = query.filter(PointTransaction.sponsor_id == int(sponsor_id))
+    
+    # Filter by date range if provided
+    if date_start and date_end:
+        try:
+            start_date = datetime.strptime(date_start, '%Y-%m-%d')
+            end_date = datetime.strptime(date_end, '%Y-%m-%d')
+            query = query.filter(PointTransaction.timestamp.between(start_date, end_date))
+        except ValueError:
+            return "Invalid date format. Use YYYY-MM-DD.", 400
+
+    transactions = query.all()
+
+    # Process data
+    if detailed:
+        # Create a detailed list of transactions
+        report_data = [
+            {
+                "Sponsor": t.sponsor.company_name,
+                "Driver": t.driver.username,
+                "Points": t.points,
+                "Reason": t.reason,
+                "Date": t.timestamp.strftime('%Y-%m-%d %H:%M:%S'),
+            }
+            for t in transactions
+        ]
+    else:
+        # Create a summary report
+        report_data = {}
+        for t in transactions:
+            sponsor_name = t.sponsor.company_name
+            if sponsor_name not in report_data:
+                report_data[sponsor_name] = {"TotalPoints": 0, "Drivers": set()}
+            report_data[sponsor_name]["TotalPoints"] += t.points
+            report_data[sponsor_name]["Drivers"].add(t.driver.username)
+        # Convert sets to lists for JSON compatibility
+        report_data = [
+            {
+                "Sponsor": sponsor,
+                "TotalPoints": data["TotalPoints"],
+                "Drivers": list(data["Drivers"]),
+            }
+            for sponsor, data in report_data.items()
+        ]
+
+    # Handle CSV export
+    if request.args.get('format') == 'csv':
+        df = pd.DataFrame(report_data)
+        csv_file = 'sales_by_sponsor.csv'
+        df.to_csv(csv_file, index=False)
+        return send_file(csv_file, as_attachment=True)
+
+    # Render the HTML template with the report data
+    return render_template('admin/admin_reports.html', report_data=report_data)
 
 
 # Routing links for sponsor dashboard : { approve applications(Reject, Deny), Participating Drivers, public profile, Job Postings, generate reports, product catalog, notifications }

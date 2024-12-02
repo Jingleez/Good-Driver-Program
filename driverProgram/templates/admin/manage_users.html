@@ -3,13 +3,56 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Manage Users</title>
+    <title>Sponsors and Drivers</title>
+    <style>
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+        }
+        th {
+            background-color: #f4f4f4;
+        }
+    </style>
 </head>
 <body>
     <section>
-        <h2>Manage Users</h2>
-        <p>Here you can view, update, or remove admin, driver, and sponsor users.</p>
-        <!-- Add table or management system to view and manage users -->
+        <h2>Sponsors and Drivers</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>Sponsor Name</th>
+                    <th>Company Name</th>
+                    <th>Location</th>
+                    <th>Drivers</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for sponsor_data in sponsors_with_drivers %}
+                <tr>
+                    <td>{{ sponsor_data.sponsor.user.username }}</td>
+                    <td>{{ sponsor_data.sponsor.company_name }}</td>
+                    <td>{{ sponsor_data.sponsor.location }}</td>
+                    <td>
+                        <ul>
+                            {% for driver in sponsor_data.drivers %}
+                            <li>
+                                UserID: {{ driver.UserID }};
+                                JobID: {{ driver.JobID }};
+                                Name: {{ driver.Name }}
+                            </li>
+                            {% else %}
+                            <li>No drivers assigned</li>
+                            {% endfor %}
+                        </ul>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
     </section>
 </body>
 </html>

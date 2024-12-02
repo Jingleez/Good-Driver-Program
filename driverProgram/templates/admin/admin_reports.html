@@ -1,15 +1,176 @@
-<!DOCTYPE html>
-<html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Generate Admin Reports</title>
+    <style>
+        /* Style for buttons */
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+
+        .btn-primary {
+            background-color: #007bff;
+            color: #fff;
+        }
+
+        .btn-primary:hover {
+            background-color: #0056b3;
+        }
+
+        .btn-secondary {
+            background-color: #6c757d;
+            color: #fff;
+        }
+
+        .btn-secondary:hover {
+            background-color: #5a6268;
+        }
+
+        /* Style for form inputs and select boxes */
+        .form-control,
+        .form-select {
+            padding: 8px;
+            font-size: 16px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            width: 100%;
+        }
+
+        .form-control:focus,
+        .form-select:focus {
+            outline: none;
+            border-color: #007bff;
+            box-shadow: 0 0 5px rgba(0, 123, 255, 0.5);
+        }
+
+        /* Labels */
+        .form-label {
+            font-weight: bold;
+            margin-bottom: 5px;
+            display: block;
+        }
+
+        /* Table styling */
+        .table {
+            border-collapse: collapse;
+            width: 100%;
+            font-size: 16px;
+        }
+
+        .table th,
+        .table td {
+            padding: 8px 10px;
+            border: 1px solid #ddd;
+            text-align: left;
+        }
+
+        .table th {
+            background-color: #f4f4f4;
+            font-weight: bold;
+        }
+
+        .table-striped tbody tr:nth-child(odd) {
+            background-color: #f9f9f9;
+        }
+    </style>
 </head>
 <body>
-    <section>
-        <h2>Generate Reports</h2>
+    <div class="container mt-5">
+        <h2>Generate Admin Reports</h2>
         <p>Generate and download system reports for administrative purposes.</p>
-        <!-- Add form or button for generating reports -->
-    </section>
+
+        <!-- Form for filtering reports -->
+        <form action="/admin-reports" method="get" class="mb-4">
+            <div class="row g-3">
+                <!-- Sponsor Selection -->
+                <div class="col-md-4">
+                    <label for="sponsor_id" class="form-label">Select Sponsor:</label>
+                    <select name="sponsor_id" id="sponsor_id" class="form-select">
+                        <option value="">All Sponsors</option>
+                        <!-- Dynamically populate sponsor options -->
+                        {% for sponsor in sponsors %}
+                        <option value="{{ sponsor.id }}">{{ sponsor.company_name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <!-- Date Range Selection -->
+                <div class="col-md-4">
+                    <label for="start_date" class="form-label">Start Date:</label>
+                    <input type="date" name="start_date" id="start_date" class="form-control">
+                </div>
+                <div class="col-md-4">
+                    <label for="end_date" class="form-label">End Date:</label>
+                    <input type="date" name="end_date" id="end_date" class="form-control">
+                </div>
+            </div>
+
+            <!-- Detailed or Summary View -->
+            <div class="row g-3 mt-3">
+                <div class="col-md-6">
+                    <label for="detailed" class="form-label">View Type:</label>
+                    <select name="detailed" id="detailed" class="form-select">
+                        <option value="false">Summary</option>
+                        <option value="true">Detailed</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Submit Button -->
+            <div class="mt-4">
+                <button type="submit" class="btn btn-primary">Generate Report</button>
+                <button type="submit" name="format" value="csv" class="btn btn-secondary">Download as CSV</button>
+            </div>
+        </form>
+
+        <!-- Display Report Data -->
+        <div>
+            {% if report_data %}
+            <h3>Report Results</h3>
+            <table class="table table-bordered table-striped">
+                <thead>
+                    <tr>
+                        <th>Sponsor</th>
+                        {% if detailed %}
+                        <th>Driver</th>
+                        <th>Points</th>
+                        <th>Reason</th>
+                        <th>Date</th>
+                        {% else %}
+                        <th>Total Points</th>
+                        <th>Drivers</th>
+                        {% endif %}
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for row in report_data %}
+                    <tr>
+                        <td>{{ row.Sponsor }}</td>
+                        {% if detailed %}
+                        <td>{{ row.Driver }}</td>
+                        <td>{{ row.Points }}</td>
+                        <td>{{ row.Reason }}</td>
+                        <td>{{ row.Date }}</td>
+                        {% else %}
+                        <td>{{ row.TotalPoints }}</td>
+                        <td>
+                            <ul>
+                                {% for driver in row.Drivers %}
+                                <li>{{ driver }}</li>
+                                {% endfor %}
+                            </ul>
+                        </td>
+                        {% endif %}
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            {% else %}
+            <p>No data available. Please adjust your filters and try again.</p>
+            {% endif %}
+        </div>
+    </div>
 </body>
 </html>
