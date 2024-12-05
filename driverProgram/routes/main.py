@@ -12,9 +12,11 @@ import os
 from ebaysdk.finding import Connection as Finding
 from flask_cors import CORS
 
+
 # Define the blueprint
 main_bp = Blueprint('main', __name__)
 CORS(main_bp)
+
 
 # Authentication check helper function
 def is_token_valid(token):
@@ -152,72 +154,50 @@ def review_reports():
 def add_users():
     return render_template('admin/add_users.html')
 
-@main_bp.route('/admin-reports', methods=['GET'])
+@main_bp.route('/audit_logs')
+@login_required
+def audit_logs():
+    return render_template('admin/audit_logs.html')
+
+# API endpoint for Driver Applications
+@main_bp.route('/audit_logs/driver_applications', methods=['GET'])
+@login_required
+def get_driver_applications():
+    try:
+        applications = (
+            db.session.query(
+                Application.date_submitted.label('date'),
+                Sponsor.company_name.label('sponsor'),
+                Application.first_name.label('driver'),
+                Application.status,
+                ApplicationSponsor.reason.label('reason')
+            )
+            .outerjoin(ApplicationSponsor, Application.id == ApplicationSponsor.application_id)
+            .outerjoin(Sponsor, Sponsor.id == ApplicationSponsor.sponsor_id)
+            .all()
+        )
+        return jsonify([
+            {
+                "date": app.date.strftime('%Y-%m-%d') if app.date else None,
+                "sponsor": app.sponsor or "N/A",
+                "driver": app.driver,
+                "status": app.status,
+                "reason": app.reason or "N/A",
+            }
+            for app in applications
+        ]), 200
+    except Exception as e:
+        print(f"Error in get_driver_applications: {e}")
+        return jsonify({"error": str(e)}), 500
+
+
+
+
+
+@main_bp.route('/admin-reports')
 @login_required
 def admin_reports():
-    sponsor_id = request.args.get('sponsor_id')  # Optional: specific sponsor
-    date_start = request.args.get('start_date')
-    date_end = request.args.get('end_date')
-    detailed = request.args.get('detailed', 'false') == 'true'
-
-    query = PointTransaction.query
-
-    # Filter by sponsor ID if provided
-    if sponsor_id:
-        query = query.filter(PointTransaction.sponsor_id == int(sponsor_id))
-    
-    # Filter by date range if provided
-    if date_start and date_end:
-        try:
-            start_date = datetime.strptime(date_start, '%Y-%m-%d')
-            end_date = datetime.strptime(date_end, '%Y-%m-%d')
-            query = query.filter(PointTransaction.timestamp.between(start_date, end_date))
-        except ValueError:
-            return "Invalid date format. Use YYYY-MM-DD.", 400
-
-    transactions = query.all()
-
-    # Process data
-    if detailed:
-        # Create a detailed list of transactions
-        report_data = [
-            {
-                "Sponsor": t.sponsor.company_name,
-                "Driver": t.driver.username,
-                "Points": t.points,
-                "Reason": t.reason,
-                "Date": t.timestamp.strftime('%Y-%m-%d %H:%M:%S'),
-            }
-            for t in transactions
-        ]
-    else:
-        # Create a summary report
-        report_data = {}
-        for t in transactions:
-            sponsor_name = t.sponsor.company_name
-            if sponsor_name not in report_data:
-                report_data[sponsor_name] = {"TotalPoints": 0, "Drivers": set()}
-            report_data[sponsor_name]["TotalPoints"] += t.points
-            report_data[sponsor_name]["Drivers"].add(t.driver.username)
-        # Convert sets to lists for JSON compatibility
-        report_data = [
-            {
-                "Sponsor": sponsor,
-                "TotalPoints": data["TotalPoints"],
-                "Drivers": list(data["Drivers"]),
-            }
-            for sponsor, data in report_data.items()
-        ]
-
-    # Handle CSV export
-    if request.args.get('format') == 'csv':
-        df = pd.DataFrame(report_data)
-        csv_file = 'sales_by_sponsor.csv'
-        df.to_csv(csv_file, index=False)
-        return send_file(csv_file, as_attachment=True)
-
-    # Render the HTML template with the report data
-    return render_template('admin/admin_reports.html', report_data=report_data)
+    return render_template('admin/admin_reports.html')
 
 
 # Routing links for sponsor dashboard : { approve applications(Reject, Deny), Participating Drivers, public profile, Job Postings, generate reports, product catalog, notifications }
@@ -261,6 +241,22 @@ def participating_drivers():
         JobPosting.sponsor_id == current_user.sponsor.id
     ).distinct(Application.user_id).all() 
     return render_template('sponsor/participating_drivers.html',drivers=approved_drivers)
+
+@main_bp.route('/remove_driver/<int:driver_id>', methods=['POST'])
+@login_required
+def remove_driver(driver_id):
+    try:
+        driver = Application.query.filter_by(user_id=driver_id).first()
+        if driver:
+            db.session.delete(driver)
+            db.session.commit()
+            return jsonify({"message": "Driver removed successfully."}), 200
+        else:
+            return jsonify({"message": "Driver not found."}), 404
+    except Exception as e:
+        print(f"Error removing driver: {e}")
+        return jsonify({"message": "Error removing driver."}), 500
+
 
 @main_bp.route('/sponsor/public_profile', methods=['GET', 'POST']) 
 @login_required
@@ -618,15 +614,18 @@ def view_wishlist():
 def driver_wishlist(driver_id):
     if current_user.role != 'sponsor':
         return jsonify({'error': 'Unauthorized access'}), 403
-
+    print(f'Fetching wishlist for driver_id: {driver_id}')
     wishlist_items = db.session.query(
         Wishlist.id.label('wishlist_id'),
         Wishlist.product_name.label('product_name'),
         Wishlist.product_price.label('product_price'),
         Wishlist.product_id.label('product_id'),
         Wishlist.sponsor_id.label('sponsor_id')
-    ).filter(Wishlist.user_id == driver_id).all()
-
+    ).filter(
+        Wishlist.user_id == driver_id,
+        Wishlist.sponsor_id == current_user.sponsor.id
+    ).all()
+    print(f'Wishlist items: {wishlist_items}')
     wishlist_data = [
         {
             'wishlist_id': item.wishlist_id,
@@ -636,7 +635,6 @@ def driver_wishlist(driver_id):
         }
         for item in wishlist_items
     ]
-
     return jsonify({'wishlist': wishlist_data})
 
 @main_bp.route('/add_to_cart', methods=['POST'])

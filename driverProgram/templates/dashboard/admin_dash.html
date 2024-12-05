@@ -7,10 +7,6 @@
 
     <!-- Google Fonts for Professional Typography -->
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
-
-    <!-- Font Awesome for Icons -->
-    <script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
-
     <style>
         /* General Body Styling */
         body {
@@ -244,6 +240,7 @@
                 <li><a href="#" onclick="loadContent('{{ url_for('main.review_reports') }}')"><i class="fas fa-chart-line"></i><span>Review Reports</span></a></li>
                 <li><a href="#" onclick="loadContent('{{ url_for('main.add_users') }}')"><i class="fas fa-user-plus"></i><span>Add New Users</span></a></li>
                 <li><a href="#" onclick="loadContent('{{ url_for('main.admin_reports') }}')"><i class="fas fa-file-alt"></i><span>Generate Reports</span></a></li>
+                <li><a href="#" onclick="loadContent('{{ url_for('main.audit_logs') }}')"><i class="fas fa-file-alt"></i><span>Audit Logs</span></a></li>
             </ul>
         </nav>
 

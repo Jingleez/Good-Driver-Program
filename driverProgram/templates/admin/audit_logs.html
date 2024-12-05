@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Audit Logs</title>
+    <style>
+        button {
+            padding: 8px 12px;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-right: 5px;
+        }
+
+        .log-button {
+            background-color: #007bff; /* Primary button color */
+        }
+
+        button:hover {
+            opacity: 0.8;
+        }
+
+        .log-item {
+            border: 1px solid #ddd;
+            padding: 10px;
+            margin-bottom: 10px;
+        }
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+</head>
+<body>
+    <div>
+        <h1>Audit Logs</h1>
+        <div class="button-group">
+            <button id="driver-applications" class="log-button">Driver Applications</button>
+        </div>
+        <div id="log-container">
+            <!-- Logs will be dynamically displayed here -->
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const logContainer = document.getElementById('log-container');
+
+            const fetchLogs = async (logType) => {
+                logContainer.innerHTML = "<p>Loading...</p>";
+                try {
+                    const response = await fetch(`/audit_logs/${logType}`);
+                    if (!response.ok) {
+                        throw new Error(`HTTP Error: ${response.status}`);
+                    }
+                    const data = await response.json();
+                    displayLogs(data);
+                } catch (error) {
+                    console.error("Error fetching logs:", error);
+                    logContainer.innerHTML = `<p>Error loading logs: ${error.message}</p>`;
+                }
+            };
+
+            const displayLogs = (logs) => {
+                if (!logs || logs.length === 0) {
+                    logContainer.innerHTML = "<p>No logs found for this category.</p>";
+                    return;
+                }
+                logContainer.innerHTML = logs.map(log => `
+                    <div class="log-item">
+                        ${Object.entries(log).map(([key, value]) => `<p><strong>${key}:</strong> ${value}</p>`).join('')}
+                    </div>
+                `).join('');
+            };
+
+            document.getElementById('driver-applications').addEventListener('click', () => {
+                fetchLogs('driver_applications');
+            });
+        });
+    </script>
+</body>
+</html>

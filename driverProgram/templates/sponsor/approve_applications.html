@@ -38,6 +38,13 @@
         button:hover {
             opacity: 0.8;
         }
+
+        input[type="text"] {
+            margin-right: 5px;
+            padding: 5px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
     </style>
     
     <h2>Approve Driver Applications</h2>
@@ -61,9 +68,11 @@
                     <td>{{ application.status }}</td>
                     <td>
                         <form action="{{ url_for('main.approve_application', application_id=application.id) }}" method="post" style="display:inline;">
+                            <input type="text" name="reason" placeholder="Reason for approval" required>
                             <button type="submit" class="approve-btn">Approve</button>
                         </form>
                         <form action="{{ url_for('main.reject_application', application_id=application.id) }}" method="post" style="display:inline;">
+                            <input type="text" name="reason" placeholder="Reason for rejection" required>
                             <button type="submit" class="reject-btn">Reject</button>
                         </form>
                     </td>

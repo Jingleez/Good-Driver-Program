@@ -152,3 +152,12 @@ class PointTransaction(db.Model):
 
     sponsor = db.relationship('Sponsor', backref='point_transactions')
     driver = db.relationship('User', backref='point_transactions')
+
+
+class LoginAttempt(db.Model):
+    __tablename__ = 'login_attempts'
+    id = db.Column(db.Integer, primary_key=True)
+    username = db.Column(db.String(150), nullable=False)
+    success = db.Column(db.Boolean, nullable=False)
+    timestamp = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
+    message = db.Column(db.String(255), nullable=True)
