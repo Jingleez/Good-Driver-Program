@@ -394,7 +394,7 @@ def remove_from_catalog():
         return jsonify({'error': 'Sponsor account not found'}), 400
     product = SponsorCatalog.query.filter_by(
         sponsor_id=sponsor.id,
-        product_id=product_id
+        id=product_id
     ).first()
     if not product:
         return jsonify({'error': 'Product not found or unauthorized'}), 404

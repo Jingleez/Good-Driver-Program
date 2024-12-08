@@ -330,6 +330,30 @@
                     console.error('Error loading content:', err);
                 });
         }
+        
+        function removeFromCatalog(productId) {
+            alert('remove function called');
+            fetch('/remove_from_catalog', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ product_id: productId })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.message) {
+                    document.getElementById(`product-${productId}`).remove();
+                    alert(data.message);
+                } else {
+                    alert(`Error: ${data.error || 'Failed to remove the product.'}`);
+                }
+            })
+            .catch(error => {
+                console.error('Error during fetch:', error);
+                alert('An error occurred. Please try again.');
+            });
+        }
     </script>
 
 </body>
