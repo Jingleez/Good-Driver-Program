@@ -1,3 +1,35 @@
-<h2>Your Points</h2>
-<p>You currently have <strong>{{ points if points else 0 }}</strong> points.</p>
-<p>Your points can be used to redeem rewards from the sponsor's catalog.</p>
+<div style="background-color: #1e1e2f; color: #f1f1f1; padding: 20px; border-radius: 10px; box-shadow: 0px 4px 15px rgba(0, 0, 0, 0.3); max-width: 800px; margin: auto; font-family: Arial, sans-serif;">
+    <h2 style="text-align: center; color: #4a90e2;">Your Points</h2>
+    
+    <p style="text-align: center; font-size: 18px; margin-bottom: 30px;">
+        <strong>Total Points: <span style="color: #4caf50;">{{ current_user.is_authenticated.total_points }}</span></strong>
+    </p>
+    
+    <h3 style="color: #f1f1f1; margin-top: 20px;">Point History</h3>
+    <table style="width: 100%; border-collapse: collapse;">
+        <thead>
+            <tr style="background-color: #2e2e3f; color: #f1f1f1; text-align: left;">
+                <th style="padding: 10px; border-bottom: 1px solid #444;">Date</th>
+                <th style="padding: 10px; border-bottom: 1px solid #444;">Points</th>
+                <th style="padding: 10px; border-bottom: 1px solid #444;">Reason</th>
+                <th style="padding: 10px; border-bottom: 1px solid #444;">Type</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for transaction in transactions %}
+            <tr style="background-color: {% if loop.index0 % 2 == 0 %}#29293a{% else %}#232334{% endif %};">
+                <td style="padding: 10px; border-bottom: 1px solid #444;">{{ transaction.timestamp }}</td>
+                <td style="padding: 10px; border-bottom: 1px solid #444; color: {% if transaction.transaction_type == 'Add' %}#4caf50{% else %}#f44336{% endif %};">
+                    {{ transaction.points }}
+                </td>
+                <td style="padding: 10px; border-bottom: 1px solid #444;">{{ transaction.reason }}</td>
+                <td style="padding: 10px; border-bottom: 1px solid #444;">{{ transaction.transaction_type }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    {% if not transactions %}
+    <p style="text-align: center; font-size: 16px; color: #a1a1a1;">No transactions available.</p>
+    {% endif %}
+</div>
