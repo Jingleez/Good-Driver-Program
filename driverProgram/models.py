@@ -55,6 +55,8 @@ class Application(db.Model):
     resume = db.Column(db.String(200), nullable=False)
     status = db.Column(db.String(50), default='Pending')
     date_submitted = db.Column(db.DateTime, nullable=False, default=db.func.current_timestamp())
+    reason = db.Column(db.Text, nullable=True)       
+
 
     # Relationships to job postings and users
     user = db.relationship('User', backref='applications')
@@ -154,15 +156,6 @@ class PointTransaction(db.Model):
     sponsor = db.relationship('Sponsor', backref='point_transactions')
     driver = db.relationship('User', backref='point_transactions')
 
-
-class LoginAttempt(db.Model):
-    __tablename__ = 'login_attempts'
-    id = db.Column(db.Integer, primary_key=True)
-    username = db.Column(db.String(150), nullable=False)
-    success = db.Column(db.Boolean, nullable=False)
-    timestamp = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
-    message = db.Column(db.String(255), nullable=True)
-
 class Cart(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     sponsor_id = db.Column(db.Integer, nullable=False)
@@ -172,3 +165,18 @@ class Cart(db.Model):
     product_price = db.Column(db.Float, nullable=False)
     product_image = db.Column(db.String(255)) 
     date_added = db.Column(db.DateTime, default=db.func.current_timestamp())
+
+
+class AuditLog(db.Model):
+    __tablename__ = 'audit_logs'
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    log_type = db.Column(db.String(50), nullable=False)  
+    log_date = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
+    sponsor_id = db.Column(db.Integer, nullable=True)  
+    driver_id = db.Column(db.Integer, nullable=True)  
+    user_id = db.Column(db.Integer, nullable=True)    
+    status = db.Column(db.String(20), nullable=True)  
+    reason = db.Column(db.Text, nullable=True)       
+    points = db.Column(db.Integer, nullable=True)     
+    username = db.Column(db.String(100), nullable=True) 
+    change_type = db.Column(db.String(50), nullable=True) 

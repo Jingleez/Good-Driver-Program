@@ -5,12 +5,13 @@ from driverProgram import db, check_database_connection
 from sqlalchemy import text
 from flask_login import login_required, current_user
 import jwt
-from driverProgram.models import JobPosting, Sponsor, Application, Notification, ApplicationSponsor, SponsorCatalog, Behavior, ReviewBoard, Wishlist, PointTransaction, User, Cart
+from driverProgram.models import JobPosting, Sponsor, Application, Notification, ApplicationSponsor, SponsorCatalog, Behavior, ReviewBoard, Wishlist, PointTransaction, User, Cart, AuditLog
 from driverProgram.forms import ApplyToJobPosting, JobPostForm, SponsorProfileForm, RewardSystemForm, BehaviorForm
 from werkzeug.utils import secure_filename
 import os
 from ebaysdk.finding import Connection as Finding
 from flask_cors import CORS
+from datetime import datetime, timezone
 
 
 # Define the blueprint
@@ -154,41 +155,89 @@ def review_reports():
 def add_users():
     return render_template('admin/add_users.html')
 
-@main_bp.route('/audit_logs')
+# Route to render the HTML page
+@main_bp.route('/audit_logs_page', methods=['GET'])
 @login_required
-def audit_logs():
-    return render_template('admin/audit_logs.html')
+def audit_logs_page():
+    return render_template('/admin/audit_logs.html')
 
-# API endpoint for Driver Applications
-@main_bp.route('/audit_logs/driver_applications', methods=['GET'])
+# Route to fetch filtered logs as JSON
+@main_bp.route('/audit_logs', methods=['GET'])
 @login_required
-def get_driver_applications():
-    try:
-        applications = (
-            db.session.query(
-                Application.date_submitted.label('date'),
-                Sponsor.company_name.label('sponsor'),
-                Application.first_name.label('driver'),
-                Application.status,
-                ApplicationSponsor.reason.label('reason')
-            )
-            .outerjoin(ApplicationSponsor, Application.id == ApplicationSponsor.application_id)
-            .outerjoin(Sponsor, Sponsor.id == ApplicationSponsor.sponsor_id)
-            .all()
-        )
-        return jsonify([
-            {
-                "date": app.date.strftime('%Y-%m-%d') if app.date else None,
-                "sponsor": app.sponsor or "N/A",
-                "driver": app.driver,
-                "status": app.status,
-                "reason": app.reason or "N/A",
-            }
-            for app in applications
-        ]), 200
-    except Exception as e:
-        print(f"Error in get_driver_applications: {e}")
-        return jsonify({"error": str(e)}), 500
+def view_audit_logs():
+    log_type = request.args.get('log_type')  # Optional filter
+    query = AuditLog.query
+
+    if log_type:
+        query = query.filter_by(log_type=log_type)
+
+    logs = query.order_by(AuditLog.log_date.desc()).all()
+    log_data = [
+        {
+            'date': log.log_date.strftime('%Y-%m-%d %H:%M:%S'),
+            'log_type': log.log_type,
+            'sponsor_id': log.sponsor_id,
+            'driver_id': log.driver_id,
+            'user_id': log.user_id,
+            'status': log.status,
+            'reason': log.reason,
+            'points': log.points,
+            'username': log.username,
+            'change_type': log.change_type
+        }
+        for log in logs
+    ]
+    return jsonify({'logs': log_data})
+
+
+# a) Log Driver Application
+def log_driver_application(sponsor_id, driver_id, status, reason):
+    log_entry = AuditLog(
+        log_type='driver_app',
+        sponsor_id=sponsor_id,
+        driver_id=driver_id,
+        status=status,
+        reason=reason,
+        log_date=datetime.now(timezone.utc)
+    )
+    db.session.add(log_entry)
+    db.session.commit()
+
+# b) Log Point Changes
+def log_point_change(sponsor_id, driver_id, points, reason):
+    log_entry = AuditLog(
+        log_type='point_change',
+        sponsor_id=sponsor_id,
+        driver_id=driver_id,
+        points=points,
+        reason=reason,
+        log_date=datetime.now(timezone.utc)
+    )
+    db.session.add(log_entry)
+    db.session.commit()
+
+# c) Log Password Changes
+def log_password_change(user_id, change_type):
+    log_entry = AuditLog(
+        log_type='password_change',
+        user_id=user_id,
+        change_type=change_type,
+        log_date=datetime.now(timezone.utc)
+    )
+    db.session.add(log_entry)
+    db.session.commit()
+
+# d) Log Login Attempts
+def log_login_attempt(username, success):
+    log_entry = AuditLog(
+        log_type='login_attempt',
+        username=username,
+        status='Success' if success else 'Failure',
+        log_date=datetime.now(timezone.utc)
+    )
+    db.session.add(log_entry)
+    db.session.commit()
+
 
 
 
@@ -217,21 +266,48 @@ def approve_applications():
 @login_required
 def approve_application(application_id):
     application = Application.query.get_or_404(application_id)
+    reason = request.form.get('reason', 'No specific reason provided')
+
+    # Update application status and reason
     application.status = 'Approved'
+    application.reason = reason
     db.session.commit()
+
+    # Log the approval
+    log_driver_application(
+        sponsor_id=current_user.sponsor.id,
+        driver_id=application.user_id,  # Assuming driver_id maps to user_id
+        status='Approved',
+        reason=reason
+    )
+
     flash('Application approved.', 'success')
-    session['load_approve_applications'] = True
-    return redirect(url_for('main.sponsor_dash')) 
+    return redirect(url_for('main.approve_applications'))
+
 
 @main_bp.route('/reject_application/<int:application_id>', methods=['POST'])
 @login_required
 def reject_application(application_id):
     application = Application.query.get_or_404(application_id)
+    reason = request.form.get('reason', 'No specific reason provided')
+
+    # Update application status and reason
     application.status = 'Denied'
+    application.reason = reason
     db.session.commit()
+
+    # Log the rejection
+    log_driver_application(
+        sponsor_id=current_user.sponsor.id,
+        driver_id=application.user_id,
+        status='Denied',
+        reason=reason
+    )
+
     flash('Application rejected.', 'info')
-    session['load_approve_applications'] = True
-    return redirect(url_for('main.sponsor_dash')) 
+    return redirect(url_for('main.approve_applications'))
+
+
 
 @main_bp.route('/participating-drivers')
 @login_required
@@ -863,18 +939,32 @@ def point_transaction():
         if transaction_type not in ['Add', 'Deduct']:
             return jsonify({'success': False, 'message': 'Invalid transaction type.'}), 400
 
+        # Get reason
+        reason = request.form.get('reason', 'No reason provided')
+
+        # Adjust points (if transaction type is 'Deduct', make points negative)
+        adjusted_points = points if transaction_type == 'Add' else -points
+
         # Create a new point transaction record
         point_transaction = PointTransaction(
             sponsor_id=current_user.sponsor.id,
             driver_id=driver_id,
-            points=points,
-            reason=request.form.get('reason', 'No reason provided'),
+            points=adjusted_points,
+            reason=reason,
             transaction_type=transaction_type,
         )
 
         # Save the transaction
         db.session.add(point_transaction)
         db.session.commit()
+
+        # Add the log entry
+        log_point_change(
+            sponsor_id=current_user.sponsor.id,
+            driver_id=driver_id,
+            points=adjusted_points,
+            reason=reason
+        )
 
         return jsonify({
             'success': True,

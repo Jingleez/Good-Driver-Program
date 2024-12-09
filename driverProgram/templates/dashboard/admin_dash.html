@@ -240,7 +240,7 @@
                 <li><a href="#" onclick="loadContent('{{ url_for('main.review_reports') }}')"><i class="fas fa-chart-line"></i><span>Review Reports</span></a></li>
                 <li><a href="#" onclick="loadContent('{{ url_for('main.add_users') }}')"><i class="fas fa-user-plus"></i><span>Add New Users</span></a></li>
                 <li><a href="#" onclick="loadContent('{{ url_for('main.admin_reports') }}')"><i class="fas fa-file-alt"></i><span>Generate Reports</span></a></li>
-                <li><a href="#" onclick="loadContent('{{ url_for('main.audit_logs') }}')"><i class="fas fa-file-alt"></i><span>Audit Logs</span></a></li>
+                <li><a href="#" onclick="loadContent('{{ url_for('main.audit_logs_page') }}')"><i class="fas fa-file-alt"></i><span>Audit Logs</span></a></li>
             </ul>
         </nav>
 
@@ -285,6 +285,82 @@
                     console.error('Error loading content:', err);
                 });
         }
+
+        function fetchLogs() {
+            const logType = document.getElementById('logFilter').value;
+            fetch(`/audit_logs?log_type=${logType}`)
+                .then(response => response.json())
+                .then(data => {
+                    const headers = document.getElementById('logHeaders');
+                    const tableBody = document.getElementById('logTableBody');
+
+                    // Clear previous headers and rows
+                    headers.innerHTML = '';
+                    tableBody.innerHTML = '';
+
+                    // Define the headers for each log type
+                    const headerMap = {
+                        driver_app: ['Date', 'Sponsor ID', 'Driver ID', 'Status', 'Reason'],
+                        point_change: ['Date', 'Sponsor ID', 'Driver ID', 'Points', 'Reason'],
+                        password_change: ['Date', 'User ID', 'Change Type'],
+                        login_attempt: ['Date', 'Username', 'Status']
+                    };
+
+                    // Populate table headers
+                    const headerRow = document.createElement('tr');
+                    headerMap[logType].forEach(headerText => {
+                        const th = document.createElement('th');
+                        th.textContent = headerText;
+                        headerRow.appendChild(th);
+                    });
+                    headers.appendChild(headerRow);
+
+                    // Populate table rows
+                    data.logs.forEach(log => {
+                        const row = document.createElement('tr');
+                        switch (logType) {
+                            case 'driver_app':
+                                row.innerHTML = `
+                                    <td>${log.date}</td>
+                                    <td>${log.sponsor_id || 'N/A'}</td>
+                                    <td>${log.driver_id || 'N/A'}</td>
+                                    <td class="${log.status === 'Accepted' ? 'success' : 'failure'}">${log.status}</td>
+                                    <td>${log.reason || 'None'}</td>
+                                `;
+                                break;
+                            case 'point_change':
+                                row.innerHTML = `
+                                    <td>${log.date}</td>
+                                    <td>${log.sponsor_id || 'N/A'}</td>
+                                    <td>${log.driver_id || 'N/A'}</td>
+                                    <td>${log.points || 0}</td>
+                                    <td>${log.reason || 'None'}</td>
+                                `;
+                                break;
+                            case 'password_change':
+                                row.innerHTML = `
+                                    <td>${log.date}</td>
+                                    <td>${log.user_id || 'N/A'}</td>
+                                    <td>${log.change_type || 'N/A'}</td>
+                                `;
+                                break;
+                            case 'login_attempt':
+                                row.innerHTML = `
+                                    <td>${log.date}</td>
+                                    <td>${log.username || 'N/A'}</td>
+                                    <td class="${log.status === 'Success' ? 'success' : 'failure'}">${log.status}</td>
+                                `;
+                                break;
+                        }
+                        tableBody.appendChild(row);
+                    });
+                })
+                .catch(error => console.error('Error fetching logs:', error));
+        }
+
+        // Initial load
+        document.addEventListener('DOMContentLoaded', fetchLogs);
+
     </script>
 
 </body>

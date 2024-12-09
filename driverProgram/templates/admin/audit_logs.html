@@ -1,79 +1,140 @@
-<!DOCTYPE html>
-<html lang="en">
 <head>
     <title>Audit Logs</title>
     <style>
-        button {
-            padding: 8px 12px;
-            color: white;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            margin-right: 5px;
+        /* General Styles */
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: #1a1a1a;
+            color: #e0e0e0;
+            margin: 0;
+            padding: 20px;
+            box-sizing: border-box;
         }
 
-        .log-button {
-            background-color: #007bff; /* Primary button color */
+        h2 {
+            margin-bottom: 20px;
+            color: #4a90e2;
+            text-transform: uppercase;
+            font-size: 1.8rem;
         }
 
-        button:hover {
-            opacity: 0.8;
+        /* Dropdown Filter */
+        label {
+            font-weight: 600;
+            margin-right: 10px;
         }
 
-        .log-item {
-            border: 1px solid #ddd;
+        select {
             padding: 10px;
-            margin-bottom: 10px;
+            margin-bottom: 20px;
+            background-color: #2e2e2e;
+            color: #e0e0e0;
+            border: 1px solid #555;
+            border-radius: 5px;
+            font-size: 1rem;
+            cursor: pointer;
+            outline: none;
+        }
+
+        /* Table Styling */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            background-color: #2e2e2e;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        th, td {
+            padding: 14px;
+            border-bottom: 1px solid #444;
+            text-align: left;
+            font-size: 0.95rem;
+        }
+
+        th {
+            background-color: #007bff;
+            color: #ffffff;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        td {
+            color: #f0f0f0;
+        }
+
+        tr:nth-child(even) {
+            background-color: #3e3e3e;
+        }
+
+        tr:hover {
+            background-color: #4d4d4d;
+        }
+
+        /* Highlight success and failure */
+        .success {
+            color: #28a745;
+            font-weight: 600;
+        }
+
+        .failure {
+            color: #dc3545;
+            font-weight: 600;
+        }
+
+        /* Responsive Table */
+        @media (max-width: 768px) {
+            table, thead, tbody, th, td, tr {
+                display: block;
+            }
+
+            thead {
+                display: none;
+            }
+
+            tr {
+                margin-bottom: 10px;
+                border: 1px solid #444;
+                border-radius: 8px;
+                box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            }
+
+            td {
+                display: flex;
+                justify-content: space-between;
+                padding: 10px;
+                border-bottom: none;
+            }
+
+            td::before {
+                content: attr(data-label);
+                font-weight: 600;
+                color: #007bff;
+            }
         }
     </style>
-    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
 </head>
 <body>
-    <div>
-        <h1>Audit Logs</h1>
-        <div class="button-group">
-            <button id="driver-applications" class="log-button">Driver Applications</button>
-        </div>
-        <div id="log-container">
-            <!-- Logs will be dynamically displayed here -->
-        </div>
-    </div>
+    <h2>Audit Logs</h2>
 
-    <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            const logContainer = document.getElementById('log-container');
+    <!-- Dropdown Filter -->
+    <label for="logFilter">Select Log Type:</label>
+    <select id="logFilter" onchange="fetchLogs()">
+        <option value="driver_app">Driver Applications</option>
+        <option value="point_change">Point Changes</option>
+        <option value="password_change">Password Changes</option>
+        <option value="login_attempt">Login Attempts</option>
+    </select>
 
-            const fetchLogs = async (logType) => {
-                logContainer.innerHTML = "<p>Loading...</p>";
-                try {
-                    const response = await fetch(`/audit_logs/${logType}`);
-                    if (!response.ok) {
-                        throw new Error(`HTTP Error: ${response.status}`);
-                    }
-                    const data = await response.json();
-                    displayLogs(data);
-                } catch (error) {
-                    console.error("Error fetching logs:", error);
-                    logContainer.innerHTML = `<p>Error loading logs: ${error.message}</p>`;
-                }
-            };
-
-            const displayLogs = (logs) => {
-                if (!logs || logs.length === 0) {
-                    logContainer.innerHTML = "<p>No logs found for this category.</p>";
-                    return;
-                }
-                logContainer.innerHTML = logs.map(log => `
-                    <div class="log-item">
-                        ${Object.entries(log).map(([key, value]) => `<p><strong>${key}:</strong> ${value}</p>`).join('')}
-                    </div>
-                `).join('');
-            };
-
-            document.getElementById('driver-applications').addEventListener('click', () => {
-                fetchLogs('driver_applications');
-            });
-        });
-    </script>
+    <!-- Logs Table -->
+    <table>
+        <thead id="logHeaders">
+            <!-- Headers will be dynamically added -->
+        </thead>
+        <tbody id="logTableBody">
+            <!-- Rows will be dynamically added -->
+        </tbody>
+    </table>
 </body>
-</html>

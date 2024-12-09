@@ -40,13 +40,14 @@
         }
 
         input[type="text"] {
-            margin-right: 5px;
+            width: 100%;
             padding: 5px;
+            margin: 5px 0;
             border: 1px solid #ccc;
             border-radius: 5px;
         }
     </style>
-    
+
     <h2>Approve Driver Applications</h2>
     <p>List of driver applications pending approval.</p>
 
@@ -57,6 +58,7 @@
                     <th>Driver Name</th>
                     <th>Application Date</th>
                     <th>Status</th>
+                    <th>Reason</th>
                     <th>Actions</th>
                 </tr>
             </thead>
@@ -67,18 +69,29 @@
                     <td>{{ application.date_submitted.strftime('%Y-%m-%d') }}</td>
                     <td>{{ application.status }}</td>
                     <td>
-                        <form action="{{ url_for('main.approve_application', application_id=application.id) }}" method="post" style="display:inline;">
-                            <input type="text" name="reason" placeholder="Reason for approval" required>
-                            <button type="submit" class="approve-btn">Approve</button>
+                        <!-- Single Reason Field -->
+                        <form id="form-{{ application.id }}" action="" method="post">
+                            <input type="text" name="reason" placeholder="Enter reason" required>
                         </form>
-                        <form action="{{ url_for('main.reject_application', application_id=application.id) }}" method="post" style="display:inline;">
-                            <input type="text" name="reason" placeholder="Reason for rejection" required>
-                            <button type="submit" class="reject-btn">Reject</button>
-                        </form>
+                    </td>
+                    <td>
+                        <!-- Approve Button -->
+                        <button form="form-{{ application.id }}" formmethod="post"
+                            formaction="{{ url_for('main.approve_application', application_id=application.id) }}"
+                            class="approve-btn">
+                            Approve
+                        </button>
+
+                        <!-- Reject Button -->
+                        <button form="form-{{ application.id }}" formmethod="post"
+                            formaction="{{ url_for('main.reject_application', application_id=application.id) }}"
+                            class="reject-btn">
+                            Reject
+                        </button>
                     </td>
                 </tr>
                 {% endfor %}
-            </tbody>        
+            </tbody>
         </table>
     {% else %}
         <p>No applications pending approval.</p>

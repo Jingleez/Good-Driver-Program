@@ -11,6 +11,8 @@ from dotenv import load_dotenv
 from datetime import datetime, timedelta
 from ..forms import ConfirmResetForm
 import requests
+from .main import log_login_attempt
+
 
 load_dotenv()
 
@@ -44,6 +46,7 @@ def login():
         if datetime.now() < lock_until:
             time_remaining = (lock_until - datetime.now()).seconds
             flash(f'Your account is locked. Try again in {time_remaining // 60} minute(s).', 'error')
+            log_login_attempt(username=form.username.data, success=False)
             return render_template('Destination/login.html', form=form)
 
     if form.validate_on_submit():
@@ -78,6 +81,8 @@ def login():
                 user_role = user.role.strip().lower()
                 session['user_role'] = user_role
 
+                log_login_attempt(username=form.username.data, success=True)
+
                 # Redirect to respective dashboard based on user role
                 if user_role == 'driver':
                     flash('Logged in successfully!', 'success')
@@ -93,11 +98,13 @@ def login():
                     return redirect(url_for('auth.login'))
             else:
                 flash('User not found in local database.', 'danger')
+                log_login_attempt(username=form.username.data, success=False)
 
         except cognito_client.exceptions.NotAuthorizedException:
             # Handle incorrect username/password
             session['login_attempts'] += 1
             remaining_attempts = MAX_LOGIN_ATTEMPTS - session['login_attempts']
+            log_login_attempt(username=form.username.data, success=False)
             if remaining_attempts <= 0:
                 session['lock_until'] = (datetime.now() + timedelta(minutes=LOCK_TIME_MINUTES)).strftime('%Y-%m-%d %H:%M:%S')
                 flash(f'Too many failed login attempts. Your account is locked for {LOCK_TIME_MINUTES} minute(s).', 'danger')
@@ -105,6 +112,7 @@ def login():
                 flash(f'Invalid username or password. You have {remaining_attempts} attempt(s) left.', 'danger')
         except Exception as e:
             flash(f'An error occurred: {str(e)}', 'danger')
+            log_login_attempt(username=form.username.data, success=False)
 
     return render_template('Destination/login.html', form=form)
 
