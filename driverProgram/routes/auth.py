@@ -11,7 +11,7 @@ from dotenv import load_dotenv
 from datetime import datetime, timedelta
 from ..forms import ConfirmResetForm
 import requests
-from .main import log_login_attempt
+from .main import log_login_attempt, log_password_change
 
 
 load_dotenv()
@@ -177,7 +177,8 @@ def reset_request():
     form = ResetPasswordRequestForm()
     if form.validate_on_submit():
         email = form.email.data
-        print(f"Email submitted: {email}") 
+        reason = request.form.get('reason') 
+
         cognito_region = os.getenv('COGNITO_REGION')
         cognito_client_id = os.getenv('COGNITO_CLIENT_ID')
         client = boto3.client('cognito-idp', region_name=cognito_region)
@@ -185,12 +186,21 @@ def reset_request():
             response = client.forgot_password( ClientId=cognito_client_id, Username=email, )
             print(f"AWS Cognito response: {response}") #debug statement to see AWS response
             flash('Password reset email sent.', 'success')
+
+
+            user = User.query.filter_by(email=email).first()
+            if user:
+                log_password_change(user_id=user.id, change_type=f'Reset requested: {reason}')
+            else:
+                print("User not found for logging reset.")
+            
             return redirect(url_for('auth.confirm_reset'))
+        
         except client.exceptions.UserNotFoundException:
             flash('No user found with that email address.', 'error')
         except Exception as e:
             flash(f'An error occurred: {str(e)}', 'error')
-        return redirect(url_for('auth.login')) 
+        return redirect(url_for('auth.reset_password')) 
     return render_template('password/reset_request.html', form=form)
 
 @auth_bp.route('/confirm_reset', methods=['GET', 'POST'])
