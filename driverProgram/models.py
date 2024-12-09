@@ -132,8 +132,9 @@ class Wishlist(db.Model):
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
     product_id = db.Column(db.String(50), nullable=False)
     sponsor_id = db.Column(db.Integer, db.ForeignKey('sponsors.id'), nullable=False)
-    product_name = db.Column(db.String(255), nullable=False)  # New field
-    product_price = db.Column(db.Float, nullable=False)  # New field
+    product_name = db.Column(db.String(255), nullable=False)
+    product_price = db.Column(db.Float, nullable=False)
+    product_image = db.Column(db.String(255)) 
     date_added = db.Column(db.DateTime, default=db.func.current_timestamp())
 
     user = db.relationship('User', backref='wishlist_items')
@@ -161,3 +162,13 @@ class LoginAttempt(db.Model):
     success = db.Column(db.Boolean, nullable=False)
     timestamp = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
     message = db.Column(db.String(255), nullable=True)
+
+class Cart(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    sponsor_id = db.Column(db.Integer, nullable=False)
+    driver_id = db.Column(db.Integer, nullable=False)
+    product_id = db.Column(db.String(50), nullable=False) 
+    product_name = db.Column(db.String(100), nullable=False)
+    product_price = db.Column(db.Float, nullable=False)
+    product_image = db.Column(db.String(255)) 
+    date_added = db.Column(db.DateTime, default=db.func.current_timestamp())

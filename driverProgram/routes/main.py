@@ -5,7 +5,7 @@ from driverProgram import db, check_database_connection
 from sqlalchemy import text
 from flask_login import login_required, current_user
 import jwt
-from driverProgram.models import JobPosting, Sponsor, Application, Notification, ApplicationSponsor, SponsorCatalog, Behavior, ReviewBoard, Wishlist, PointTransaction, User
+from driverProgram.models import JobPosting, Sponsor, Application, Notification, ApplicationSponsor, SponsorCatalog, Behavior, ReviewBoard, Wishlist, PointTransaction, User, Cart
 from driverProgram.forms import ApplyToJobPosting, JobPostForm, SponsorProfileForm, RewardSystemForm, BehaviorForm
 from werkzeug.utils import secure_filename
 import os
@@ -555,53 +555,51 @@ def add_to_wishlist():
     if not product_id:
         return jsonify({'error': 'Product ID is required'}), 400
 
+    # Fetch product details, including the image, from SponsorCatalog
     product = SponsorCatalog.query.filter_by(id=product_id).first()
     if not product:
         return jsonify({'error': 'Product not found'}), 404
 
+    # Check if product is already in the wishlist
     existing_wishlist_item = Wishlist.query.filter_by(user_id=current_user.id, product_id=product_id).first()
     if existing_wishlist_item:
         return jsonify({'message': 'Product already in wishlist'}), 400
 
+    # Add product to wishlist, including the image
     new_wishlist_item = Wishlist(
         user_id=current_user.id,
         product_id=product_id,
         sponsor_id=product.sponsor_id,
         product_name=product.name,
-        product_price=product.price
+        product_price=product.price,
+        product_image=product.image  # New image column
     )
     db.session.add(new_wishlist_item)
     db.session.commit()
 
     return jsonify({'message': 'Product added to wishlist successfully'}), 200
 
+
 @main_bp.route('/remove_from_wishlist', methods=['POST'])
 @login_required
 def remove_from_wishlist():
     data = request.get_json()
-    wishlist_id = data.get('wishlist_id')
+    product_id = data.get('product_id')
 
-    if not wishlist_id:
-        return jsonify({'error': 'Wishlist ID is required'}), 400
+    if not product_id:
+        return jsonify({'error': 'Product ID is required'}), 400
 
-    wishlist_item = Wishlist.query.filter_by(id=wishlist_id).first()
+    wishlist_item = Wishlist.query.filter_by(user_id=current_user.id, product_id=product_id).first()
+
     if not wishlist_item:
         return jsonify({'error': 'Wishlist item not found'}), 404
-
-    driver_id = wishlist_item.user_id
-    authorized_driver = db.session.query(Application).join(JobPosting).filter(
-        Application.user_id == driver_id,
-        Application.status == 'Approved',
-        JobPosting.sponsor_id == current_user.sponsor.id
-    ).first()
-
-    if not authorized_driver:
-        return jsonify({'error': 'Unauthorized action'}), 403
 
     db.session.delete(wishlist_item)
     db.session.commit()
 
-    return jsonify({'message': 'Wishlist item removed successfully'}), 200
+    return jsonify({'message': 'Product removed from wishlist successfully'}), 200
+
+
 
 @main_bp.route('/wishlist', methods=['GET'])
 @login_required
@@ -614,43 +612,134 @@ def view_wishlist():
 def driver_wishlist(driver_id):
     if current_user.role != 'sponsor':
         return jsonify({'error': 'Unauthorized access'}), 403
-    print(f'Fetching wishlist for driver_id: {driver_id}')
+
     wishlist_items = db.session.query(
-        Wishlist.id.label('wishlist_id'),
-        Wishlist.product_name.label('product_name'),
-        Wishlist.product_price.label('product_price'),
-        Wishlist.product_id.label('product_id'),
-        Wishlist.sponsor_id.label('sponsor_id')
+        Wishlist.product_id,
+        Wishlist.product_name,
+        Wishlist.product_price,
+        SponsorCatalog.image  # Fetch the image from SponsorCatalog
+    ).join(
+        SponsorCatalog, Wishlist.product_id == SponsorCatalog.id
     ).filter(
         Wishlist.user_id == driver_id,
         Wishlist.sponsor_id == current_user.sponsor.id
     ).all()
-    print(f'Wishlist items: {wishlist_items}')
+
     wishlist_data = [
         {
-            'wishlist_id': item.wishlist_id,
+            'product_id': item.product_id,
             'product_name': item.product_name,
             'product_price': item.product_price,
-            'product_id': item.product_id,
+            'image': item.image if item.image else '/static/placeholder.png'
         }
         for item in wishlist_items
     ]
+
     return jsonify({'wishlist': wishlist_data})
+
+
 
 @main_bp.route('/add_to_cart', methods=['POST'])
 @login_required
 def add_to_cart():
     data = request.get_json()
     product_id = data.get('product_id')
-    wishlist_id = data.get('wishlist_id')
+    user_id = data.get('user_id')
 
-    product = SponsorCatalog.query.filter_by(id=product_id).first()
-    wishlist_item = Wishlist.query.filter_by(id=wishlist_id).first()
+    if not product_id or not user_id:
+        return jsonify({'error': 'Product ID and User ID are required'}), 400
 
-    if not product or not wishlist_item:
-        return jsonify({'error': 'Invalid product or wishlist item'}), 404
+    wishlist_item = Wishlist.query.filter_by(user_id=user_id, product_id=product_id).first()
+    if not wishlist_item:
+        return jsonify({'error': 'Product not found in wishlist'}), 404
 
-    return jsonify({'message': 'Item added to cart successfully'})
+    print(f"Adding to cart: {wishlist_item.product_name}, {wishlist_item.product_price}, {wishlist_item.product_image}")
+
+    new_cart_item = Cart(
+        sponsor_id=current_user.id,
+        driver_id=user_id,
+        product_id=product_id,
+        product_name=wishlist_item.product_name,
+        product_price=wishlist_item.product_price,
+        product_image=wishlist_item.product_image
+    )
+
+    db.session.add(new_cart_item)
+    db.session.commit()
+
+    return jsonify({'message': 'Item successfully added to cart!'}), 200
+
+
+
+
+
+@main_bp.route('/orders', methods=['GET'])
+@login_required
+def view_orders():
+    if current_user.role != 'sponsor':
+        flash('Unauthorized access', 'error')
+        return redirect(url_for('main.dashboard'))
+
+    # Fetch approved drivers (status = 'approved') from the Application table
+    approved_drivers = db.session.query(
+        Application.user_id,
+        Application.first_name,
+        Application.last_name
+    ).filter(Application.status == 'Approved').all()
+
+    return render_template('/sponsor/orders.html', approved_drivers=approved_drivers)
+
+
+
+
+@main_bp.route('/cart/<int:driver_id>', methods=['GET'])
+@login_required
+def get_driver_cart(driver_id):
+    if current_user.role != 'sponsor':
+        return jsonify({'error': 'Unauthorized access'}), 403
+
+    # Fetch all cart items associated with the driver_id
+    cart_items = Cart.query.filter_by(driver_id=driver_id).all()
+    print("Cart Items Fetched:", cart_items)
+
+    # Prepare response with product_name, product_price, and product_image
+    cart_data = [
+        {
+            'product_name': item.product_name,
+            'product_price': item.product_price,
+            'image': item.product_image
+        }
+        for item in cart_items
+    ]
+
+    return jsonify({'cart': cart_data})
+
+
+
+
+
+
+
+
+
+
+
+
+@main_bp.route('/remove_from_cart', methods=['POST'])
+@login_required
+def remove_from_cart():
+    data = request.get_json()
+    cart_id = data.get('cart_id')
+
+    cart_item = Cart.query.get(cart_id)
+    if not cart_item:
+        return jsonify({'error': 'Item not found'}), 404
+
+    db.session.delete(cart_item)
+    db.session.commit()
+    return jsonify({'message': 'Item removed successfully'})
+
+
 
 @main_bp.route('/driver/review-purchases')
 @login_required

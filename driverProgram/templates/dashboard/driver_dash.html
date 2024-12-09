@@ -342,6 +342,47 @@
                     console.error('Error loading content:', err);
                 });
         }
+
+        function addToWishlist(productId) {
+            fetch('/add_to_wishlist', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ product_id: productId })
+            })
+            .then(response => response.json()) 
+            .then(data => {
+                if (data.message) {
+                    alert(data.message);
+                } else {
+                    alert(`Error: ${data.error || 'An unexpected error occurred'}`);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error); 
+                alert('Failed to add the item to the wishlist. Please try again.');
+            });
+        }
+
+        function removeFromWishlist(productId) {
+            console.log('Removing product with ID:', productId);
+            fetch('/remove_from_wishlist', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ product_id: productId })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.message) {
+                    alert(data.message);
+                    location.reload();
+                } else {
+                    alert(data.error || 'An error occurred');
+                }
+            })
+            .catch(error => console.error('Error:', error));
+        }
     </script>
 
 </body>

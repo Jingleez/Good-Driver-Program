@@ -1,0 +1,29 @@
+{% block content %}
+<div>
+    <h2>Orders - View Driver Carts</h2>
+
+    <!-- Driver Dropdown -->
+    <div>
+        <label for="driverDropdown">Select Driver:</label>
+        <select id="driverDropdown" onchange="fetchCartItems()" style="padding: 8px; margin-bottom: 20px;">
+            <option value="">-- Select Driver --</option>
+            {% for driver in approved_drivers %}
+                <option value="{{ driver.user_id }}">
+                    {{ driver.first_name }} {{ driver.last_name }} (ID: {{ driver.user_id }})
+                </option>
+            {% endfor %}
+        </select>
+        
+    </div>
+
+    <!-- Cart Display -->
+    <div id="cartContainer" style="display: none;">
+        <h3>Driver's Cart</h3>
+        <div id="cartItems" style="display: flex; flex-wrap: wrap; gap: 20px;"></div>
+        <h4 id="cartTotal" style="margin-top: 20px;">Total Points: 0</h4>
+    </div>
+
+    <!-- Empty Cart Message -->
+    <p id="emptyCartMessage" style="color: gray; display: none;">No items in the cart.</p>
+</div>
+{% endblock %}

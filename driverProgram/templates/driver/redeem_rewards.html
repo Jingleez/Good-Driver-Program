@@ -69,30 +69,7 @@
         {% else %}
         <p>No rewards available.</p>
         {% endif %}
-    </div>
-    <script>
-        function addToWishlist(productId) {
-            fetch('/add_to_wishlist', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({ product_id: productId })
-            })
-            .then(response => response.json()) 
-            .then(data => {
-                if (data.message) {
-                    alert(data.message);
-                } else {
-                    alert(`Error: ${data.error || 'An unexpected error occurred'}`);
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error); 
-                alert('Failed to add the item to the wishlist. Please try again.');
-            });
-        }
-    </script>    
+    </div>  
 </body>
 
 

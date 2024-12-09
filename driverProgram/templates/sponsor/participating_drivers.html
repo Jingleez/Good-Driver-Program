@@ -23,8 +23,8 @@
                         <td>{{ driver.phone }}</td>
                         <td>{{ driver.date_submitted.strftime('%Y-%m-%d') }}</td>
                         <td>
-                            <button onclick="viewWishlist({{ driver.user_id }})">View Wishlist</button>
-                            <button onclick="removeDriver({{ driver.user_id }})" style="background-color: #dc3545; color: white;">Remove Driver</button>
+                            <button onclick="viewWishlist('{{ driver.user_id }}')">View Wishlist</button>
+                            <button onclick="removeDriver('{{ driver.user_id }}')" style="background-color: #dc3545; color: white;">Remove Driver</button>
                         </td>
                     </tr>
                     {% endfor %}
@@ -34,106 +34,19 @@
             <p>No drivers have been accepted yet.</p>
         {% endif %}
     </section>
-
     <div id="wishlistModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.5); justify-content: center; align-items: center;">
-        <div style="background: white; padding: 20px; border-radius: 8px; width: 80%; max-width: 500px;">
-            <h3>Driver's Wishlist</h3>
-            <table id="wishlistTable" style="width: 100%; border-collapse: collapse;">
-                <thead>
-                    <tr>
-                        <th>Product Name</th>
-                        <th>Price</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                </tbody>
-            </table>
-            <button onclick="closeWishlist()">Close</button>
+        <div style="background: white; padding: 20px; border-radius: 8px; width: 80%; max-width: 800px; overflow-y: auto;">
+            <h3 style="color: black; text-align: center; margin-bottom: 20px;">Driver's Wishlist</h3>
+            
+            <div class="Items" id="wishlistItems" style="display: flex; flex-wrap: wrap; gap: 20px; justify-content: center;">
+                <!-- Wishlist items will be dynamically inserted here -->
+            </div>
+    
+            <button onclick="closeWishlist()" style="margin-top: 20px; background-color: #007bff; color: white; border: none; padding: 10px 15px; border-radius: 5px; cursor: pointer;">
+                Close
+            </button>
         </div>
     </div>
-
-    <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            // View Wishlist Functionality
-            window.viewWishlist = function(driverId) {
-                fetch(`/driver_wishlist/${driverId}`)
-                    .then(response => response.json())
-                    .then(data => {
-                        if (data.wishlist) {
-                            const wishlistTable = document.querySelector('#wishlistTable tbody');
-                            wishlistTable.innerHTML = '';
-
-                            data.wishlist.forEach(item => {
-                                const row = document.createElement('tr');
-                                row.innerHTML = `
-                                    <td>${item.product_name}</td>
-                                    <td>${item.product_price} Points</td>
-                                    <td>
-                                        <button onclick="addToCart(${item.product_id}, ${item.wishlist_id})">Add to Cart</button>
-                                    </td>
-                                `;
-                                wishlistTable.appendChild(row);
-                            });
-
-                            document.getElementById('wishlistModal').style.display = 'flex';
-                        } else {
-                            alert('No wishlist items found for this driver.');
-                        }
-                    })
-                    .catch(error => {
-                        console.error('Error fetching wishlist:', error);
-                        alert('An error occurred while fetching the wishlist.');
-                    });
-            };
-
-            // Close Wishlist Modal
-            window.closeWishlist = function() {
-                document.getElementById('wishlistModal').style.display = 'none';
-            };
-
-            // Add to Cart Functionality
-            window.addToCart = function(productId, wishlistId) {
-                fetch('/add_to_cart', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({ product_id: productId, wishlist_id: wishlistId })
-                })
-                .then(response => response.json())
-                .then(data => {
-                    alert(data.message || 'Item added to cart successfully.');
-                })
-                .catch(error => {
-                    console.error('Error adding item to cart:', error);
-                    alert('An error occurred while adding the item to the cart.');
-                });
-            };
-
-            // Remove Driver Functionality
-            window.removeDriver = function(driverId) {
-                if (!confirm('Are you sure you want to remove this driver?')) {
-                    return;
-                }
-
-                fetch(`/remove_driver/${driverId}`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                })
-                .then(response => response.json())
-                .then(data => {
-                    alert(data.message || 'Driver removed successfully.');
-                    location.reload();
-                })
-                .catch(error => {
-                    console.error('Error removing driver:', error);
-                    alert('An error occurred while removing the driver.');
-                });
-            };
-        });
-    </script>
+    
 </div>
 {% endblock %}

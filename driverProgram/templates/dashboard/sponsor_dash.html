@@ -253,6 +253,7 @@
                 <li><a onclick="loadContent('{{ url_for('main.sponsor_reports') }}')"><i class="fas fa-bell"></i><span>Generate Reports</span></a></li>
                 <li><a onclick="loadContent('{{ url_for('main.reward_system') }}')"><i class="fas fa-bell"></i><span>Reward System</span></a></li>
                 <li><a onclick="loadContent('{{ url_for('main.sponsor_items') }}')"><i class="fas fa-bell"></i><span>My Prodcuts</span></a></li>
+                <li><a onclick="loadContent('{{ url_for('main.view_orders') }}')"><i class="fas fa-bell"></i><span>Orders</span></a></li>
             </ul>
             
         </nav>
@@ -330,9 +331,8 @@
                     console.error('Error loading content:', err);
                 });
         }
-        
+
         function removeFromCatalog(productId) {
-            alert('remove function called');
             fetch('/remove_from_catalog', {
                 method: 'POST',
                 headers: {
@@ -354,7 +354,208 @@
                 alert('An error occurred. Please try again.');
             });
         }
-    </script>
 
+        function removeDriver(driverId) {
+            if (!confirm('Are you sure you want to remove this driver?')) {
+                return;
+            }
+           fetch(`/remove_driver/${driverId}`, {
+                method: 'POST', headers: { 'Content-Type': 'application/json', }, })
+                .then(response => response.json())
+                .then(data => {
+                    alert(data.message || 'Driver removed successfully.');
+                    location.reload();
+                })
+                .catch(error => {
+                    console.error('Error removing driver:', error);
+                    alert('An error occurred while removing the driver.');
+                });
+            };
+        
+        
+        // Function to fetch and display a driver's wishlist
+        function viewWishlist(driverId) {
+            fetch(`/wishlist/${driverId}`)
+                .then(response => response.json())
+                .then(data => {
+                    console.log('Wishlist Data:', data);
+
+                    const wishlistContainer = document.getElementById('wishlistItems');
+                    wishlistContainer.innerHTML = '';
+
+                    if (data.wishlist && Array.isArray(data.wishlist) && data.wishlist.length > 0) {
+                        data.wishlist.forEach(item => {
+                            const productCard = document.createElement('div');
+                            productCard.className = 'Item';
+                            productCard.style = `
+                                padding: 15px;
+                                width: 30%;
+                                text-align: center;
+                                background: #f9f9f9;
+                                border: 1px solid #ddd;
+                                border-radius: 8px;
+                                box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+                            `;
+
+                            productCard.innerHTML = `
+                                <div style="margin-bottom: 10px;">
+                                    <img src="${item.image}" alt="${item.product_name}" style="width: 100px; height: 100px; object-fit: cover; border-radius: 5px;">
+                                </div>
+                                <div class="Item__title" style="font-size: 1em; font-weight: bold; margin-bottom: 5px; color: #333;">
+                                    ${item.product_name}
+                                </div>
+                                <div class="Item__price" style="font-size: 0.9em; color: #777; margin-bottom: 10px;">
+                                    ${item.product_price} points
+                                </div>
+                                <button onclick="addToCart('${item.product_id}', '${driverId}')"
+                                        style="background-color: #007bff; color: white; border: none; padding: 8px 12px; border-radius: 5px; cursor: pointer;">
+                                    Add to Cart
+                                </button>
+                            `;
+                            wishlistContainer.appendChild(productCard);
+                        });
+
+                        document.getElementById('wishlistModal').style.display = 'flex';
+                    } else {
+                        wishlistContainer.innerHTML = `<p style="text-align: center; color: #777;">No wishlist items found.</p>`;
+                        document.getElementById('wishlistModal').style.display = 'flex';
+                    }
+                })
+                .catch(error => {
+                    console.error('Error fetching wishlist:', error);
+                    alert('Failed to fetch the wishlist. Please try again.');
+                });
+        }
+
+
+        function closeWishlist() {
+            document.getElementById('wishlistModal').style.display = 'none';
+        }
+
+        function addToCart(productId, userId) {
+            fetch('/add_to_cart', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ product_id: productId, user_id: userId }) // Send product_id and user_id
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.message) {
+                    alert(data.message); // Success message
+                } else {
+                    alert(`Error: ${data.error || 'An unexpected error occurred'}`);
+                }
+            })
+            .catch(error => {
+                console.error('Error adding to cart:', error);
+                alert('Failed to add the item to the cart. Please try again.');
+            });
+        }
+
+
+        document.addEventListener('DOMContentLoaded', () => {
+            fetchDrivers();
+        });
+
+        function fetchDrivers() {
+            const driverDropdown = document.getElementById('driverDropdown');
+
+            if (!driverDropdown) {
+                console.error('Dropdown element not found!');
+                return;
+            }
+
+            fetch('/drivers')
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Failed to fetch drivers');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    driverDropdown.innerHTML = '<option value="">-- Select Driver --</option>';
+                    data.drivers.forEach(driver => {
+                        const option = document.createElement('option');
+                        option.value = driver.id;
+                        option.textContent = driver.name;
+                        driverDropdown.appendChild(option);
+                    });
+                })
+                .catch(error => {
+                    console.error('Error fetching drivers:', error);
+                    alert('Unable to load drivers. Please try again later.');
+                });
+        }
+
+        function fetchCartItems() {
+            const driverId = document.getElementById('driverDropdown').value;
+            const cartItemsContainer = document.getElementById('cartItems');
+            const cartTotal = document.getElementById('cartTotal');
+            const cartContainer = document.getElementById('cartContainer');
+            const emptyCartMessage = document.getElementById('emptyCartMessage');
+
+            cartItemsContainer.innerHTML = '';
+            cartTotal.textContent = 'Total Points: 0';
+            cartContainer.style.display = 'none';
+            emptyCartMessage.style.display = 'none';
+
+            if (!driverId) return;
+
+            // Fetch cart items for the selected driver
+            fetch(`/cart/${driverId}`)
+                .then(response => response.json())
+                .then(({ cart }) => {
+                    if (!cart.length) {
+                        emptyCartMessage.style.display = 'block';
+                        return;
+                    }
+
+                    let totalPoints = 0;
+
+                    // Loop over each cart item and add it to the UI
+                    cart.forEach(item => {
+                        totalPoints += item.product_price;
+                        const itemCard = `
+                            <div class="cart-item" style="
+                                padding: 15px; width: 30%; text-align: center;
+                                background: #f9f9f9; border: 1px solid #ddd;
+                                border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
+                                <img src="${item.image || '/static/placeholder.png'}" 
+                                    alt="${item.product_name}" 
+                                    style="width: 100px; height: 100px; object-fit: cover;">
+                                <div style="font-size: 1em; font-weight: bold; color: #000; margin-top: 10px;">
+                                    ${item.product_name || 'No Name'}
+                                </div>
+                                <div style="color: #000; margin-top: 5px;">
+                                    ${item.product_price} points
+                                </div>
+                            </div>
+                        `;
+                        cartItemsContainer.insertAdjacentHTML('beforeend', itemCard);
+                    });
+
+                    cartTotal.textContent = `Total Points: ${totalPoints}`;
+                    cartContainer.style.display = 'block';
+                })
+                .catch(error => console.error('Error fetching cart items:', error));
+            }
+
+
+
+        function removeFromCart(cartId) {
+            fetch('/remove_from_cart', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ cart_id: cartId })
+            })
+            .then(response => response.json())
+            .then(data => {
+                alert(data.message);
+                fetchCartItems();
+            })
+            .catch(error => console.error('Error removing item:', error));
+        }
+
+    </script>
 </body>
 </html>
