@@ -224,15 +224,12 @@ def log_login_attempt(username, success):
     db.session.add(log_entry)
     db.session.commit()
 
-
-
-
-
-
-@main_bp.route('/admin-reports')
+@main_bp.route('/admin/reports', methods=['GET'])
 @login_required
-def admin_reports():
-    return render_template('admin/admin_reports.html')
+def admin_reports_page():
+    # Query all sponsors from the database
+    sponsors = db.session.query(Sponsor.id, Sponsor.company_name).all()
+    return render_template('admin_reports.html', sponsors=sponsors)
 
 
 # Routing links for sponsor dashboard : { approve applications(Reject, Deny), Participating Drivers, public profile, Job Postings, generate reports, product catalog, notifications }
@@ -361,10 +358,22 @@ def job_postings():
     job_postings = JobPosting.query.all()
     return render_template('sponsor/job_postings.html', form=form, job_postings=job_postings)
 
-@main_bp.route('/sponsor/reports')
+@main_bp.route('/sponsor/reports', methods=['GET'])
+@login_required
 def sponsor_reports():
-    return render_template('sponsor/sponsor_reports.html')
-
+    sponsor_id = current_user.sponsor.id
+    approved_drivers = db.session.query(
+        Application.user_id,
+        Application.first_name,
+        Application.last_name
+    ).join(JobPosting).filter(
+        JobPosting.sponsor_id == sponsor_id,
+        Application.status == "Approved"
+    ).distinct(Application.user_id).all()
+    return render_template(
+        'sponsor/sponsor_reports.html',
+        approved_drivers=approved_drivers
+    )
 
 @main_bp.route('/product-catalog', methods=['GET'])
 @login_required
@@ -898,7 +907,7 @@ def point_transaction():
         })
     except Exception as e:
         db.session.rollback()
-        return jsonify({'success': False, 'message': f'Error: {str(e)}'}), 500
+        return jsonify({'success': False, 'message': f'An error occurred: {str(e)}'})
 
 
 @main_bp.route('/checkout', methods=['POST'])
@@ -978,6 +987,41 @@ def mark_driver_notification_as_read(notification_id):
     except Exception as e:
         db.session.rollback()
         return jsonify({'success': False, 'message': str(e)}), 500
+
+from flask import send_file
+from driverProgram.controllers.report_controller import ReportController
+
+@main_bp.route('/generate_report_csv', methods=['GET'])
+@login_required
+def generate_report_csv():
+    report_type = request.args.get('reportType')
+    start_date = request.args.get('startDate')
+    end_date = request.args.get('endDate')
+    driver_id = request.args.get('driverId')
+
+    if start_date:
+        start_date = datetime.strptime(start_date, "%Y-%m-%d")
+    if end_date:
+        end_date = datetime.strptime(end_date, "%Y-%m-%d")
+
+    controller = ReportController(db.session)
+
+    if report_type == "driver_point_tracking":
+        rows = controller.driver_point_tracking(
+            sponsor_id=current_user.sponsor.id,
+            start_date=start_date,
+            end_date=end_date,
+            driver_id=driver_id
+        )
+        controller.write_csv(rows)
+
+    file = controller.get_csv_file()
+    return send_file(
+        file,
+        as_attachment=True,
+        download_name="driver_point_tracking_report.csv",
+        mimetype="text/csv"
+    )
     
 @main_bp.route('/remove_job/<int:job_id>', methods=['DELETE'])
 @login_required
