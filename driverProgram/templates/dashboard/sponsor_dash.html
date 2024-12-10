@@ -332,6 +332,31 @@
                 });
         }
 
+        document.addEventListener('DOMContentLoaded', () => {
+        const reportForm = document.getElementById('reportForm');
+        if (reportForm) {
+            reportForm.addEventListener('submit', function (e) {
+                e.preventDefault();
+
+                const formData = new FormData(this);
+
+                fetch('/generate_report', {
+                    method: 'POST',
+                    body: formData,
+                })
+                    .then(response => response.text())
+                    .then(html => {
+                        const reportResults = document.getElementById('reportResults');
+                        if (reportResults) {
+                            reportResults.innerHTML = html;
+                        } else {
+                            console.error('Report results container not found.');
+                        }
+                    })
+                    .catch(error => console.error('Error:', error));
+            });
+        }
+    });
         
         // Show Notification Details in Popup
         function showPopup(notificationId) {
@@ -401,9 +426,6 @@
                     });
             }
         }
-
-
-
 
         function removeFromCatalog(productId) {
             fetch('/remove_from_catalog', {
