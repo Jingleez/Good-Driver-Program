@@ -1,85 +1,188 @@
-<div class="content-area">
-    <h2>Your Public Profile</h2>
-    
-    <!-- Display section -->
-    <div id="view-section">
-        <div>
-            <label for="company_name">Company Name:</label>
-            <p id="company_name">{{ sponsor.company_name }}</p>
-        </div>
-        <div>
-            <label for="location">Location:</label>
-            <p id="location">{{ sponsor.location }}</p>
-        </div>
-        <div>
-            <label for="phone">Phone Number:</label>
-            <p id="phone">{{ sponsor.phone }}</p>
-        </div>
-        <div>
-            <label for="email">Email:</label>
-            <p id="email">{{ sponsor.email }}</p>
-        </div>
-        <div>
-            <label for="website">Website:</label>
-            <p id="website">{{ sponsor.website }}</p>
-        </div>
-        <div>
-            <label for="bio">Bio:</label>
-            <p id="bio">{{ sponsor.bio }}</p>
-        </div>
-        
-    </div>
-
-    <!-- Edit section -->
-    <div id="edit-section">
-        <h2>Edit Public Profile</h2>
-        <form action="{{ url_for('main.public_profile') }}" method="POST">
-            {{ form.hidden_tag() }}
-            <div>
-                <label for="company_name">Company Name:</label>
-                <input type="text" name="company_name" value="{{ sponsor.company_name }}">
-            </div>
-            <div>
-                <label for="location">Location:</label>
-                <input type="text" name="location" value="{{ sponsor.location }}">
-            </div>
-            <div>
-                <label for="phone">Phone Number:</label>
-                <input type="text" name="phone" value="{{ sponsor.phone }}">
-            </div>
-            <div>
-                <label for="email">Email:</label>
-                <input type="email" name="email" value="{{ sponsor.email }}">
-            </div>
-            <div>
-                <label for="website">Website:</label>
-                <input type="text" name="website" value="{{ sponsor.website }}">
-            </div>
-            <div>
-                <label for="bio">Bio:</label>
-                <textarea name="bio">{{ sponsor.bio }}</textarea>
-            </div>
-            <button type="submit" class="edit-button">Save Changes</button>
-            <button type="button" class="edit-button" onclick="toggleEdit()">Cancel</button>
-        </form>
-    </div>
-</div>
-
-<script>
-    function toggleEdit() {
-        const editSection = document.getElementById('edit-section');
-        const viewSection = document.getElementById('view-section');
-
-        // Toggle visibility
-        if (editSection.style.display === 'none') {
-            editSection.style.display = 'block';
-            viewSection.style.display = 'none';
-        } else {
-            editSection.style.display = 'none';
-            viewSection.style.display = 'block';
+<head>
+    <style>
+        /* Scoped profile wrapper styles */
+        .profile-wrapper .content-area {
+            width: 100%;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+            margin-bottom: 30px;
         }
-    }
-</script>
+    
+        .profile-wrapper h2 {
+            text-align: center;
+            color: #4a90e2;
+            margin-bottom: 20px;
+        }
+    
+        .profile-wrapper .profile-item {
+            margin: 15px 0;
+            display: flex;
+            justify-content: space-between;
+            border-bottom: 1px solid #ddd;
+            padding-bottom: 10px;
+        }
+    
+        .profile-wrapper .profile-item label {
+            font-weight: bold;
+            color: #555;
+        }
+    
+        .profile-wrapper .profile-item p {
+            margin: 0;
+            color: #333;
+        }
+    
+        .profile-wrapper .edit-button {
+            background-color: #4a90e2;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-top: 10px;
+            transition: background 0.3s;
+        }
+    
+        .profile-wrapper .edit-button:hover {
+            background-color: #357ab8;
+        }
+    
+        /* Modal styles */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 100;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+        }
+    
+        .modal-content {
+            background-color: white;
+            margin: 10% auto;
+            padding: 20px;
+            border-radius: 10px;
+            width: 50%;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+        }
+    
+        .modal-content h2 {
+            text-align: center;
+            color: #4a90e2;
+        }
+    
+        .modal-content form div {
+            margin-bottom: 15px;
+        }
+    
+        .modal-content form label {
+            font-weight: bold;
+            display: block;
+            margin-bottom: 5px;
+        }
+    
+        .modal-content form input,
+        .modal-content form textarea {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+    
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+    
+        .close:hover {
+            color: black;
+        }
+    </style>
+</head>
+<body>
+    <div class="content-area">
+        <!-- Profile Section -->
+        <div class="identity-card">
+            <h2> Public Profile <i class="fa fa-pen fa-xs edit" onclick="openModal()"></i></h2>
+            <table>
+                <tbody>
+                    <tr>
+                        <td>Company</td>
+                        <td>:</td>
+                        <td>{{ sponsor.company_name }}</td>
+                    </tr>
+                    <tr>
+                        <td>Email</td>
+                        <td>:</td>
+                        <td>{{ sponsor.email }}</td>
+                    </tr>
+                    <tr>
+                        <td>Location</td>
+                        <td>:</td>
+                        <td>{{ sponsor.location }}</td>
+                    </tr>
+                    <tr>
+                        <td>Phone</td>
+                        <td>:</td>
+                        <td>{{ sponsor.phone }}</td>
+                    </tr>
+                    <tr>
+                        <td>Website</td>
+                        <td>:</td>
+                        <td>{{ sponsor.website }}</td>
+                    </tr>
+                    <tr>
+                        <td>Bio</td>
+                        <td>:</td>
+                        <td>{{ sponsor.bio }}</td>
+                    </tr>
+                </tbody>
+            </table>
+            <button class="edit-button" onclick="openModal()">Edit Profile</button>
+        </div>
+    </div>
 
+    <!-- Edit Modal -->
+    <div id="edit-modal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal()">&times;</span>
+            <h2>Edit Public Profile</h2>
+            <form action="{{ url_for('main.public_profile') }}" method="POST">
+                {{ form.hidden_tag() }}
+                <div>
+                    <label for="company_name">Company Name:</label>
+                    <input type="text" name="company_name" value="{{ sponsor.company_name }}">
+                </div>
+                <div>
+                    <label for="email">Email:</label>
+                    <input type="email" name="email" value="{{ sponsor.email }}">
+                </div>
+                <div>
+                    <label for="location">Location:</label>
+                    <input type="text" name="location" value="{{ sponsor.location }}">
+                </div>
+                <div>
+                    <label for="phone">Phone Number:</label>
+                    <input type="text" name="phone" value="{{ sponsor.phone }}">
+                </div>
+                <div>
+                    <label for="website">Website:</label>
+                    <input type="text" name="website" value="{{ sponsor.website }}">
+                </div>
+                <div>
+                    <label for="bio">Bio:</label>
+                    <textarea name="bio">{{ sponsor.bio }}</textarea>
+                </div>
+                <button type="submit" class="edit-button">Save Changes</button>
+                <button type="button" class="edit-button" onclick="closeModal()">Cancel</button>
+            </form>
+        </div>
+    </div>
 </body>
-</html>

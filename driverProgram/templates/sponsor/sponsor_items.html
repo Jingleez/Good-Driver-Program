@@ -1,65 +1,84 @@
 {% block content %}
 <style>
-    body {
-        font-family: Arial, sans-serif;
-    }
-    .Items {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 20px;
-        justify-content: space-between;
-        max-width: 1200px;
-        margin: 20px auto;
-        background: #fff;
-        padding: 20px;
-    }
-    .Item {
-        flex: 1 1 calc(30% - 20px);
-        max-width: calc(30% - 20px);
-        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    header {
         text-align: center;
+        margin: 20px 0;
+    }
+
+    header h2 {
+        font-size: 2em;
+        color: #4a90e2;
+        margin: 0;
+    }
+
+    .Items {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 20px;
+        max-width: 1400px;
+        margin: 20px auto;
+        padding: 20px;
         background-color: #fff;
-        border-radius: 5px;
-        transition: box-shadow 0.4s ease-in-out;
-        margin: 10px 0;
+        border-radius: 8px;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    }
+
+    .Item {
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        padding: 15px;
+        background-color: #fff;
         display: flex;
         flex-direction: column;
         justify-content: space-between;
+        text-align: center;
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
     }
-    @media (max-width: 1050px) {
-        .Item {
-            flex: 1 1 calc(48% - 20px);
-        }
+
+    .Item:hover {
+        transform: scale(1.02);
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
     }
-    @media (max-width: 600px) {
-        .Item {
-            flex: 1 1 100%;
-        }
-    }
+
     .ImageContainer {
-        width: 100%;
-        display: flex;
-        justify-content: center;
-        align-items: center;
         margin-bottom: 10px;
     }
+
     .Image {
         width: 100%;
-        max-width: 150px;
-        max-height: 150px;
+        max-width: 200px;
+        height: 200px;
         object-fit: cover;
+        border-radius: 5px;
     }
+
     .Item__title {
-        font-family: 'Montserrat', sans-serif;
-        font-size: 1em;
+        font-size: 1.1em;
+        font-weight: bold;
         color: #333;
-        margin: 10px 0;
+        margin-bottom: 5px;
     }
+
     .Item__price {
-        font-family: 'Montserrat', sans-serif;
+        font-size: 1em;
+        color: #4a90e2;
+        margin-bottom: 10px;
+    }
+
+    .Item button {
+        padding: 10px 15px;
+        background-color: #e74c3c;
+        border: none;
+        color: white;
+        border-radius: 5px;
         font-size: 0.9em;
-        margin: 5px 0;
-        color: #777;
+        cursor: pointer;
+        transition: background-color 0.3s ease;
+    }
+
+    .Item button:hover {
+        background-color: #c0392b;
     }
 </style>
 

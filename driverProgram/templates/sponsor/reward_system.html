@@ -88,7 +88,20 @@
         <h4 style="color: #4a90e2; text-align: center;">Your Behaviors</h4>
         <div id="behaviors-list">
             {% for behavior in sponsor_behaviors %}
-                <div style="margin-bottom: 10px; padding: 10px; border-radius: 5px; background-color: {% if behavior.type == 'Good' %}#28a745{% else %}#dc3545{% endif %}; color: white;">
+                <div style="margin-bottom: 10px; padding: 10px; border-radius: 5px; position: relative; background-color: {% if behavior.type == 'Good' %}#28a745{% else %}#dc3545{% endif %}; color: white;" id="behavior-{{ behavior.id }}">
+                    <!-- Delete Button -->
+                    <button style="
+                        position: absolute;
+                        top: 5px;
+                        right: 5px;
+                        background: none;
+                        border: none;
+                        color: white;
+                        font-size: 16px;
+                        cursor: pointer;
+                        font-weight: bold;"
+                        onclick="removeBehavior({{ behavior.id }})">X</button>
+                    
                     <strong>{{ behavior.name }}</strong><br>
                     Type: {{ behavior.type }}<br>
                     Points: {{ behavior.point_value }}
