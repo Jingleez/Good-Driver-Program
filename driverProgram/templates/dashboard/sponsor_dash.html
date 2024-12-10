@@ -603,37 +603,6 @@
             .catch(error => console.error('Error removing item:', error));
         }
 
-        // Global definition of the checkout function
-        async function checkout() {
-            const driverId = document.getElementById('driverDropdown').value;
-        
-            console.log("Driver ID:", driverId);
-            console.log("Cart Items Data:", cartItemsData);
-        
-            if (!driverId || cartItemsData.length === 0) {
-                alert("Driver ID or Cart Items missing.");
-                return;
-            }
-        
-            try {
-                const response = await fetch(`/checkout`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ driverId, cartItems: cartItemsData }),
-                });
-                const result = await response.json();
-        
-                if (result.success) {
-                    alert('Checkout successful!');
-                } else {
-                    alert(result.message || 'Error during checkout!');
-                }
-            } catch (error) {
-                console.error('Error during checkout:', error);
-                alert('Error during checkout. Please try again.');
-            }
-        }
-        
     </script>
 </body>
 </html>

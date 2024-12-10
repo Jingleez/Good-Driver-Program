@@ -84,5 +84,8 @@ class BehaviorForm(FlaskForm):
     point_value = IntegerField('Point Worth', validators=[DataRequired()])
     submit = SubmitField('Add Behavior')
 
-class RewardSystemForm(FlaskForm):
-    behaviors = FieldList(FormField(BehaviorForm), min_entries=1)
+class PointTransactionForm(FlaskForm):
+    driver_id = SelectField('Driver', coerce=int, validators=[DataRequired()])
+    behavior_id = SelectField('Behavior', coerce=int, validators=[DataRequired()])
+    reason = TextAreaField('Reason', validators=[DataRequired()])
+    submit = SubmitField('Submit')

@@ -113,8 +113,6 @@ class Behavior(db.Model):
     # Define relationship to Sponsor
     sponsor = db.relationship('Sponsor', backref='behaviors')
 
-    def __repr__(self):
-        return f'<Behavior {self.name}>'
     
 class ReviewBoard(db.Model):
     id = db.Column(db.Integer, primary_key=True)
