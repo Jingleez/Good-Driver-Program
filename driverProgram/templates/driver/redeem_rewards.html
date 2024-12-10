@@ -1,60 +1,117 @@
+{% block content %}
 <head>
     <title>Redeem Rewards</title>
     <style>
+        /* Scoped Styles for Redeem Rewards Grid */
+        .rewards-container {
+            max-width: 100%; /* Use the full available width */
+            margin: 20px auto;
+            padding: 20px;
+            box-sizing: border-box;
+            font-family: Arial, sans-serif;
+        }
+
+        .rewards-container h2 {
+            text-align: center;
+            font-size: 2rem;
+            color: #4a90e2;
+            margin-bottom: 10px;
+        }
+
+        .rewards-container p {
+            text-align: center;
+            color: #777;
+            margin-bottom: 20px;
+        }
+
         .rewards-grid {
             display: flex;
             flex-wrap: wrap;
-            gap: 20px;
-            justify-content: center; /* Center the grid items */
-            padding: 20px;
+            gap: 15px;
+            justify-content: center;
         }
 
         .reward-card {
-            flex: 1 1 calc(33.333% - 40px); /* Ensure three cards per row with a gap */
-            max-width: calc(33.333% - 40px); /* Prevent cards from exceeding one-third of the container */
+            flex: 1 1 calc(25% - 20px); /* Four cards per row */
+            max-width: calc(25% - 20px);
             border: 1px solid #ddd;
             border-radius: 8px;
-            padding: 10px;
             text-align: center;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            background-color: #fff; /* Card background */
+            transition: box-shadow 0.3s ease, transform 0.2s ease-in-out;
+            overflow: hidden;
+            padding: 15px;
+        }
+
+        .reward-card:hover {
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            transform: translateY(-5px);
         }
 
         .reward-card img {
             width: 100%;
-            height: 150px;
-            object-fit: cover;
+            height: 200px;
+            object-fit: contain;
             margin-bottom: 10px;
+            border-radius: 5px;
         }
 
         .reward-card h3 {
             font-size: 1rem;
-            margin: 10px 0;
+            color: #333;
+            margin: 5px 0;
         }
 
         .reward-card p {
             font-size: 0.9rem;
             color: #555;
+            margin: 5px 0 10px;
+        }
+
+        .reward-card button {
+            background-color: #4a90e2;
+            color: white;
+            border: none;
+            padding: 8px 12px;
+            font-size: 0.9rem;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        .reward-card button:hover {
+            background-color: #357ab8;
+        }
+
+        /* Responsive Breakpoints */
+        @media (max-width: 1024px) {
+            .reward-card {
+                flex: 1 1 calc(33.333% - 20px); /* Three cards per row */
+                max-width: calc(33.333% - 20px);
+            }
         }
 
         @media (max-width: 768px) {
             .reward-card {
-                flex: 1 1 calc(50% - 40px); /* Two cards per row on smaller screens */
-                max-width: calc(50% - 40px);
+                flex: 1 1 calc(50% - 20px); /* Two cards per row */
+                max-width: calc(50% - 20px);
             }
         }
 
         @media (max-width: 480px) {
             .reward-card {
-                flex: 1 1 100%; /* One card per row on very small screens */
+                flex: 1 1 100%; /* One card per row */
                 max-width: 100%;
             }
         }
     </style>
 </head>
 <body>
-    <div class="container">
+    <div class="rewards-container">
         <h2>Redeem Rewards</h2>
         <p>Select from the rewards below:</p>
+
         {% if rewards %}
         <div class="rewards-grid">
             {% for reward in rewards %}
@@ -65,12 +122,10 @@
                 <button onclick="addToWishlist('{{ reward.id }}')">Add to Wishlist</button>
             </div>
             {% endfor %}
-        </div>        
+        </div>
         {% else %}
-        <p>No rewards available.</p>
+        <p>No rewards available at the moment.</p>
         {% endif %}
-    </div>  
+    </div>
 </body>
-
-
-
+{% endblock %}

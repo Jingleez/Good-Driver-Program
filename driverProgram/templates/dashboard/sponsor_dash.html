@@ -758,6 +758,67 @@
         }
 
 
+        function openModal() {
+            document.getElementById('edit-modal').style.display = 'block';
+        }
+
+        function closeModal() {
+            document.getElementById('edit-modal').style.display = 'none';
+        }
+
+        // Close modal when clicking outside
+        window.onclick = function(event) {
+            const modal = document.getElementById('edit-modal');
+            if (event.target === modal) {
+                closeModal();
+            }
+        }
+
+        function removeJobPosting(jobId) {
+        // Confirm before removal
+        if (!confirm("Are you sure you want to remove this job posting?")) return;
+
+        fetch(`/remove_job/${jobId}`, {
+            method: 'DELETE',
+            headers: { 'Content-Type': 'application/json' },
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Remove the job card from the DOM
+                const jobCard = document.getElementById(`job-${jobId}`);
+                if (jobCard) jobCard.remove();
+                alert("Job posting removed successfully!");
+            } else {
+                alert("Failed to remove the job posting: " + data.message);
+            }
+        })
+        .catch(error => {
+            console.error("Error removing job posting:", error);
+            alert("An error occurred while removing the job posting.");
+        });
+    }
+
+    // Remove Behavior Function
+    function removeBehavior(behaviorId) {
+        if (!confirm("Are you sure you want to remove this behavior?")) return;
+        fetch(`/remove_behavior/${behaviorId}`, {
+            method: 'DELETE',
+            headers: { 'Content-Type': 'application/json' }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                const behaviorCard = document.getElementById(`behavior-${behaviorId}`);
+                if (behaviorCard) behaviorCard.remove();
+                showPopup('Behavior removed successfully!', 'green');
+            } else {
+                showPopup(data.message || 'Failed to remove behavior.', 'red');
+            }
+        })
+        .catch(() => showPopup('Error: Unable to remove behavior. Please try again.', 'red'));
+    }
+
     </script>
 </body>
 </html>

@@ -584,11 +584,13 @@ def driver_points(driver_id):
         flash('An error occurred while fetching your points.', 'danger')
         total_points = 0
         transactions = []
+
     return render_template(
         'driver/view_points.html',
         points=total_points,
         transactions=transactions
     )
+
 
 
 @main_bp.route('/redeem_rewards')
@@ -914,7 +916,6 @@ def checkout():
     data = request.json
     if not data:
         return jsonify({'success': False, 'message': 'Invalid request body'}), 400
-
     driver_id = data.get('driverId')
     cart_items = data.get('cartItems')
     if not driver_id or not cart_items:
@@ -923,14 +924,25 @@ def checkout():
         driver = User.query.get(driver_id)
         if not driver:
             return jsonify({'success': False, 'message': 'Driver not found'}), 404
-        driver_points = driver.points_balance
+        driver_points = (
+            db.session.query(
+                db.func.sum(
+                    db.case(
+                        (PointTransaction.transaction_type == 'Add', PointTransaction.points),
+                        (PointTransaction.transaction_type == 'Deduct', -PointTransaction.points),
+                        else_=0
+                    )
+                )
+            )
+            .filter(PointTransaction.driver_id == driver_id)
+            .scalar()
+        ) or 0
         total_cost = sum(item['product_price'] for item in cart_items)
         if driver_points < total_cost:
             return jsonify({
                 'success': False,
                 'message': f"Driver does not have enough points. Current balance: {driver_points}, required: {total_cost}"
             }), 400
-        driver.points_balance -= total_cost
         for item in cart_items:
             purchase = PointTransaction(
                 sponsor_id=current_user.sponsor.id,
@@ -940,6 +952,12 @@ def checkout():
                 transaction_type="Deduct",
             )
             db.session.add(purchase)
+            log_point_change(
+                sponsor_id=current_user.sponsor.id,
+                driver_id=driver_id,
+                points=-item['product_price'],
+                reason=f"Purchase of {item['product_name']}"
+            )
         notification_message = f"Your sponsor has placed an order for: " + ", ".join(
             [item['product_name'] for item in cart_items]
         )
@@ -969,7 +987,7 @@ def mark_driver_notification_as_read(notification_id):
     except Exception as e:
         db.session.rollback()
         return jsonify({'success': False, 'message': str(e)}), 500
-      
+
 from flask import send_file
 from driverProgram.controllers.report_controller import ReportController
 
@@ -1004,3 +1022,36 @@ def generate_report_csv():
         download_name="driver_point_tracking_report.csv",
         mimetype="text/csv"
     )
+    
+@main_bp.route('/remove_job/<int:job_id>', methods=['DELETE'])
+@login_required
+def remove_job(job_id):
+    try:
+        if current_user.role != 'sponsor':
+            return jsonify({"success": False, "message": "Unauthorized action."}), 403
+        job = JobPosting.query.get_or_404(job_id)
+        if job.sponsor_id != current_user.id:
+            return jsonify({"success": False, "message": "You can only remove your own job postings."}), 403
+        db.session.delete(job)
+        db.session.commit()
+        return jsonify({"success": True, "message": "Job posting removed successfully."})
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"success": False, "message": str(e)})
+    
+@main_bp.route('/remove_behavior/<int:behavior_id>', methods=['DELETE'])
+@login_required
+def remove_behavior(behavior_id):
+    try:
+        if current_user.role != 'sponsor':
+            return jsonify({"success": False, "message": "Unauthorized action."}), 403
+        behavior = Behavior.query.get_or_404(behavior_id)
+        if behavior.sponsor_id != current_user.id:
+            return jsonify({"success": False, "message": "You can only remove your own behaviors."}), 403
+        db.session.delete(behavior)
+        db.session.commit()
+        return jsonify({"success": True, "message": "Behavior removed successfully."})
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"success": False, "message": str(e)})
+

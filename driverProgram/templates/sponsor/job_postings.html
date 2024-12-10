@@ -1,26 +1,46 @@
 {% block content %}
-<h2>Job Postings</h2>
+<h2 style="text-align: center; color: #4a90e2;">Job Postings</h2>
 
 <!-- Two-column layout -->
-<div style="display: flex; justify-content: space-between;">
+<div style="display: flex; justify-content: space-between; gap: 20px;">
 
     <!-- Column for displaying active job postings -->
     <div style="flex: 70%; padding-right: 20px;">
-        <h1>View Job Postings</h1>
-        
+        <h3 style="color: #4a90e2;">View Job Postings</h3>
+
         <!-- Check if there are any job postings -->
         {% if job_postings %}
-            <div class="job-list">
-                <!-- Loop through each job posting and display its details -->
+            <div class="job-grid" style="display: flex; flex-wrap: wrap; gap: 20px;">
                 {% for job in job_postings %}
-                    <div class="job-item">
-                        <h2>{{ job.title }}</h2>
-                        <p><strong>Location:</strong> {{ job.location }}</p>
-                        <p><strong>Description:</strong> {{ job.description }}</p>
-                        <p><strong>Salary:</strong> {{ job.salary }}</p>
-                        <p><strong>Required Hours:</strong> {{ job.hours }}</p>
-                        <p><strong>Experience:</strong> {{ job.experience }}</p>
+                    <div class="job-card" id="job-{{ job.id }}" style="
+                        flex: 1 1 calc(33.333% - 20px);
+                        background-color: #ffffff;
+                        border: 1px solid #ddd;
+                        border-radius: 8px;
+                        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+                        padding: 20px;
+                        display: flex;
+                        flex-direction: column;
+                        justify-content: space-between;">
                         
+                        <h2 style="color: #333; font-size: 1.2em; margin-bottom: 10px;">{{ job.title }}</h2>
+                        <p style="margin: 5px 0; color: #555;"><strong>Location:</strong> {{ job.location }}</p>
+                        <p style="margin: 5px 0; color: #555;"><strong>Description:</strong> {{ job.description }}</p>
+                        <p style="margin: 5px 0; color: #555;"><strong>Salary:</strong> {{ job.salary }}</p>
+                        <p style="margin: 5px 0; color: #555;"><strong>Hours:</strong> {{ job.hours }}</p>
+                        <p style="margin: 5px 0; color: #555;"><strong>Experience:</strong> {{ job.experience }}</p>
+
+                        <!-- Remove Button -->
+                        <button onclick="removeJobPosting('{{ job.id }}')" style="
+                            margin-top: 10px;
+                            background-color: #ff4d4d;
+                            color: white;
+                            border: none;
+                            padding: 8px 10px;
+                            border-radius: 5px;
+                            cursor: pointer;">
+                            Remove Job Posting
+                        </button>
                     </div>
                 {% endfor %}
             </div>
@@ -31,114 +51,93 @@
 
     <!-- Sidebar column for creating a new job posting -->
     <div style="
-    flex: 30%;
-    padding-left: 20px;
-    border-left: 1px solid #ccc;
-    background-color: #2b2b2b;
-    padding: 40px;
-    border-radius: 10px;
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);">
+        flex: 30%;
+        border-left: 1px solid #ccc;
+        background-color: #2b2b2b;
+        padding: 40px;
+        border-radius: 10px;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);">
 
-    <button style="
-        background-color: #4a90e2;
-        color: white;
-        border: none;
-        padding: 10px 20px;
-        border-radius: 5px;
-        cursor: pointer;" 
-        onclick="document.getElementById('new-job-form').style.display='block'">
-        Create New Job Posting
-    </button>
+        <button style="
+            background-color: #4a90e2;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;" 
+            onclick="document.getElementById('new-job-form').style.display='block'">
+            Create New Job Posting
+        </button>
 
-    <!-- Form for creating a new job posting -->
-    <div id="new-job-form" style="
-        display:none;
-        margin-top: 20px;">
-
-        <form id="job-form" method="POST" action="{{ url_for('main.job_postings') }}">
-            {{ form.hidden_tag() }}
-
-            <div style="margin-bottom: 15px;">
-                <label for="title">Job Title</label>
-                {{ form.title(class="form-control", style="width: 100%;") }}
-            </div>
-    
-            <div style="margin-bottom: 15px;">
-                <label for="description">Job Description</label>
-                {{ form.description(class="form-control", style="width: 100%;") }}
-            </div>
-    
-            <div style="margin-bottom: 15px;">
-                <label for="location">Location</label>
-                {{ form.location(class="form-control", style="width: 100%;") }}
-            </div>
-    
-            <div style="margin-bottom: 15px;">
-                <label for="salary">Salary</label>
-                {{ form.salary(class="form-control", style="width: 100%;") }}
-            </div>
-    
-            <div style="margin-bottom: 15px;">
-                <label for="hours">Required Hours</label>
-                {{ form.hours(class="form-control", style="width: 100%;") }}
-            </div>
-    
-            <div style="margin-bottom: 15px;">
-                <label for="experience">Experience</label>
-                {{ form.experience(class="form-control", style="width: 100%;") }}
-            </div>
-    
-
-            <button type="submit" class="btn btn-primary" style="
-                background-color: #4a90e2;
-                cursor: pointer;
-                padding: 10px 20px;
-                border-radius: 5px;
-                border: none;
-                color: white;">
-                Post Job
-            </button>
-        </form>
-    </div>
-    <script>
-        document.getElementById('job-form').addEventListener('submit', function(event) {
-            event.preventDefault();  // Prevent default form submission
-
-            let formData = new FormData(this);
-
-            fetch('{{ url_for("main.job_postings") }}', {
-                method: 'POST',
-                body: formData
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    // Update the job list dynamically with the new job
-                    let jobList = document.querySelector('.job-list');
-                    let newJob = `
-                        <div class="job-item">
-                            <h2>${data.job.title}</h2>
-                            <p><strong>Location:</strong> ${data.job.location}</p>
-                            <p><strong>Description:</strong> ${data.job.description}</p>
-                            <p><strong>Salary:</strong> ${data.job.salary}</p>
-                            <p><strong>Required Hours:</strong> ${data.job.hours}</p>
-                            <p><strong>Experience:</strong> ${data.job.experience}</p>
-                        </div>
-                    `;
-                    jobList.insertAdjacentHTML('beforeend', newJob);  // Append the new job
-
-                    // Optionally clear the form fields
-                    document.getElementById('job-form').reset();
-                } else {
-                    console.error('Failed to post the job:', data.message);
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-            });
-        });
-    </script>
-                
+        <!-- Form for creating a new job posting -->
+        <div id="new-job-form" style="display:none; margin-top: 20px;">
+            <form id="job-form" method="POST" action="{{ url_for('main.job_postings') }}">
+                {{ form.hidden_tag() }}
+                <div style="margin-bottom: 15px;">
+                    <label for="title" style="color: white;">Job Title</label>
+                    {{ form.title(class="form-control", style="width: 100%;") }}
+                </div>
+                <div style="margin-bottom: 15px;">
+                    <label for="description" style="color: white;">Job Description</label>
+                    {{ form.description(class="form-control", style="width: 100%;") }}
+                </div>
+                <button type="submit" class="btn btn-primary" style="
+                    background-color: #4a90e2;
+                    cursor: pointer;
+                    padding: 10px 20px;
+                    border-radius: 5px;
+                    border: none;
+                    color: white;">
+                    Post Job
+                </button>
+            </form>
+        </div>
     </div>
 </div>
+
+
+<script>
+    document.getElementById('job-form').addEventListener('submit', function(event) {
+        event.preventDefault();
+
+        let formData = new FormData(this);
+
+        fetch('{{ url_for("main.job_postings") }}', {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                let jobGrid = document.querySelector('.job-grid');
+                let newJob = `
+                    <div class="job-card" style="
+                        flex: 1 1 calc(33.333% - 20px);
+                        background-color: #ffffff;
+                        border: 1px solid #ddd;
+                        border-radius: 8px;
+                        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+                        padding: 20px;">
+                        
+                        <h2 style="color: #333; font-size: 1.2em; margin-bottom: 10px;">${data.job.title}</h2>
+                        <p><strong>Location:</strong> ${data.job.location}</p>
+                        <p><strong>Description:</strong> ${data.job.description}</p>
+                        <p><strong>Salary:</strong> ${data.job.salary}</p>
+                        <p><strong>Required Hours:</strong> ${data.job.hours}</p>
+                        <p><strong>Experience:</strong> ${data.job.experience}</p>
+                    </div>
+                `;
+                jobGrid.insertAdjacentHTML('beforeend', newJob);
+                document.getElementById('job-form').reset();
+                alert('Job posted successfully!');
+            } else {
+                alert('Error posting job: ' + data.message);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('An error occurred. Please try again.');
+        });
+    });
+</script>
 {% endblock %}
