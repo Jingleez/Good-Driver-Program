@@ -10,6 +10,7 @@ class User(db.Model, UserMixin):
     password_hash = db.Column(db.String(128), nullable=False)
     role = db.Column(db.String(50), nullable=False)
     sponsor_code = db.Column(db.String(6), nullable=True)
+    points_balance = db.Column(db.Integer, default=0)
     
     sponsor = db.relationship('Sponsor', backref='user',uselist=False)
 

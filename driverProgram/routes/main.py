@@ -566,8 +566,7 @@ def reward_system():
             )
 
             return jsonify({
-                'success': True,
-                'updated_behaviors_html': updated_behaviors
+                'success': True
             })
         else:
             # Form not valid, return errors as JSON
@@ -970,6 +969,7 @@ def submitted_applications():
     applications = Application.query.filter_by(user_id=current_user.id).all()
     return render_template('driver/submitted_applications.html', applications=applications)
 
+
 @main_bp.route('/point_transaction', methods=['POST'])
 @login_required
 def point_transaction():
@@ -977,6 +977,7 @@ def point_transaction():
         return jsonify({'success': False, 'message': 'Unauthorized action.'}), 403
 
     try:
+        # Get form data
         driver_id = request.form.get('driver_id')
         behavior_id = request.form.get('behavior_id')
         reason = request.form.get('reason', 'No reason provided')
@@ -986,25 +987,45 @@ def point_transaction():
         if not behavior:
             return jsonify({'success': False, 'message': 'Invalid behavior selected.'}), 400
 
+        # Determine points based on transaction type
+        if behavior.type.lower() == "bad":  # Deduction case for "bad" behavior
+            adjusted_points = -abs(behavior.point_value)
+        else:  # Addition case for "good" behavior
+            adjusted_points = abs(behavior.point_value)
+
+        # Fetch the driver
+        driver = User.query.get(driver_id)
+        if not driver:
+            return jsonify({'success': False, 'message': 'Driver not found'}), 404
+
+        # Check and apply points
+        if adjusted_points < 0:  # Deduct points
+            driver.points_balance -= adjusted_points  # Deduct points (already negative)
+        else:  # Add points
+            driver.points_balance += adjusted_points
+
         # Create the transaction
-        adjusted_points = behavior.point_value
         point_transaction = PointTransaction(
             sponsor_id=current_user.sponsor.id,
             driver_id=driver_id,
-            points=adjusted_points,
+            points=abs(adjusted_points),  # Store positive points for clarity
             reason=reason,
-            transaction_type='Add' if adjusted_points > 0 else 'Deduct'
+            transaction_type="Deduct" if adjusted_points < 0 else "Add"
         )
         db.session.add(point_transaction)
+
+        # Commit the transaction
         db.session.commit()
 
         return jsonify({
             'success': True,
-            'message': f'Points successfully assigned to Driver ID {driver_id}.'
+            'message': f'Points successfully updated for Driver ID {driver_id}. Current balance: {driver.points_balance}'
         })
+
     except Exception as e:
         db.session.rollback()
         return jsonify({'success': False, 'message': f'Error: {str(e)}'}), 500
+
 
 
 
