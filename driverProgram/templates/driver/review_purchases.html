@@ -10,19 +10,59 @@
             border-collapse: collapse;
             margin: 20px 0;
         }
+
         table, th, td {
             border: 1px solid #ddd;
         }
+
         th, td {
             padding: 10px;
             text-align: left;
         }
+
         th {
             background-color: #007bff;
             color: white;
         }
+
+        /* Light gray for alternating rows */
         tr:nth-child(even) {
             background-color: #f9f9f9;
+        }
+
+        /* Unread notifications with light red */
+        tr.unread {
+            background-color: #ffcccc;
+            color: #333;
+        }
+
+        /* Read notifications with default light gray */
+        tr.read {
+            background-color: #f9f9f9;
+            color: #333;
+        }
+
+        button {
+            padding: 5px 10px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: opacity 0.3s ease;
+        }
+
+        button:hover {
+            opacity: 0.8;
+        }
+
+        button:first-of-type {
+            background-color: #28a745; /* Green for "Mark as Read" */
+            color: white;
+        }
+
+        button:last-of-type {
+            background-color: #dc3545; /* Red for "Delete" */
+            color: white;
         }
     </style>
 </head>
@@ -40,7 +80,7 @@
             </thead>
             <tbody>
                 {% for notification in notifications %}
-                <tr>
+                <tr class="{{ 'unread' if not notification.is_read else 'read' }}" data-id="{{ notification.id }}">
                     <td>{{ notification.message }}</td>
                     <td>{{ 'Unread' if not notification.is_read else 'Read' }}</td>
                     <td>
@@ -54,41 +94,5 @@
     {% else %}
         <p>No notifications to show.</p>
     {% endif %}
-
-    <script>
-        // Mark a notification as read
-        function markAsRead(notificationId) {
-            fetch(`/mark_driver_notification_as_read/${notificationId}`, { method: 'POST' })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        location.reload(); // Refresh the page
-                    } else {
-                        alert(data.message);
-                    }
-                })
-                .catch(error => {
-                    console.error('Error marking notification as read:', error);
-                });
-        }
-
-        // Delete a notification
-        function deleteNotification(notificationId) {
-            if (confirm("Are you sure you want to delete this notification?")) {
-                fetch(`/delete_notification/${notificationId}`, { method: 'DELETE' })
-                    .then(response => response.json())
-                    .then(data => {
-                        if (data.success) {
-                            location.reload(); // Refresh the page
-                        } else {
-                            alert(data.message);
-                        }
-                    })
-                    .catch(error => {
-                        console.error('Error deleting notification:', error);
-                    });
-            }
-        }
-    </script>
 </body>
 </html>

@@ -332,6 +332,79 @@
                 });
         }
 
+        
+        // Show Notification Details in Popup
+        function showPopup(notificationId) {
+            fetch(`/notification_details/${notificationId}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.error) {
+                        alert(data.error);
+                        return;
+                    }
+
+                    // Populate the popup content
+                    const popupContent = document.getElementById('popupContent');
+                    popupContent.innerHTML = `
+                        <p><strong>First Name:</strong> ${data.first_name}</p>
+                        <p><strong>Last Name:</strong> ${data.last_name}</p>
+                        <p><strong>Email:</strong> ${data.email}</p>
+                        <p><strong>Phone:</strong> ${data.phone}</p>
+                        <p><strong>Date Submitted:</strong> ${data.date_submitted}</p>
+                    `;
+
+                    // Display the popup
+                    const popup = document.getElementById('notificationPopup');
+                    popup.style.display = 'block';
+
+                    // Mark the notification as read
+                    fetch(`/mark_as_read/${notificationId}`, { method: 'POST' })
+                        .then(response => response.json())
+                        .then(() => {
+                            // Remove the unread class from the notification
+                            const notification = document.querySelector(`.notification[data-id='${notificationId}']`);
+                            if (notification) {
+                                notification.classList.remove('unread');
+                            }
+                        });
+                })
+                .catch(error => {
+                    console.error('Error fetching notification details:', error);
+                });
+        }
+
+        // Close Popup
+        function closePopup() {
+            const popup = document.getElementById('notificationPopup');
+            popup.style.display = 'none';
+        }
+
+        // Delete Notification
+        function deleteNotification(notificationId) {
+            if (confirm("Are you sure you want to delete this notification?")) {
+                fetch(`/delete_notification/${notificationId}`, { method: 'DELETE' })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            // Remove the notification from the page
+                            const notification = document.querySelector(`.notification[data-id='${notificationId}']`);
+                            if (notification) {
+                                notification.remove();
+                            }
+                        } else {
+                            alert("Failed to delete notification.");
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error deleting notification:', error);
+                        alert("An error occurred. Please try again.");
+                    });
+            }
+        }
+
+
+
+
         function removeFromCatalog(productId) {
             fetch('/remove_from_catalog', {
                 method: 'POST',
@@ -535,48 +608,46 @@
                             product_price: item.product_price,
                         });
                         const itemCard = `
-                        <div class="cart-item" style="
-                            display: flex; 
-                            align-items: center; 
-                            justify-content: space-between; 
-                            padding: 15px; 
-                            width: 100%; 
-                            background: #2c2f33; 
-                            border: 1px solid #444; 
-                            border-radius: 8px; 
-                            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
-                            margin-bottom: 10px;
-                            color: #fff;
-                            transition: transform 0.2s ease, background-color 0.3s ease;">
-                            
-                            <!-- Product Name -->
-                            <div style="flex: 1; text-align: left;">
-                                <div style="font-size: 1.2em; font-weight: bold; color: #fff; margin-bottom: 5px;">
+                            <div class="cart-item" style="
+                                display: flex; 
+                                align-items: center; 
+                                justify-content: space-between; 
+                                padding: 15px; 
+                                width: 100%; 
+                                background: #2c2f33; 
+                                border: 1px solid #444; 
+                                border-radius: 8px; 
+                                box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+                                margin-bottom: 10px;
+                                color: #fff;
+                                transition: transform 0.2s ease, background-color 0.3s ease;">
+                                
+                                <!-- Product Name -->
+                                <div class="product-name" style="flex: 1; text-align: left; font-size: 1.2em; font-weight: bold; color: #fff;">
                                     ${item.product_name || 'No Name'}
                                 </div>
+
+                                <!-- Product Price -->
+                                <div class="product-price" style="flex: 0 0 120px; text-align: right; font-size: 1.1em; font-weight: bold; color: #4CAF50;">
+                                    ${item.product_price || 0} points
+                                </div>
+
+                                <!-- Remove Button -->
+                                <button onclick="removeFromCart(${item.cart_id})" style="
+                                    background-color: #e74c3c; 
+                                    color: #fff; 
+                                    border: none; 
+                                    padding: 8px 16px; 
+                                    border-radius: 5px; 
+                                    cursor: pointer; 
+                                    font-size: 0.9em; 
+                                    font-weight: bold;
+                                    transition: background-color 0.3s ease;">
+                                    Remove
+                                </button>
                             </div>
-                    
-                            <!-- Product Price -->
-                            <div style="flex: 0 0 120px; text-align: right; font-size: 1.1em; font-weight: bold; color: #4CAF50;">
-                                ${item.product_price || 0} points
-                            </div>
-                    
-                            <!-- Remove Button -->
-                            <button onclick="removeFromCart(${item.cart_id})" style="
-                                background-color: #e74c3c; 
-                                color: #fff; 
-                                border: none; 
-                                padding: 8px 16px; 
-                                border-radius: 5px; 
-                                cursor: pointer; 
-                                font-size: 0.9em; 
-                                font-weight: bold;
-                                transition: background-color 0.3s ease;">
-                                Remove
-                            </button>
-                        </div>
-                    `;
-                    
+                        `;
+
                     // Insert the updated item card into the cart
                     cartItemsContainer.insertAdjacentHTML('beforeend', itemCard);
                     
@@ -602,6 +673,68 @@
             })
             .catch(error => console.error('Error removing item:', error));
         }
+
+        function checkout() {
+            const driverId = document.getElementById("driverDropdown").value;
+
+            if (!driverId) {
+                alert("Please select a driver before checking out.");
+                return;
+            }
+
+            // Get cart items from the cart container
+            const cartItems = [];
+            document.querySelectorAll("#cartItems .cart-item").forEach(item => {
+                const productNameElement = item.querySelector(".product-name");
+                const productPriceElement = item.querySelector(".product-price");
+
+                // Skip if elements are missing
+                if (!productNameElement || !productPriceElement) {
+                    console.warn("Skipping invalid cart item:", item);
+                    return;
+                }
+
+                const productName = productNameElement.innerText;
+                const productPrice = parseFloat(productPriceElement.innerText);
+
+                cartItems.push({
+                    product_name: productName,
+                    product_price: productPrice
+                });
+            });
+
+            if (cartItems.length === 0) {
+                alert("The cart is empty. Cannot proceed with checkout.");
+                return;
+            }
+
+            // Make a POST request to the backend checkout route
+            fetch("/checkout", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    driverId: driverId,
+                    cartItems: cartItems
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert("Checkout completed successfully!");
+                    document.getElementById("cartContainer").style.display = "none";
+                    document.getElementById("emptyCartMessage").style.display = "block";
+                } else {
+                    alert(`Error: ${data.message}`);
+                }
+            })
+            .catch(error => {
+                console.error("Error during checkout:", error);
+                alert("An error occurred while processing the checkout.");
+            });
+        }
+
 
     </script>
 </body>

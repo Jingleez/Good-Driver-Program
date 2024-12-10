@@ -33,14 +33,11 @@ LOCK_TIME_MINUTES = 1
 @auth_bp.route('/login', methods=['GET', 'POST'])
 def login():
     form = LoginForm()
-
-    # Initialize login attempt tracking
     if 'login_attempts' not in session:
         session['login_attempts'] = 0
     if 'lock_until' not in session:
         session['lock_until'] = None
 
-    # Check if the user is locked out
     if session['lock_until']:
         lock_until = datetime.strptime(session['lock_until'], '%Y-%m-%d %H:%M:%S')
         if datetime.now() < lock_until:
@@ -51,7 +48,6 @@ def login():
 
     if form.validate_on_submit():
         try:
-            # Authenticate with Cognito
             response = cognito_client.admin_initiate_auth(
                 UserPoolId=CognitoUserPoolId,
                 ClientId=CognitoClientId,
@@ -61,29 +57,19 @@ def login():
                     'PASSWORD': form.password.data,
                 }
             )
-
-            # Get the Cognito IdToken
             id_token = response['AuthenticationResult']['IdToken']
             session['id_token'] = id_token
-
-            # Query the local database for the user
             user = db.session.query(User).filter_by(username=form.username.data).first()
 
             if user:
-                # Reset login attempts on successful login
                 session['login_attempts'] = 0
                 session['lock_until'] = None
 
-                # Authenticate the user with Flask-Login
                 login_user(user, remember=True)
-
-                # Store user role in session if needed
                 user_role = user.role.strip().lower()
                 session['user_role'] = user_role
-
                 log_login_attempt(username=form.username.data, success=True)
 
-                # Redirect to respective dashboard based on user role
                 if user_role == 'driver':
                     flash('Logged in successfully!', 'success')
                     return redirect(url_for('main.driver_dash'))
@@ -101,7 +87,6 @@ def login():
                 log_login_attempt(username=form.username.data, success=False)
 
         except cognito_client.exceptions.NotAuthorizedException:
-            # Handle incorrect username/password
             session['login_attempts'] += 1
             remaining_attempts = MAX_LOGIN_ATTEMPTS - session['login_attempts']
             log_login_attempt(username=form.username.data, success=False)
@@ -113,7 +98,6 @@ def login():
         except Exception as e:
             flash(f'An error occurred: {str(e)}', 'danger')
             log_login_attempt(username=form.username.data, success=False)
-
     return render_template('Destination/login.html', form=form)
 
 @auth_bp.route('/signup', methods=['GET', 'POST'])
@@ -130,11 +114,8 @@ def signup():
             phone_number = form.phone.data
             if not phone_number.startswith('+'):
                 phone_number = '+1' + re.sub(r'\D', '', phone_number)
-
-            # Hash the password before signing up
             password_hash = generate_password_hash(form.password.data)
 
-            # Sign up with Cognito
             response = cognito_client.sign_up(
                 ClientId=CognitoClientId,
                 Username=form.username.data,
@@ -151,12 +132,13 @@ def signup():
             new_user = User(
                 username=form.username.data,
                 email=form.email.data,
-                password_hash=password_hash,  # Set the hashed password here
+                password_hash=password_hash,
                 role=form.role.data,
                 sponsor_code=form.sponsor_code.data if form.role.data == 'sponsor' else None
             )
             db.session.add(new_user)
             db.session.commit()
+
             flash('Account created successfully! Please verify your email to activate your account.', 'success')
             return redirect(url_for('auth.verify'))
         except ClientError as e:
@@ -184,18 +166,14 @@ def reset_request():
         client = boto3.client('cognito-idp', region_name=cognito_region)
         try:
             response = client.forgot_password( ClientId=cognito_client_id, Username=email, )
-            print(f"AWS Cognito response: {response}") #debug statement to see AWS response
+            print(f"AWS Cognito response: {response}")
             flash('Password reset email sent.', 'success')
-
-
             user = User.query.filter_by(email=email).first()
             if user:
                 log_password_change(user_id=user.id, change_type=f'Reset requested: {reason}')
             else:
                 print("User not found for logging reset.")
-            
             return redirect(url_for('auth.confirm_reset'))
-        
         except client.exceptions.UserNotFoundException:
             flash('No user found with that email address.', 'error')
         except Exception as e:
@@ -205,7 +183,7 @@ def reset_request():
 
 @auth_bp.route('/confirm_reset', methods=['GET', 'POST'])
 def confirm_reset():
-    form = ConfirmResetForm()  # Assuming you have a form for verification code and new password
+    form = ConfirmResetForm()
     if request.method == 'POST' and form.validate_on_submit():
         email = form.email.data
         verification_code = form.verification_code.data
@@ -238,7 +216,6 @@ def verify():
         except ClientError as e:
             flash(f'An error occurred: {e.response["Error"]["Message"]}', 'danger')
     return render_template('password/verify.html')
-
 
 
 # To allow admin users to disable or delete users.
