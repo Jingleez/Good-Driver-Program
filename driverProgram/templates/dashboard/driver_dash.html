@@ -383,6 +383,52 @@
             })
             .catch(error => console.error('Error:', error));
         }
+
+        // Mark a notification as read
+        function markAsRead(notificationId) {
+            fetch(`/mark_driver_notification_as_read/${notificationId}`, { method: 'POST' })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! Status: ${response.status}`);
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    if (data.success) {
+                        const row = document.querySelector(`tr[data-id='${notificationId}']`);
+                        if (row) {
+                            row.classList.remove('unread');
+                            row.classList.add('read');
+                            row.querySelector('td:nth-child(2)').innerText = 'Read';
+                        }
+                    } else {
+                        alert(data.message);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error marking notification as read:', error);
+                });
+        }
+
+
+
+        // Delete a notification
+        function deleteNotification(notificationId) {
+            if (confirm("Are you sure you want to delete this notification?")) {
+                fetch(`/delete_notification/${notificationId}`, { method: 'DELETE' })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            location.reload(); // Refresh the page
+                        } else {
+                            alert(data.message);
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error deleting notification:', error);
+                    });
+            }
+        }
     </script>
 
 </body>

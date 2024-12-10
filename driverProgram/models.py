@@ -10,6 +10,7 @@ class User(db.Model, UserMixin):
     password_hash = db.Column(db.String(128), nullable=False)
     role = db.Column(db.String(50), nullable=False)
     sponsor_code = db.Column(db.String(6), nullable=True)
+    points_balance = db.Column(db.Integer, default=0)
     
     sponsor = db.relationship('Sponsor', backref='user',uselist=False)
 
@@ -82,6 +83,7 @@ class Notification(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     message = db.Column(db.String(255), nullable=False)
     sponsor_id = db.Column(db.Integer, db.ForeignKey('sponsors.id'), nullable=False)
+    driver_id = db.Column(db.Integer, nullable=True)
     job_id = db.Column(db.Integer, db.ForeignKey('job_postings.id'), nullable=True)
     application_id = db.Column(db.Integer, db.ForeignKey('applications.id'), nullable=True)
     is_read = db.Column(db.Boolean, default=False)
@@ -112,8 +114,6 @@ class Behavior(db.Model):
     # Define relationship to Sponsor
     sponsor = db.relationship('Sponsor', backref='behaviors')
 
-    def __repr__(self):
-        return f'<Behavior {self.name}>'
     
 class ReviewBoard(db.Model):
     id = db.Column(db.Integer, primary_key=True)

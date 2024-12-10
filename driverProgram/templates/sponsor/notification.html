@@ -1,77 +1,11 @@
-<body>
-    <h2>Notifications</h2>
-
-    {% if notifications %}
-        {% for notification in notifications %}
-            <div class="notification {% if not notification.is_read %}unread{% endif %}">
-                <p onclick="showPopup('{{ notification.id }}')">{{ notification.message }}</p>
-                <button class="delete-btn" onclick="deleteNotification('{{ notification.id }}')">Delete</button>
-            </div>
-        {% endfor %}
-    {% else %}
-        <p>No new notifications</p>
-    {% endif %}
-
-    <!-- Popup for Notification Details -->
-    <div id="notificationPopup" class="popup">
-        <button class="close-btn" onclick="closePopup()">X</button>
-        <div class="popup-content">
-            <!-- Dynamic content will be inserted here -->
-        </div>
-    </div>
-
-    <script>
-        // Function to display popup with notification details
-        function showPopup(notificationId) {
-            fetch(`/notification_details/${notificationId}`)
-                .then(response => response.json())
-                .then(data => {
-                    const popupContent = document.querySelector('.popup-content');
-                    popupContent.innerHTML = `
-                        <h3>Driver Application Details</h3>
-                        <p><strong>Name:</strong> ${data.first_name} ${data.last_name}</p>
-                        <p><strong>Email:</strong> ${data.email}</p>
-                        <p><strong>Phone:</strong> ${data.phone}</p>
-                        <p><strong>Application Date:</strong> ${data.date_submitted}</p>
-                    `;
-                    document.getElementById('notificationPopup').style.display = 'block';
-
-                    // Mark notification as read
-                    fetch(`/mark_as_read/${notificationId}`, { method: 'POST' })
-                        .then(() => {
-                            const notificationElement = document.querySelector(`.notification[data-id="${notificationId}"]`);
-                            notificationElement.classList.remove('unread');
-                        });
-                });
-        }
-
-        // Function to close the popup
-        function closePopup() {
-            document.getElementById('notificationPopup').style.display = 'none';
-        }
-
-        // Function to delete a notification
-        function deleteNotification(notificationId) {
-            if (confirm("Are you sure you want to delete this notification?")) {
-                fetch(`/delete_notification/${notificationId}`, { method: 'DELETE' })
-                    .then(response => response.json())
-                    .then(data => {
-                        if (data.success) {
-                            alert("Notification deleted.");
-                            document.querySelector(`.notification[data-id="${notificationId}"]`).remove();
-                        } else {
-                            alert("Failed to delete notification.");
-                        }
-                    })
-                    .catch(error => {
-                        console.error("Error deleting notification:", error);
-                        alert("An error occurred. Please try again.");
-                    });
-            }
-        }
-    </script>
-
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Notifications</title>
     <style>
+        /* General Notification Styling */
         .notification {
             display: flex;
             justify-content: space-between;
@@ -80,6 +14,7 @@
             border: 1px solid #ddd;
             margin-bottom: 10px;
             border-radius: 5px;
+            cursor: pointer;
         }
 
         .notification.unread {
@@ -122,4 +57,28 @@
             background: #ff7875;
         }
     </style>
+</head>
+<body>
+    <h2>Notifications</h2>
+
+    {% if notifications %}
+        {% for notification in notifications %}
+            <div class="notification {% if not notification.is_read %}unread{% endif %}" 
+                 data-id="{{ notification.id }}">
+                <p onclick="showPopup('{{ notification.id }}')">{{ notification.message }}</p>
+                <button class="delete-btn" onclick="deleteNotification('{{ notification.id }}')">Delete</button>
+            </div>
+        {% endfor %}
+    {% else %}
+        <p>No new notifications</p>
+    {% endif %}
+
+    <!-- Popup for Notification Details -->
+    <div id="notificationPopup" class="popup">
+        <button class="close-btn" onclick="closePopup()">X</button>
+        <div class="popup-content" id="popupContent">
+            <!-- Dynamic content will be inserted here -->
+        </div>
+    </div>
 </body>
+</html>

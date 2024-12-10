@@ -6,7 +6,7 @@ from sqlalchemy import text
 from flask_login import login_required, current_user
 import jwt
 from driverProgram.models import JobPosting, Sponsor, Application, Notification, ApplicationSponsor, SponsorCatalog, Behavior, ReviewBoard, Wishlist, PointTransaction, User, Cart, AuditLog
-from driverProgram.forms import ApplyToJobPosting, JobPostForm, SponsorProfileForm, RewardSystemForm, BehaviorForm
+from driverProgram.forms import ApplyToJobPosting, JobPostForm, SponsorProfileForm, BehaviorForm, PointTransactionForm
 from werkzeug.utils import secure_filename
 import os
 from ebaysdk.finding import Connection as Finding
@@ -33,9 +33,7 @@ def is_token_valid(token):
 @main_bp.route('/dashboard')
 @login_required
 def dashboard():
-    # Retrieve user role from the session or database
     user_role = session.get('user_role', current_user.role)
-    # Redirect based on role
     if user_role == 'driver':
         return redirect(url_for('main.driver_dash'))
     elif user_role == 'sponsor':
@@ -60,7 +58,6 @@ def destination():
 def driver_dash():
     load_view_job_postings = session.get('load_view_job_postings', False)
     session.pop('load_view_job_postings', None)
-
     return render_template('dashboard/driver_dash.html', load_view_job_postings=load_view_job_postings)
 
 @main_bp.route('/sponsor/dashboard')
@@ -129,19 +126,9 @@ def about():
 def sponsors_drivers():
     sponsors = Sponsor.query.all()
     sponsors_with_drivers = []
-    
     for sponsor in sponsors:
-        drivers = Application.query.join(User, Application.user_id == User.id).add_columns(
-            Application.user_id.label('UserID'),
-            Application.job_id.label('JobID'),
-            (Application.first_name + ' ' + Application.last_name).label('Name')
-        ).all()
-
-        sponsors_with_drivers.append({
-            "sponsor": sponsor,
-            "drivers": [{"UserID": d.UserID, "JobID": d.JobID, "Name": d.Name} for d in drivers]
-        })
-
+        drivers = Application.query.join(User, Application.user_id == User.id).add_columns( Application.user_id.label('UserID'), Application.job_id.label('JobID'), (Application.first_name + ' ' + Application.last_name).label('Name') ).all()
+        sponsors_with_drivers.append({ "sponsor": sponsor, "drivers": [{"UserID": d.UserID, "JobID": d.JobID, "Name": d.Name} for d in drivers] })
     return render_template('admin/manage_users.html', sponsors_with_drivers=sponsors_with_drivers)
 
 
@@ -170,7 +157,6 @@ def view_audit_logs():
 
     if log_type:
         query = query.filter_by(log_type=log_type)
-
     logs = query.order_by(AuditLog.log_date.desc()).all()
     log_data = [
         {
@@ -264,20 +250,15 @@ def approve_applications():
 def approve_application(application_id):
     application = Application.query.get_or_404(application_id)
     reason = request.form.get('reason', 'No specific reason provided')
-
-    # Update application status and reason
     application.status = 'Approved'
     application.reason = reason
     db.session.commit()
-
-    # Log the approval
     log_driver_application(
         sponsor_id=current_user.sponsor.id,
-        driver_id=application.user_id,  # Assuming driver_id maps to user_id
+        driver_id=application.user_id,
         status='Approved',
         reason=reason
     )
-
     flash('Application approved.', 'success')
     return redirect(url_for('main.approve_applications'))
 
@@ -287,20 +268,15 @@ def approve_application(application_id):
 def reject_application(application_id):
     application = Application.query.get_or_404(application_id)
     reason = request.form.get('reason', 'No specific reason provided')
-
-    # Update application status and reason
     application.status = 'Denied'
     application.reason = reason
     db.session.commit()
-
-    # Log the rejection
     log_driver_application(
         sponsor_id=current_user.sponsor.id,
         driver_id=application.user_id,
         status='Denied',
         reason=reason
     )
-
     flash('Application rejected.', 'info')
     return redirect(url_for('main.approve_applications'))
 
@@ -405,7 +381,6 @@ def sponsor_reports():
 def sponsor_product_catalog():
     search_term = request.args.get('searchTerm')
     media_type = request.args.get('mediaType', 'music')
-
     if search_term:
         url = f"https://itunes.apple.com/search?term={search_term}&media={media_type}&limit=10"
         try:
@@ -415,7 +390,6 @@ def sponsor_product_catalog():
         except Exception as e:
             print("Error fetching data from iTunes API:", e)
             return render_template('sponsor/product_catalog.html', error="Error fetching data from iTunes API.")
-    
     return render_template('sponsor/product_catalog.html')
 
 @main_bp.route('/add_to_catalog', methods=['POST'])
@@ -427,12 +401,9 @@ def add_to_catalog():
     product_image = data.get('image')
     product_price = data.get('price')
 
-    # Fetch the sponsor associated with the current user
     sponsor = Sponsor.query.filter_by(user_id=current_user.id).first()
     if not sponsor:
         return jsonify({'error': 'Sponsor account not found'}), 400
-
-    # Validate product price
     if product_price is None:
         return jsonify({'error': 'Product price is missing'}), 400
 
@@ -440,7 +411,6 @@ def add_to_catalog():
         price_in_points = float(product_price) * 100  # Convert to points if required
     except ValueError:
         return jsonify({'error': 'Invalid price format'}), 400
-
     existing_product = SponsorCatalog.query.filter_by(
         sponsor_id=current_user.sponsor_code,
         product_id=product_id
@@ -469,7 +439,6 @@ def sponsor_items():
     return render_template('sponsor/sponsor_items.html', products=sponsor_products)
 
 
-
 @main_bp.route('/remove_from_catalog', methods=['POST'])
 @login_required
 def remove_from_catalog():
@@ -489,10 +458,6 @@ def remove_from_catalog():
     return jsonify({'message': 'Product removed successfully'}), 200
 
 
-
-
-
-
 @main_bp.route('/notifications', methods=['GET'])
 @login_required
 def view_notifications():
@@ -501,6 +466,7 @@ def view_notifications():
         sponsor_id=sponsor.id
     ).order_by(Notification.created_at.desc()).all()
     return render_template('sponsor/notification.html', notifications=notifications_list)
+
 
 @main_bp.route('/notification_details/<int:notification_id>', methods=['GET'])
 @login_required
@@ -517,6 +483,7 @@ def notification_details(notification_id):
         })
     return jsonify({'error': 'Application not found'}), 404
 
+
 @main_bp.route('/mark_as_read/<int:notification_id>', methods=['POST'])
 @login_required
 def mark_as_read(notification_id):
@@ -524,6 +491,7 @@ def mark_as_read(notification_id):
     notification.is_read = True 
     db.session.commit()
     return jsonify({'success': True})
+
 
 @main_bp.route('/delete_notification/<int:notification_id>', methods=['DELETE'])
 @login_required
@@ -537,86 +505,91 @@ def delete_notification(notification_id):
 @main_bp.route('/reward_system', methods=['GET', 'POST'])
 @login_required
 def reward_system():
-    # Ensure the user is a sponsor
     if current_user.role != 'sponsor':
         flash('Unauthorized action.', 'danger')
-        return redirect(url_for('main.sponsor_dash'))
+        return redirect(url_for('main.sponsor_dashboard'))
 
-    form = BehaviorForm()
+    approved_drivers = db.session.query(Application.user_id, Application.first_name, Application.last_name)\
+        .filter(Application.status == 'Approved').all()
+    sponsor_behaviors = Behavior.query.filter_by(sponsor_id=current_user.sponsor.id).all()
 
-    if form.validate_on_submit() and request.method == 'POST':
-        new_behavior = Behavior(
-            name=form.name.data,
-            type=form.type.data,
-            point_value=form.point_value.data,
-            sponsor_id=current_user.sponsor.id  # Associate behavior with the sponsor
-        )
-        db.session.add(new_behavior)
-        db.session.commit()
-        flash('Behavior added successfully!', 'success')
-        return redirect(url_for('main.reward_system'))  # Stay on the reward system page after adding a behavior
+    behavior_form = BehaviorForm()
+    transaction_form = PointTransactionForm()
 
-    # Fetch drivers with approved status and distinct user_id
-    approved_drivers = (
-        db.session.query(Application.user_id, Application.first_name, Application.last_name)
-        .filter(Application.status == 'Approved')
-        .distinct(Application.user_id)
-        .all()
-    )
+    if request.method == 'POST':
+        if behavior_form.validate_on_submit():
+            new_behavior = Behavior(
+                name=behavior_form.name.data,
+                type=behavior_form.type.data,
+                point_value=behavior_form.point_value.data,
+                sponsor_id=current_user.sponsor.id
+            )
+            db.session.add(new_behavior)
+            db.session.commit()
 
-    behaviors = Behavior.query.all()
-    return render_template('sponsor/reward_system.html', form=form, behaviors=behaviors, approved_drivers=approved_drivers)
-
-
-
-
+            updated_behaviors = "".join(
+                f"""<div style="margin-bottom: 10px; padding: 10px; border-radius: 5px; 
+                    background-color: {'#28a745' if beh.type == 'Good' else '#dc3545'}; color: white;">
+                    <strong>{beh.name}</strong><br>
+                    Type: {beh.type}<br>
+                    Points: {beh.point_value}
+                </div>"""
+                for beh in Behavior.query.filter_by(sponsor_id=current_user.sponsor.id)
+            )
+            return jsonify({'message': 'Behavior added successfully'}), 200
+        else:
+            return jsonify({
+                'success': False,
+                'message': 'Form validation failed.',
+                'errors': behavior_form.errors
+            }), 400
+    return render_template('sponsor/reward_system.html',
+                           behavior_form=behavior_form,
+                           transaction_form=transaction_form,
+                           approved_drivers=approved_drivers,
+                           sponsor_behaviors=sponsor_behaviors)
 
 
 # Routing links for driver dashboard { view : {organizations, Job Postings, submitted applications, } , apply to job postings  }
 @main_bp.route('/driver/points')
 @login_required
 def view_points():
-    return render_template('driver/view_points.html') 
+    return redirect(url_for('main.driver_points', driver_id=current_user.id))
+
 
 @main_bp.route('/driver_points/<int:driver_id>')
 @login_required
 def driver_points(driver_id):
-    # Ensure the user accessing this route is a driver
-    if current_user.role != 'driver' or current_user.id != driver_id:
-        flash('Unauthorized access.', 'danger')
-        return redirect(url_for('main.index'))
-
-    # Calculate total points for the driver
     try:
         total_points = (
             db.session.query(
                 db.func.sum(
                     db.case(
-                        [
-                            (PointTransaction.transaction_type == 'Add', PointTransaction.points),
-                            (PointTransaction.transaction_type == 'Deduct', -PointTransaction.points),
-                        ],
-                        else_=0,  # Default case if no matching type
+                        (PointTransaction.transaction_type == 'Add', PointTransaction.points),
+                        (PointTransaction.transaction_type == 'Deduct', -PointTransaction.points),
+                        else_=0
                     )
                 )
             )
-            .filter(PointTransaction.driver_id == driver_id)  # Ensure points are for this driver
+            .filter(PointTransaction.driver_id == driver_id)
             .scalar()
         ) or 0
-
-        # Debugging: Log the result
-        print(f"Driver ID: {driver_id}, Total Points Retrieved: {total_points}")
-
+        transactions = (
+            PointTransaction.query
+            .filter(PointTransaction.driver_id == driver_id)
+            .order_by(PointTransaction.timestamp.desc())
+            .all()
+        )
     except Exception as e:
-        # Log any errors
-        print(f"Error calculating total points for Driver ID {driver_id}: {str(e)}")
+        print(f"Error retrieving data for Driver ID {driver_id}: {str(e)}")
+        flash('An error occurred while fetching your points.', 'danger')
         total_points = 0
-
+        transactions = []
     return render_template(
-        'driver/view_points.html', points=total_points,
+        'driver/view_points.html',
+        points=total_points,
+        transactions=transactions
     )
-
-
 
 
 @main_bp.route('/redeem_rewards')
@@ -641,17 +614,13 @@ def add_to_wishlist():
     if not product_id:
         return jsonify({'error': 'Product ID is required'}), 400
 
-    # Fetch product details, including the image, from SponsorCatalog
     product = SponsorCatalog.query.filter_by(id=product_id).first()
     if not product:
         return jsonify({'error': 'Product not found'}), 404
-
-    # Check if product is already in the wishlist
     existing_wishlist_item = Wishlist.query.filter_by(user_id=current_user.id, product_id=product_id).first()
     if existing_wishlist_item:
         return jsonify({'message': 'Product already in wishlist'}), 400
 
-    # Add product to wishlist, including the image
     new_wishlist_item = Wishlist(
         user_id=current_user.id,
         product_id=product_id,
@@ -662,7 +631,6 @@ def add_to_wishlist():
     )
     db.session.add(new_wishlist_item)
     db.session.commit()
-
     return jsonify({'message': 'Product added to wishlist successfully'}), 200
 
 
@@ -674,17 +642,12 @@ def remove_from_wishlist():
 
     if not product_id:
         return jsonify({'error': 'Product ID is required'}), 400
-
     wishlist_item = Wishlist.query.filter_by(user_id=current_user.id, product_id=product_id).first()
-
     if not wishlist_item:
         return jsonify({'error': 'Wishlist item not found'}), 404
-
     db.session.delete(wishlist_item)
     db.session.commit()
-
     return jsonify({'message': 'Product removed from wishlist successfully'}), 200
-
 
 
 @main_bp.route('/wishlist', methods=['GET'])
@@ -692,6 +655,7 @@ def remove_from_wishlist():
 def view_wishlist():
     wishlist_items = Wishlist.query.filter_by(user_id=current_user.id).all()
     return render_template('driver/wishlist.html', items=wishlist_items)
+
 
 @main_bp.route('/wishlist/<int:driver_id>', methods=['GET'])
 @login_required
@@ -703,14 +667,13 @@ def driver_wishlist(driver_id):
         Wishlist.product_id,
         Wishlist.product_name,
         Wishlist.product_price,
-        SponsorCatalog.image  # Fetch the image from SponsorCatalog
+        SponsorCatalog.image 
     ).join(
         SponsorCatalog, Wishlist.product_id == SponsorCatalog.id
     ).filter(
         Wishlist.user_id == driver_id,
         Wishlist.sponsor_id == current_user.sponsor.id
     ).all()
-
     wishlist_data = [
         {
             'product_id': item.product_id,
@@ -720,9 +683,7 @@ def driver_wishlist(driver_id):
         }
         for item in wishlist_items
     ]
-
     return jsonify({'wishlist': wishlist_data})
-
 
 
 @main_bp.route('/add_to_cart', methods=['POST'])
@@ -734,13 +695,10 @@ def add_to_cart():
 
     if not product_id or not user_id:
         return jsonify({'error': 'Product ID and User ID are required'}), 400
-
     wishlist_item = Wishlist.query.filter_by(user_id=user_id, product_id=product_id).first()
     if not wishlist_item:
         return jsonify({'error': 'Product not found in wishlist'}), 404
-
     print(f"Adding to cart: {wishlist_item.product_name}, {wishlist_item.product_price}, {wishlist_item.product_image}")
-
     new_cart_item = Cart(
         sponsor_id=current_user.id,
         driver_id=user_id,
@@ -749,14 +707,9 @@ def add_to_cart():
         product_price=wishlist_item.product_price,
         product_image=wishlist_item.product_image
     )
-
     db.session.add(new_cart_item)
     db.session.commit()
-
     return jsonify({'message': 'Item successfully added to cart!'}), 200
-
-
-
 
 
 @main_bp.route('/orders', methods=['GET'])
@@ -765,17 +718,12 @@ def view_orders():
     if current_user.role != 'sponsor':
         flash('Unauthorized access', 'error')
         return redirect(url_for('main.dashboard'))
-
-    # Fetch approved drivers (status = 'approved') from the Application table
     approved_drivers = db.session.query(
         Application.user_id,
         Application.first_name,
         Application.last_name
     ).filter(Application.status == 'Approved').all()
-
     return render_template('/sponsor/orders.html', approved_drivers=approved_drivers)
-
-
 
 
 @main_bp.route('/cart/<int:driver_id>', methods=['GET'])
@@ -783,32 +731,18 @@ def view_orders():
 def get_driver_cart(driver_id):
     if current_user.role != 'sponsor':
         return jsonify({'error': 'Unauthorized access'}), 403
-
-    # Fetch all cart items associated with the driver_id
     cart_items = Cart.query.filter_by(driver_id=driver_id).all()
-    print("Cart Items Fetched:", cart_items)
-
-    # Prepare response with product_name, product_price, and product_image
     cart_data = [
         {
+            'cart_id': item.id,
+            'product_id': item.product_id,
             'product_name': item.product_name,
             'product_price': item.product_price,
-            'image': item.product_image
+            'image': item.product_image,
         }
         for item in cart_items
     ]
-
     return jsonify({'cart': cart_data})
-
-
-
-
-
-
-
-
-
-
 
 
 @main_bp.route('/remove_from_cart', methods=['POST'])
@@ -816,27 +750,30 @@ def get_driver_cart(driver_id):
 def remove_from_cart():
     data = request.get_json()
     cart_id = data.get('cart_id')
-
     cart_item = Cart.query.get(cart_id)
     if not cart_item:
         return jsonify({'error': 'Item not found'}), 404
-
     db.session.delete(cart_item)
     db.session.commit()
     return jsonify({'message': 'Item removed successfully'})
 
 
-
-@main_bp.route('/driver/review-purchases')
+@main_bp.route('/driver/review-purchases', methods=['GET'])
 @login_required
 def review_purchases():
-    return render_template('driver/review_purchases.html') 
+    print(f"Current User Role: {current_user.role}")
+    notifications = Notification.query.filter_by(driver_id=current_user.id).order_by(
+        Notification.created_at.desc()
+    ).all()
+    return render_template('driver/review_purchases.html', notifications=notifications)
+
 
 @main_bp.route('/view_organizations', methods=['GET'])
 @login_required
 def view_organizations():
     organizations = Sponsor.query.all()  
     return render_template('Destination/view_organizations.html', organizations=organizations)
+
 
 @main_bp.route('/view_job_postings', methods=['GET'])
 @login_required
@@ -863,6 +800,7 @@ def view_job_postings():
     job_postings = JobPosting.query.all()
     return render_template('Destination/view_job_postings.html', job_postings=job_postings)
 
+
 @main_bp.route('/apply_to_job_posting/<int:job_id>', methods=['GET', 'POST'])
 @login_required
 def apply_to_job_posting(job_id):
@@ -874,12 +812,10 @@ def apply_to_job_posting(job_id):
         JobPosting.sponsor_id == job.sponsor_id,
         Application.status.in_(['Pending', 'Approved'])
     ).first()
-
     if existing_application:
         flash('You have already applied to a job posting from this sponsor.', 'warning')
         session['load_view_job_postings'] = True
         return redirect(url_for('main.driver_dash'))
-
     if form.validate_on_submit():
         resume_file = form.resume.data
         filename = secure_filename(resume_file.filename)
@@ -900,7 +836,6 @@ def apply_to_job_posting(job_id):
         )
         db.session.add(new_application)
         db.session.commit()
-
         sponsor = job.sponsor
         notification_message = f"New application from {new_application.first_name} {new_application.last_name} for the job '{job.title}'."
         notification = Notification(
@@ -913,17 +848,18 @@ def apply_to_job_posting(job_id):
         )
         db.session.add(notification)
         db.session.commit()
-
         flash('Your application has been submitted successfully.', 'success')
         session['load_view_job_postings'] = True
         return redirect(url_for('main.driver_dash'))
     return render_template('driver/apply_to_job_posting.html', form=form, job=job)
+
 
 @main_bp.route('/driver/submitted_applications', methods=['GET'])
 @login_required
 def submitted_applications():
     applications = Application.query.filter_by(user_id=current_user.id).all()
     return render_template('driver/submitted_applications.html', applications=applications)
+
 
 @main_bp.route('/point_transaction', methods=['POST'])
 @login_required
@@ -932,53 +868,41 @@ def point_transaction():
         return jsonify({'success': False, 'message': 'Unauthorized action.'}), 403
 
     try:
-        # Get driver_id from the form
         driver_id = request.form.get('driver_id')
-        if not driver_id or not driver_id.isdigit():
-            return jsonify({'success': False, 'message': 'Invalid or missing driver ID.'}), 400
-        driver_id = int(driver_id)
-
-        # Validate points
-        points = request.form.get('points')
-        if not points or not points.isdigit():
-            return jsonify({'success': False, 'message': 'Invalid or missing points value.'}), 400
-        points = int(points)
-
-        # Validate transaction type
-        transaction_type = request.form.get('transaction_type')
-        if transaction_type not in ['Add', 'Deduct']:
-            return jsonify({'success': False, 'message': 'Invalid transaction type.'}), 400
-
-        # Get reason
+        behavior_id = request.form.get('behavior_id')
         reason = request.form.get('reason', 'No reason provided')
-
-        # Adjust points (if transaction type is 'Deduct', make points negative)
-        adjusted_points = points if transaction_type == 'Add' else -points
-
-        # Create a new point transaction record
+        behavior = Behavior.query.get(behavior_id)
+        if not behavior:
+            return jsonify({'success': False, 'message': 'Invalid behavior selected.'}), 400
+        if behavior.type.lower() == "bad":
+            adjusted_points = -abs(behavior.point_value)
+        else:
+            adjusted_points = abs(behavior.point_value)
+        driver = User.query.get(driver_id)
+        if not driver:
+            return jsonify({'success': False, 'message': 'Driver not found'}), 404
+        if adjusted_points < 0:
+            driver.points_balance += adjusted_points
+        else:
+            driver.points_balance += adjusted_points
         point_transaction = PointTransaction(
             sponsor_id=current_user.sponsor.id,
             driver_id=driver_id,
-            points=adjusted_points,
+            points=abs(adjusted_points),
             reason=reason,
-            transaction_type=transaction_type,
+            transaction_type="Deduct" if adjusted_points < 0 else "Add"
         )
-
-        # Save the transaction
         db.session.add(point_transaction)
-        db.session.commit()
-
-        # Add the log entry
         log_point_change(
             sponsor_id=current_user.sponsor.id,
             driver_id=driver_id,
             points=adjusted_points,
             reason=reason
         )
-
+        db.session.commit()
         return jsonify({
             'success': True,
-            'message': f'Points {transaction_type.lower()}ed successfully!',
+            'message': f'Points successfully updated for Driver ID {driver_id}. Current balance: {driver.points_balance}'
         })
     except Exception as e:
         db.session.rollback()
@@ -1021,3 +945,64 @@ def generate_report_csv():
     )
 
 
+@main_bp.route('/checkout', methods=['POST'])
+@login_required
+def checkout():
+    data = request.json
+    if not data:
+        return jsonify({'success': False, 'message': 'Invalid request body'}), 400
+
+    driver_id = data.get('driverId')
+    cart_items = data.get('cartItems')
+    if not driver_id or not cart_items:
+        return jsonify({'success': False, 'message': 'Driver ID or Cart Items missing'}), 400
+    try:
+        driver = User.query.get(driver_id)
+        if not driver:
+            return jsonify({'success': False, 'message': 'Driver not found'}), 404
+        driver_points = driver.points_balance
+        total_cost = sum(item['product_price'] for item in cart_items)
+        if driver_points < total_cost:
+            return jsonify({
+                'success': False,
+                'message': f"Driver does not have enough points. Current balance: {driver_points}, required: {total_cost}"
+            }), 400
+        driver.points_balance -= total_cost
+        for item in cart_items:
+            purchase = PointTransaction(
+                sponsor_id=current_user.sponsor.id,
+                driver_id=driver_id,
+                points=item['product_price'],
+                reason=f"Purchase of {item['product_name']}",
+                transaction_type="Deduct",
+            )
+            db.session.add(purchase)
+        notification_message = f"Your sponsor has placed an order for: " + ", ".join(
+            [item['product_name'] for item in cart_items]
+        )
+        notification = Notification(
+            message=notification_message,
+            sponsor_id=current_user.sponsor.id,
+            driver_id=driver_id,
+            is_read=False,
+        )
+        db.session.add(notification)
+        db.session.commit()
+        return jsonify({'success': True, 'message': 'Checkout completed successfully'}), 200
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'success': False, 'message': str(e)}), 500
+
+
+@main_bp.route('/mark_driver_notification_as_read/<int:notification_id>', methods=['POST'])
+def mark_driver_notification_as_read(notification_id):
+    try:
+        notification = Notification.query.get(notification_id)
+        if not notification:
+            return jsonify({'success': False, 'message': 'Notification not found'}), 404
+        notification.is_read = True
+        db.session.commit()
+        return jsonify({'success': True, 'message': 'Notification marked as read successfully'})
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'success': False, 'message': str(e)}), 500

@@ -1,20 +1,98 @@
-<h2>Review Purchases</h2>
-<p>Here is a list of your past and pending purchases:</p>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Review Purchases</title>
+    <style>
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
 
-<ul>
-    {% for purchase in purchases %}
-    <li>
-        <strong>{{ purchase.product_name }}</strong> - {{ purchase.status }}
-        {% if purchase.status == 'Pending' %}
-        <button onclick="cancelPurchase({{ purchase.id }})">Cancel</button>
-        {% endif %}
-    </li>
-    {% endfor %}
-</ul>
+        table, th, td {
+            border: 1px solid #ddd;
+        }
 
-<script>
-    function cancelPurchase(purchaseId) {
-        // Handle purchase cancellation logic
-        console.log('Cancelled Purchase ID:', purchaseId);
-    }
-</script>
+        th, td {
+            padding: 10px;
+            text-align: left;
+        }
+
+        th {
+            background-color: #007bff;
+            color: white;
+        }
+
+        /* Light gray for alternating rows */
+        tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+
+        /* Unread notifications with light red */
+        tr.unread {
+            background-color: #ffcccc;
+            color: #333;
+        }
+
+        /* Read notifications with default light gray */
+        tr.read {
+            background-color: #f9f9f9;
+            color: #333;
+        }
+
+        button {
+            padding: 5px 10px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: opacity 0.3s ease;
+        }
+
+        button:hover {
+            opacity: 0.8;
+        }
+
+        button:first-of-type {
+            background-color: #28a745; /* Green for "Mark as Read" */
+            color: white;
+        }
+
+        button:last-of-type {
+            background-color: #dc3545; /* Red for "Delete" */
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <h2>Review Purchases</h2>
+
+    {% if notifications %}
+        <table>
+            <thead>
+                <tr>
+                    <th>Message</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for notification in notifications %}
+                <tr class="{{ 'unread' if not notification.is_read else 'read' }}" data-id="{{ notification.id }}">
+                    <td>{{ notification.message }}</td>
+                    <td>{{ 'Unread' if not notification.is_read else 'Read' }}</td>
+                    <td>
+                        <button onclick="markAsRead({{ notification.id }})">Mark as Read</button>
+                        <button onclick="deleteNotification({{ notification.id }})">Delete</button>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <p>No notifications to show.</p>
+    {% endif %}
+</body>
+</html>
