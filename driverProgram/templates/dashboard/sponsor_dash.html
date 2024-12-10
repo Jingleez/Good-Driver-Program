@@ -535,38 +535,51 @@
                             product_price: item.product_price,
                         });
                         const itemCard = `
-                            <div class="cart-item" style="
-                                display: flex; 
-                                align-items: center; 
-                                justify-content: space-between; 
-                                padding: 15px; 
-                                width: 100%; 
-                                background: transparent; 
-                                border-bottom: 1px solid #444; 
-                                border-radius: 0; 
-                                box-shadow: none;
-                                margin-bottom: 10px;
-                                color: #fff;">
-                                <div style="flex: 1; text-align: left;">
-                                    <div style="font-size: 1.1em; font-weight: bold; color: #fff; margin-bottom: 5px;">
-                                        ${item.product_name || 'No Name'}
-                                    </div>
+                        <div class="cart-item" style="
+                            display: flex; 
+                            align-items: center; 
+                            justify-content: space-between; 
+                            padding: 15px; 
+                            width: 100%; 
+                            background: #2c2f33; 
+                            border: 1px solid #444; 
+                            border-radius: 8px; 
+                            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+                            margin-bottom: 10px;
+                            color: #fff;
+                            transition: transform 0.2s ease, background-color 0.3s ease;">
+                            
+                            <!-- Product Name -->
+                            <div style="flex: 1; text-align: left;">
+                                <div style="font-size: 1.2em; font-weight: bold; color: #fff; margin-bottom: 5px;">
+                                    ${item.product_name || 'No Name'}
                                 </div>
-                                <div style="flex: 0 0 100px; text-align: right; font-size: 1em; font-weight: bold; color: #4CAF50;">
-                                    ${item.product_price || 0} points
-                                </div>
-                                <button onclick="removeFromCart(${item.cart_id})" style="
-                                    background-color: #e74c3c; 
-                                    color: #fff; 
-                                    border: none; 
-                                    padding: 8px 12px; 
-                                    border-radius: 5px; 
-                                    cursor: pointer;
-                                    font-size: 14px;
-                                ">Remove</button>
                             </div>
-                        `;
-                        cartItemsContainer.insertAdjacentHTML('beforeend', itemCard);
+                    
+                            <!-- Product Price -->
+                            <div style="flex: 0 0 120px; text-align: right; font-size: 1.1em; font-weight: bold; color: #4CAF50;">
+                                ${item.product_price || 0} points
+                            </div>
+                    
+                            <!-- Remove Button -->
+                            <button onclick="removeFromCart(${item.cart_id})" style="
+                                background-color: #e74c3c; 
+                                color: #fff; 
+                                border: none; 
+                                padding: 8px 16px; 
+                                border-radius: 5px; 
+                                cursor: pointer; 
+                                font-size: 0.9em; 
+                                font-weight: bold;
+                                transition: background-color 0.3s ease;">
+                                Remove
+                            </button>
+                        </div>
+                    `;
+                    
+                    // Insert the updated item card into the cart
+                    cartItemsContainer.insertAdjacentHTML('beforeend', itemCard);
+                    
                     });
         
                     cartTotal.textContent = `Total Points: ${totalPoints}`;

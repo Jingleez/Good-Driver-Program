@@ -82,6 +82,7 @@ class Notification(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     message = db.Column(db.String(255), nullable=False)
     sponsor_id = db.Column(db.Integer, db.ForeignKey('sponsors.id'), nullable=False)
+    driver_id = db.Column(db.Integer, nullable=True)
     job_id = db.Column(db.Integer, db.ForeignKey('job_postings.id'), nullable=True)
     application_id = db.Column(db.Integer, db.ForeignKey('applications.id'), nullable=True)
     is_read = db.Column(db.Boolean, default=False)

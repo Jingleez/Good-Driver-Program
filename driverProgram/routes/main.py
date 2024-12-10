@@ -817,10 +817,22 @@ def remove_from_cart():
 
 
 
-@main_bp.route('/driver/review-purchases')
+@main_bp.route('/driver/review-purchases', methods=['GET'])
 @login_required
 def review_purchases():
-    return render_template('driver/review_purchases.html') 
+    # Debugging: Print current user's role
+    print(f"Current User Role: {current_user.role}")
+
+    # Ensure the current user is a driver
+
+
+    # Query notifications for the driver
+    notifications = Notification.query.filter_by(driver_id=current_user.id).order_by(
+        Notification.created_at.desc()
+    ).all()
+
+    # Render the template with notifications
+    return render_template('driver/review_purchases.html', notifications=notifications)
 
 @main_bp.route('/view_organizations', methods=['GET'])
 @login_required
@@ -978,33 +990,61 @@ def point_transaction():
 @main_bp.route('/checkout', methods=['POST'])
 @login_required
 def checkout():
-    data = request.json
+    data = request.json  # Parse the JSON request body
     if not data:
         return jsonify({'success': False, 'message': 'Invalid request body'}), 400
-    
+
     driver_id = data.get('driverId')
     cart_items = data.get('cartItems')
-
-    print("Driver ID:", driver_id)  # Debugging log
-    print("Cart Items:", cart_items)  # Debugging log
 
     if not driver_id or not cart_items:
         return jsonify({'success': False, 'message': 'Driver ID or Cart Items missing'}), 400
 
-    # Verify each cart item
-    for item in cart_items:
-        if not all(key in item for key in ('product_id', 'product_name', 'product_price')):
-            return jsonify({'success': False, 'message': 'Invalid cart item structure'}), 400
-
-    # Log the checkout process
-    print(f"Processing checkout for driver: {driver_id} with items: {cart_items}")
-
     try:
-        # Example: Deduct points and clear cart
-        Cart.query.filter_by(driver_id=driver_id).delete()
+        # Fetch the driver's current points
+        driver = User.query.get(driver_id)
+        if not driver:
+            return jsonify({'success': False, 'message': 'Driver not found'}), 404
+
+        driver_points = driver.points_balance
+        total_cost = sum(item['product_price'] for item in cart_items)
+
+        # Check if the driver has enough points
+        if driver_points < total_cost:
+            return jsonify({
+                'success': False,
+                'message': f"Driver does not have enough points. Current balance: {driver_points}, required: {total_cost}"
+            }), 400
+
+        # Deduct points and process checkout
+        driver.points_balance -= total_cost
+
+        for item in cart_items:
+            # Save each cart item as a purchase
+            purchase = PointTransaction(
+                sponsor_id=current_user.sponsor.id,
+                driver_id=driver_id,
+                points=item['product_price'],
+                reason=f"Purchase of {item['product_name']}",
+                transaction_type="Deduct",
+            )
+            db.session.add(purchase)
+
+        # Create a notification for the driver
+        notification_message = f"Your sponsor has placed an order for: " + ", ".join(
+            [item['product_name'] for item in cart_items]
+        )
+        notification = Notification(
+            message=notification_message,
+            sponsor_id=current_user.sponsor.id,
+            driver_id=driver_id,
+            is_read=False,
+        )
+        db.session.add(notification)
+
         db.session.commit()
+        return jsonify({'success': True, 'message': 'Checkout completed successfully'}), 200
+
     except Exception as e:
         db.session.rollback()
-        return jsonify({'success': False, 'message': f'Error during checkout: {str(e)}'}), 500
-
-    return jsonify({'success': True, 'message': 'Checkout completed successfully'}), 200
+        return jsonify({'success': False, 'message': str(e)}), 500
