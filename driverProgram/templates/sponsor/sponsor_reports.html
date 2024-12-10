@@ -2,7 +2,7 @@
 <body>
     <div class="container mt-5">
         <h2 class="mb-4">Generate Sponsor Report</h2>
-        <form id="reportForm" action="/generate_report" method="POST">
+        <form id="reportForm" action="/generate_report_csv" method="GET">
             <!-- Select Report Type -->
             <div class="mb-3">
                 <label for="reportType" class="form-label">Report Type</label>
@@ -30,8 +30,9 @@
                 <label for="driverId" class="form-label">Select Driver</label>
                 <select class="form-select" id="driverId" name="driverId">
                     <option value="">All Drivers</option>
-                    <!-- Dynamically populate options with drivers associated with the sponsor -->
-                    <!-- Example option: <option value="1">Driver Name</option> -->
+                    {% for driver in approved_drivers %}
+                        <option value="{{ driver.user_id }}">{{ driver.first_name }} {{ driver.last_name }}</option>
+                    {% endfor %}
                 </select>
             </div>
 
@@ -48,7 +49,7 @@
             </div>
 
             <!-- Submit Button -->
-            <button type="submit" class="btn btn-primary">Generate Report</button>
+            <button type="submit" class="btn btn-primary">Download CSV</button>
         </form>
     </div>
 
