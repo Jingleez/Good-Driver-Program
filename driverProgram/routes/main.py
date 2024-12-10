@@ -907,42 +907,6 @@ def point_transaction():
         db.session.rollback()
         return jsonify({'success': False, 'message': f'An error occurred: {str(e)}'})
 
-from flask import send_file
-from driverProgram.controllers.report_controller import ReportController
-
-
-@main_bp.route('/generate_report_csv', methods=['GET'])
-@login_required
-def generate_report_csv():
-    report_type = request.args.get('reportType')
-    start_date = request.args.get('startDate')
-    end_date = request.args.get('endDate')
-    driver_id = request.args.get('driverId')
-
-    if start_date:
-        start_date = datetime.strptime(start_date, "%Y-%m-%d")
-    if end_date:
-        end_date = datetime.strptime(end_date, "%Y-%m-%d")
-
-    controller = ReportController(db.session)
-
-    if report_type == "driver_point_tracking":
-        rows = controller.driver_point_tracking(
-            sponsor_id=current_user.sponsor.id,
-            start_date=start_date,
-            end_date=end_date,
-            driver_id=driver_id
-        )
-        controller.write_csv(rows)
-
-    file = controller.get_csv_file()
-    return send_file(
-        file,
-        as_attachment=True,
-        download_name="driver_point_tracking_report.csv",
-        mimetype="text/csv"
-    )
-
 
 @main_bp.route('/checkout', methods=['POST'])
 @login_required
