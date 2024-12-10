@@ -767,7 +767,6 @@ def view_orders():
 
 
 
-
 @main_bp.route('/cart/<int:driver_id>', methods=['GET'])
 @login_required
 def get_driver_cart(driver_id):
@@ -776,14 +775,15 @@ def get_driver_cart(driver_id):
 
     # Fetch all cart items associated with the driver_id
     cart_items = Cart.query.filter_by(driver_id=driver_id).all()
-    print("Cart Items Fetched:", cart_items)
 
-    # Prepare response with product_name, product_price, and product_image
+    # Prepare response with cart_id, product_name, product_price, and product_image
     cart_data = [
         {
+            'cart_id': item.id,  # Include the unique cart ID
+            'product_id': item.product_id,
             'product_name': item.product_name,
             'product_price': item.product_price,
-            'image': item.product_image
+            'image': item.product_image,
         }
         for item in cart_items
     ]
@@ -973,3 +973,38 @@ def point_transaction():
     except Exception as e:
         db.session.rollback()
         return jsonify({'success': False, 'message': f'An error occurred: {str(e)}'})
+
+
+@main_bp.route('/checkout', methods=['POST'])
+@login_required
+def checkout():
+    data = request.json
+    if not data:
+        return jsonify({'success': False, 'message': 'Invalid request body'}), 400
+    
+    driver_id = data.get('driverId')
+    cart_items = data.get('cartItems')
+
+    print("Driver ID:", driver_id)  # Debugging log
+    print("Cart Items:", cart_items)  # Debugging log
+
+    if not driver_id or not cart_items:
+        return jsonify({'success': False, 'message': 'Driver ID or Cart Items missing'}), 400
+
+    # Verify each cart item
+    for item in cart_items:
+        if not all(key in item for key in ('product_id', 'product_name', 'product_price')):
+            return jsonify({'success': False, 'message': 'Invalid cart item structure'}), 400
+
+    # Log the checkout process
+    print(f"Processing checkout for driver: {driver_id} with items: {cart_items}")
+
+    try:
+        # Example: Deduct points and clear cart
+        Cart.query.filter_by(driver_id=driver_id).delete()
+        db.session.commit()
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'success': False, 'message': f'Error during checkout: {str(e)}'}), 500
+
+    return jsonify({'success': True, 'message': 'Checkout completed successfully'}), 200

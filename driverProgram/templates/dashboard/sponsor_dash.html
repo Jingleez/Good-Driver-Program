@@ -457,14 +457,22 @@
             fetchDrivers();
         });
 
+        document.addEventListener('DOMContentLoaded', () => {
+            fetchDrivers(); // Call fetchDrivers after the DOM is fully loaded
+        });
+        
         function fetchDrivers() {
             const driverDropdown = document.getElementById('driverDropdown');
-
+        
+            // Check if the dropdown exists
             if (!driverDropdown) {
                 console.error('Dropdown element not found!');
                 return;
             }
-
+        
+            console.log("Driver dropdown found:", driverDropdown);
+        
+            // Fetch drivers from the server
             fetch('/drivers')
                 .then(response => {
                     if (!response.ok) {
@@ -473,11 +481,13 @@
                     return response.json();
                 })
                 .then(data => {
+                    console.log("Fetched drivers:", data);
+                    // Populate the dropdown with driver data
                     driverDropdown.innerHTML = '<option value="">-- Select Driver --</option>';
                     data.drivers.forEach(driver => {
                         const option = document.createElement('option');
                         option.value = driver.id;
-                        option.textContent = driver.name;
+                        option.textContent = `${driver.first_name} ${driver.last_name} (ID: ${driver.id})`;
                         driverDropdown.appendChild(option);
                     });
                 })
@@ -486,6 +496,9 @@
                     alert('Unable to load drivers. Please try again later.');
                 });
         }
+        
+        
+        let cartItemsData = [];
 
         function fetchCartItems() {
             const driverId = document.getElementById('driverDropdown').value;
@@ -493,14 +506,14 @@
             const cartTotal = document.getElementById('cartTotal');
             const cartContainer = document.getElementById('cartContainer');
             const emptyCartMessage = document.getElementById('emptyCartMessage');
-
+        
             cartItemsContainer.innerHTML = '';
             cartTotal.textContent = 'Total Points: 0';
             cartContainer.style.display = 'none';
             emptyCartMessage.style.display = 'none';
-
+        
             if (!driverId) return;
-
+        
             // Fetch cart items for the selected driver
             fetch(`/cart/${driverId}`)
                 .then(response => response.json())
@@ -509,38 +522,59 @@
                         emptyCartMessage.style.display = 'block';
                         return;
                     }
-
+        
                     let totalPoints = 0;
-
+        
                     // Loop over each cart item and add it to the UI
                     cart.forEach(item => {
                         totalPoints += item.product_price;
+                        cartItemsData.push({
+                            cart_id: item.cart_id, // Ensure cart_id is included
+                            product_id: item.product_id,
+                            product_name: item.product_name,
+                            product_price: item.product_price,
+                        });
                         const itemCard = `
                             <div class="cart-item" style="
-                                padding: 15px; width: 30%; text-align: center;
-                                background: #f9f9f9; border: 1px solid #ddd;
-                                border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
-                                <img src="${item.image || '/static/placeholder.png'}" 
-                                    alt="${item.product_name}" 
-                                    style="width: 100px; height: 100px; object-fit: cover;">
-                                <div style="font-size: 1em; font-weight: bold; color: #000; margin-top: 10px;">
-                                    ${item.product_name || 'No Name'}
+                                display: flex; 
+                                align-items: center; 
+                                justify-content: space-between; 
+                                padding: 15px; 
+                                width: 100%; 
+                                background: transparent; 
+                                border-bottom: 1px solid #444; 
+                                border-radius: 0; 
+                                box-shadow: none;
+                                margin-bottom: 10px;
+                                color: #fff;">
+                                <div style="flex: 1; text-align: left;">
+                                    <div style="font-size: 1.1em; font-weight: bold; color: #fff; margin-bottom: 5px;">
+                                        ${item.product_name || 'No Name'}
+                                    </div>
                                 </div>
-                                <div style="color: #000; margin-top: 5px;">
-                                    ${item.product_price} points
+                                <div style="flex: 0 0 100px; text-align: right; font-size: 1em; font-weight: bold; color: #4CAF50;">
+                                    ${item.product_price || 0} points
                                 </div>
+                                <button onclick="removeFromCart(${item.cart_id})" style="
+                                    background-color: #e74c3c; 
+                                    color: #fff; 
+                                    border: none; 
+                                    padding: 8px 12px; 
+                                    border-radius: 5px; 
+                                    cursor: pointer;
+                                    font-size: 14px;
+                                ">Remove</button>
                             </div>
                         `;
                         cartItemsContainer.insertAdjacentHTML('beforeend', itemCard);
                     });
-
+        
                     cartTotal.textContent = `Total Points: ${totalPoints}`;
                     cartContainer.style.display = 'block';
                 })
                 .catch(error => console.error('Error fetching cart items:', error));
-            }
-
-
+        }
+        
 
         function removeFromCart(cartId) {
             fetch('/remove_from_cart', {
@@ -556,6 +590,37 @@
             .catch(error => console.error('Error removing item:', error));
         }
 
+        // Global definition of the checkout function
+        async function checkout() {
+            const driverId = document.getElementById('driverDropdown').value;
+        
+            console.log("Driver ID:", driverId);
+            console.log("Cart Items Data:", cartItemsData);
+        
+            if (!driverId || cartItemsData.length === 0) {
+                alert("Driver ID or Cart Items missing.");
+                return;
+            }
+        
+            try {
+                const response = await fetch(`/checkout`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ driverId, cartItems: cartItemsData }),
+                });
+                const result = await response.json();
+        
+                if (result.success) {
+                    alert('Checkout successful!');
+                } else {
+                    alert(result.message || 'Error during checkout!');
+                }
+            } catch (error) {
+                console.error('Error during checkout:', error);
+                alert('Error during checkout. Please try again.');
+            }
+        }
+        
     </script>
 </body>
 </html>

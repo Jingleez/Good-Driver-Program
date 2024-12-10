@@ -1,29 +1,32 @@
 {% block content %}
-<div>
-    <h2>Orders - View Driver Carts</h2>
+<div style="max-width: 900px; margin: 0 auto; font-family: 'Poppins', sans-serif; color: #fff;">
+    <h2 style="text-align: center; color: #4a90e2; margin-bottom: 20px;">Orders - View Driver Carts</h2>
 
     <!-- Driver Dropdown -->
-    <div>
-        <label for="driverDropdown">Select Driver:</label>
-        <select id="driverDropdown" onchange="fetchCartItems()" style="padding: 8px; margin-bottom: 20px;">
+    <div style="text-align: center; margin-bottom: 30px;">
+        <label for="driverDropdown" style="font-size: 16px; font-weight: bold; color: #fff;">Select Driver:</label>
+        <select id="driverDropdown" onchange="fetchCartItems()" style="padding: 10px; font-size: 16px; border-radius: 8px; border: 1px solid #ccc; background-color: #2b2b2b; color: #fff;">
             <option value="">-- Select Driver --</option>
             {% for driver in approved_drivers %}
-                <option value="{{ driver.user_id }}">
+                <option value="{{ driver.user_id }}" style="color: #000;">
                     {{ driver.first_name }} {{ driver.last_name }} (ID: {{ driver.user_id }})
                 </option>
             {% endfor %}
         </select>
-        
     </div>
 
     <!-- Cart Display -->
-    <div id="cartContainer" style="display: none;">
-        <h3>Driver's Cart</h3>
-        <div id="cartItems" style="display: flex; flex-wrap: wrap; gap: 20px;"></div>
-        <h4 id="cartTotal" style="margin-top: 20px;">Total Points: 0</h4>
+    <div id="cartContainer" style="display: none; background-color: #1a1a1a; padding: 20px; border-radius: 10px; box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);">
+        <h3 style="color: #4a90e2; text-align: center; margin-bottom: 20px;">Driver's Cart</h3>
+        <div id="cartItems" style="display: flex; flex-direction: column; gap: 20px;">
+        </div>
+        <div style="margin-top: 30px; display: flex; justify-content: flex-end; align-items: center; border-top: 1px solid #4a90e2; padding-top: 20px;">
+            <h4 id="cartTotal" style="font-size: 20px; font-weight: bold; color: #ddd; margin-right: 20px;">Total Points: 0</h4>
+            <button id="checkoutButton" onclick="checkout()" style="background-color: #4a90e2; color: #fff; font-weight: bold; border: none; padding: 10px 20px; border-radius: 8px; font-size: 16px; cursor: pointer;">Checkout</button>
+        </div>
     </div>
 
     <!-- Empty Cart Message -->
-    <p id="emptyCartMessage" style="color: gray; display: none;">No items in the cart.</p>
+    <p id="emptyCartMessage" style="color: gray; text-align: center; display: none; font-size: 16px;">No items in the cart.</p>
 </div>
 {% endblock %}
