@@ -556,6 +556,43 @@
             .catch(error => console.error('Error removing item:', error));
         }
 
+
+        document.getElementById('add-behavior-form').addEventListener('submit', function(e) {
+        e.preventDefault();
+
+        let formData = new FormData(this);
+
+        fetch("{{ url_for('main.reward_system') }}", {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                const behaviorList = document.querySelector('div[style*="overflow-y: auto"] > div');
+                const newBehavior = `
+                    <div style="
+                        margin-bottom: 10px;
+                        padding: 10px;
+                        border-radius: 5px;
+                        color: white;
+                        background-color: ${data.type === 'Good' ? '#28a745' : '#dc3545'};">
+                        <strong>${data.name}</strong> <br>
+                        Type: ${data.type} <br>
+                        Points: ${data.point_value}
+                    </div>
+                `;
+                behaviorList.insertAdjacentHTML('afterbegin', newBehavior);
+                document.getElementById('add-behavior-form').reset();
+            } else {
+                alert('Error: Could not add behavior.');
+            }
+        });
+    });
+
+
+
+
     </script>
 </body>
 </html>
