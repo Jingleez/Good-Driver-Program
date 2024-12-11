@@ -1,6 +1,24 @@
 <head>
     <title>Audit Logs</title>
     <style>
+        /* Button Styling */
+        .btn {
+            display: inline-block;
+            margin: 10px 5px;
+            padding: 10px 15px;
+            background-color: #007bff;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+            font-size: 1rem;
+            text-align: center;
+            transition: background-color 0.3s;
+        }
+
+        .btn:hover {
+            background-color: #0056b3;
+        }
+
         /* General Styles */
         body {
             font-family: 'Poppins', sans-serif;
@@ -121,12 +139,18 @@
 
     <!-- Dropdown Filter -->
     <label for="logFilter">Select Log Type:</label>
-    <select id="logFilter" onchange="fetchLogs()">
+    <select id="logFilter" onchange="fetchLogs(); updateDownloadLink()">
         <option value="driver_app">Driver Applications</option>
         <option value="point_change">Point Changes</option>
         <option value="password_change">Password Changes</option>
         <option value="login_attempt">Login Attempts</option>
-    </select>
+    </select>     
+
+    <!-- Single Download Button -->
+    <div style="margin-top: 20px;">
+        <h3>Download Logs as CSV:</h3>
+        <a id="downloadCsvButton" href="/download_audit_logs?log_type=driver_app" class="btn">Download as CSV</a>
+    </div>
 
     <!-- Logs Table -->
     <table>

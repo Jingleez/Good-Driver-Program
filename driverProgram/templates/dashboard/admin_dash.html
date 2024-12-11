@@ -239,7 +239,6 @@
                 <li><a href="#" onclick="loadContent('{{ url_for('main.manage_users') }}')"><i class="fas fa-users-cog"></i><span>Manage Users</span></a></li>
                 <li><a href="#" onclick="loadContent('{{ url_for('main.review_reports') }}')"><i class="fas fa-chart-line"></i><span>Review Reports</span></a></li>
                 <li><a href="#" onclick="loadContent('{{ url_for('main.add_users') }}')"><i class="fas fa-user-plus"></i><span>Add New Users</span></a></li>
-                <li><a href="#" onclick="loadContent('{{ url_for('main.admin_reports_page') }}')"><i class="fas fa-file-alt"></i><span>Generate Reports</span></a></li>
                 <li><a href="#" onclick="loadContent('{{ url_for('main.audit_logs_page') }}')"><i class="fas fa-file-alt"></i><span>Audit Logs</span></a></li>
             </ul>
         </nav>
@@ -284,6 +283,12 @@
                 .catch(err => {
                     console.error('Error loading content:', err);
                 });
+        }
+
+        function updateDownloadLink() {
+            const logType = document.getElementById('logFilter').value;
+            const downloadButton = document.getElementById('downloadCsvButton');
+            downloadButton.href = `/download_audit_logs?log_type=${logType}`;
         }
 
         function fetchLogs() {
