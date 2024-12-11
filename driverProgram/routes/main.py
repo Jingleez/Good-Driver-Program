@@ -1,5 +1,5 @@
 from datetime import datetime
-from flask import Blueprint, logging, render_template, redirect, url_for, session, flash, request, current_app, jsonify, request, current_app, send_file
+from flask import Blueprint, logging, render_template, redirect, url_for, session, flash, request, current_app, jsonify, Response, current_app, send_file
 import requests, pandas as pd
 from driverProgram import db, check_database_connection
 from sqlalchemy import text
@@ -12,6 +12,9 @@ import os
 from ebaysdk.finding import Connection as Finding
 from flask_cors import CORS
 from datetime import datetime, timezone
+from driverProgram.controllers.report_controller import ReportController
+import csv
+from io import StringIO
 
 
 # Define the blueprint
@@ -28,6 +31,87 @@ def is_token_valid(token):
         return False
     except jwt.InvalidTokenError:
         return False
+    
+@main_bp.route('/download_audit_logs', methods=['GET'])
+@login_required
+def download_audit_logs():
+    log_type = request.args.get('log_type')  # Log type to filter by
+    query = AuditLog.query
+
+    # Filter logs by log_type if provided
+    if log_type:
+        query = query.filter_by(log_type=log_type)
+
+    logs = query.order_by(AuditLog.log_date.desc()).all()
+
+    # Prepare CSV data
+    import csv
+    from io import StringIO
+
+    csv_output = StringIO()
+    csv_writer = csv.writer(csv_output)
+
+    # Set header and rows based on log_type
+    if log_type == "driver_app":
+        csv_writer.writerow(['Date', 'Sponsor ID', 'Driver ID', 'Status', 'Reason'])
+        for log in logs:
+            csv_writer.writerow([
+                log.log_date.strftime('%Y-%m-%d %H:%M:%S'),
+                log.sponsor_id,
+                log.driver_id,
+                log.status,
+                log.reason
+            ])
+    elif log_type == "point_change":
+        csv_writer.writerow(['Date', 'Sponsor ID', 'Driver ID', 'Points', 'Reason'])
+        for log in logs:
+            csv_writer.writerow([
+                log.log_date.strftime('%Y-%m-%d %H:%M:%S'),
+                log.sponsor_id,
+                log.driver_id,
+                log.points,
+                log.reason
+            ])
+    elif log_type == "password_change":
+        csv_writer.writerow(['Date', 'User ID', 'Change Type'])
+        for log in logs:
+            csv_writer.writerow([
+                log.log_date.strftime('%Y-%m-%d %H:%M:%S'),
+                log.user_id,
+                log.change_type
+            ])
+    elif log_type == "login_attempt":
+        csv_writer.writerow(['Date', 'Username', 'Status'])
+        for log in logs:
+            csv_writer.writerow([
+                log.log_date.strftime('%Y-%m-%d %H:%M:%S'),
+                log.username,
+                log.status
+            ])
+    else:
+        # Default header for all logs
+        csv_writer.writerow(['Date', 'Log Type', 'Sponsor ID', 'Driver ID', 'User ID', 'Status', 'Reason', 'Points', 'Username', 'Change Type'])
+        for log in logs:
+            csv_writer.writerow([
+                log.log_date.strftime('%Y-%m-%d %H:%M:%S'),
+                log.log_type,
+                log.sponsor_id,
+                log.driver_id,
+                log.user_id,
+                log.status,
+                log.reason,
+                log.points,
+                log.username,
+                log.change_type
+            ])
+
+    # Create a response object
+    csv_output.seek(0)
+    return Response(
+        csv_output.getvalue(),
+        mimetype='text/csv',
+        headers={'Content-Disposition': f'attachment;filename={log_type or "all"}_audit_logs.csv'}
+    )
 
 # Route for the dashboard, with authentication check and role-based redirection
 @main_bp.route('/dashboard')
@@ -987,9 +1071,6 @@ def mark_driver_notification_as_read(notification_id):
     except Exception as e:
         db.session.rollback()
         return jsonify({'success': False, 'message': str(e)}), 500
-
-from flask import send_file
-from driverProgram.controllers.report_controller import ReportController
 
 @main_bp.route('/generate_report_csv', methods=['GET'])
 @login_required
