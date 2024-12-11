@@ -73,14 +73,37 @@
         <div id="new-job-form" style="display:none; margin-top: 20px;">
             <form id="job-form" method="POST" action="{{ url_for('main.job_postings') }}">
                 {{ form.hidden_tag() }}
+                
                 <div style="margin-bottom: 15px;">
                     <label for="title" style="color: white;">Job Title</label>
-                    {{ form.title(class="form-control", style="width: 100%;") }}
+                    {{ form.title(class="form-control", style="width: 100%; padding: 8px; border-radius: 5px;") }}
                 </div>
+
                 <div style="margin-bottom: 15px;">
                     <label for="description" style="color: white;">Job Description</label>
-                    {{ form.description(class="form-control", style="width: 100%;") }}
+                    {{ form.description(class="form-control", style="width: 100%; padding: 8px; border-radius: 5px;") }}
                 </div>
+
+                <div style="margin-bottom: 15px;">
+                    <label for="location" style="color: white;">Location</label>
+                    {{ form.location(class="form-control", style="width: 100%; padding: 8px; border-radius: 5px;") }}
+                </div>
+
+                <div style="margin-bottom: 15px;">
+                    <label for="salary" style="color: white;">Salary</label>
+                    {{ form.salary(class="form-control", style="width: 100%; padding: 8px; border-radius: 5px;") }}
+                </div>
+
+                <div style="margin-bottom: 15px;">
+                    <label for="hours" style="color: white;">Hours</label>
+                    {{ form.hours(class="form-control", style="width: 100%; padding: 8px; border-radius: 5px;") }}
+                </div>
+
+                <div style="margin-bottom: 15px;">
+                    <label for="experience" style="color: white;">Experience</label>
+                    {{ form.experience(class="form-control", style="width: 100%; padding: 8px; border-radius: 5px;") }}
+                </div>
+
                 <button type="submit" class="btn btn-primary" style="
                     background-color: #4a90e2;
                     cursor: pointer;
@@ -92,6 +115,7 @@
                 </button>
             </form>
         </div>
+
     </div>
 </div>
 
